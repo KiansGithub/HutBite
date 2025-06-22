@@ -49,18 +49,24 @@ function RootLayoutNav() {
     initialize();
   }, []);
 
+    /* 🔑 make both light & dark themes transparent */
+    const TransparentLight = {
+      ...DefaultTheme,
+      colors: { ...DefaultTheme.colors, background: 'transparent' },
+    };
+    const TransparentDark = {
+      ...DarkTheme,
+      colors: { ...DarkTheme.colors, background: 'transparent' },
+    };
+
   if (loading) {
     return null;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? TransparentDark : TransparentLight}>
       <Stack screenOptions={{ headerShown: false }}>
-        {user ? (
-          <Stack.Screen name="(main)" />
-        ): (
-          <Stack.Screen name="auth" />
-        )}
+        {user ? <Stack.Screen name="(main)" /> : <Stack.Screen name="auth" />}
       </Stack>
     </ThemeProvider>
   );

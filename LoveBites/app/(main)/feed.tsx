@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   restaurantDescription: { fontSize: 16, color: '#ccc', marginBottom: 20 },
 
   orderButton: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: Colors.light.primary,
     borderRadius: 25,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   menuItemInfo: { marginBottom: 16, padding: 12, backgroundColor: 'transparent', borderRadius: 8 },
   menuItemName: { fontSize: 20, fontWeight: '600', color: '#fff', marginBottom: 4 },
   menuItemDescription: { fontSize: 14, color: '#ccc', marginBottom: 4 },
-  menuItemPrice: { fontSize: 18, fontWeight: 'bold', color: '#FF6B35' },
+  menuItemPrice: { fontSize: 18, fontWeight: 'bold', color: Colors.light.primary },
 
   videoPlaceholder: {
     width: W,

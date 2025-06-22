@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text, View } from '@/components/Themed';
 import { useAuthStore } from '@/store/authStore';
 import { router } from 'expo-router';
+import Colors from '@/constants/Colors';
 
 export default function SignInScreen() {
     const [email, setEmail] = useState('');
@@ -34,8 +36,14 @@ export default function SignInScreen() {
     };
 
     return(
-        <KeyboardAvoidingView
+        <LinearGradient 
+          colors={['#FF6B35', '#FFAD35']}
           style={styles.container}
+          start={{ x: 0.1, y: 0}}
+          end={{ x: 0.9, y: 1 }}
+        >
+        <KeyboardAvoidingView
+          style={styles.kav}
           behavior={Platform.OS === 'ios' ? 'padding': 'height'}
         >
             <View style={styles.content}>
@@ -83,14 +91,17 @@ export default function SignInScreen() {
                 </View>
             </View>
         </KeyboardAvoidingView>
+        </LinearGradient>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1, 
-        backgroundColor: '#fff'
+        flex: 1,
     },
+    kav: {
+        flex: 1, 
+},
     content: {
         flex: 1, 
         justifyContent: 'center',
@@ -101,8 +112,7 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textAlign: 'center',
         marginBottom: 8, 
-        backgroundColor: 'linear-gradient(45deg, #FF6B35, #FF8E53)',
-        color: '#FF6B35'
+        color: Colors.light.primary,
     },
     subtitle: {
         fontSize: 18, 
@@ -122,7 +132,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#f9f9f9',
     },
     button: {
-        backgroundColor: '#FF6B35',
+        backgroundColor: Colors.light.primary,
         borderRadius: 12, 
         padding: 16, 
         alignItems: 'center',
@@ -138,7 +148,7 @@ const styles = StyleSheet.create({
         marginTop: 16,
     },
     switchText: {
-        color: '#FF6B35',
+        color: Colors.light.primary,
         fontSize: 16,
     },
 });
