@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, FlatList, Dimensions, TouchableOpacity, Alert} from 'react-native';
+import { StyleSheet, FlatList, Dimensions, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Text, View } from '@/components/Themed';
 import { Video, ResizeMode } from 'expo-av';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
-import { Database } from '@/lib/supabase';
+import { Database } from '@/lib/supabase.d';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'];
 
-const { height: SCREEN_HEIGHT} = Dimensions.get('window');
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 
 export default function FeedScreen() {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -53,70 +53,68 @@ export default function FeedScreen() {
 
         return (
             <View style={styles.restaurantCard}>
-                <View style={styles.restaurantInfo}>
-                    <Text style={styles.restaurantName}>{item.name}</Text>
-                    <Text style={styles.restaurantDescription}>{item.description}</Text>
-
-                    {currentMenuItem && (
-                        <View style={styles.menuItemInfo}>
-                            <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
-                            <Text style={styles.menuItemDescription}>{currentMenuItem.description}</Text>
-                            <Text style={styles.menuItemPrice}>${currentMenuItem.price.toFixed(2)}</Text>
-                        </View>
-                    )}
-
-                    <TouchableOpacity 
-                      style={styles.orderButton}
-                      onPress={() => handleOrder(item)}
-                    >
-                        <Text style={styles.orderButtonText}>Order Now</Text>
-                    </TouchableOpacity>
-                </View>
 
                 {currentMenuItem?.video_url ? (
                     <Video 
                         source={{ uri: currentMenuItem.video_url }}
                         style={styles.video}
-                        useNativeControls 
-                        resizeMode={ResizeMode.CONTAIN}
+                        resizeMode={ResizeMode.COVER}
                         isLooping
-                        shouldPlay={false}
+                        shouldPlay={true}
                     />
                 ): (
                     <View style={styles.videoPlaceholder}>
                         <Text style={styles.placeholderText}>No video available</Text>
                     </View>
                 )}
+                <View style={styles.overlay}>
+                    <View style={styles.restaurantInfo}>
+                        <Text style={styles.restaurantName}>{item.name}</Text>
+                        <Text style={styles.restaurantDescription}>{item.description}</Text>
+ 
+                        {currentMenuItem && (
+                            <View style={styles.menuItemInfo}>
+                                <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
+                                <Text style={styles.menuItemDescription}>{currentMenuItem.description}</Text>
+                                <Text style={styles.menuItemPrice}>${currentMenuItem.price.toFixed(2)}</Text>
+                            </View>
+                        )}
+ 
+                        <TouchableOpacity
+                            style={styles.orderButton}
+                            onPress={() => handleOrder(item)}
+                        >
+                            <Text style={styles.orderButtonText}>Order Now</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
             </View>
         );
     };
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <Text>Loading restaurants...</Text>
+            <View style={[styles.container, styles.center]}>
+                <ActivityIndicator size="large" color="#FF6B35" />
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>LoveBites</Text>
-                <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
-                    <Text style={styles.signOutText}>Sign Out</Text>
-                </TouchableOpacity>
-            </View>
 
             <FlatList
               data={restaurants}
               renderItem={renderRestaurant}
-              keyExtractor={(item) => item.id}
-              pagingEnabled 
+              keyExtractor={(item) => item.id.toString()}
+              pagingEnabled
               showsVerticalScrollIndicator={false}
-              snapToInterval={SCREEN_HEIGHT - 100}
+              snapToAlignment="start"
               decelerationRate="fast"
-              style={styles.feed}
+              snapToInterval={SCREEN_HEIGHT}
             />
+             <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
+                <Text style={styles.signOutText}>Sign Out</Text>
+            </TouchableOpacity>
         </View>
     );
 }
