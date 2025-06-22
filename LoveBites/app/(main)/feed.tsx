@@ -9,6 +9,7 @@ import {
   ViewToken,
   View,
 } from 'react-native';
+import Colors from '@/constants/Colors';
 import { Text } from '@/components/Themed';
 import {
   createVideoPlayer,
@@ -97,17 +98,20 @@ export default function FeedScreen() {
     const source: VideoSource = {
       uri,
       useCaching: true,
-      bufferOptions: {
+    };
+
+    const player = useVideoPlayer(
+        { uri: uri as string, useCaching: true },
+        p => {
+        p.loop  = true;
+        p.muted = true;
+        p.bufferOptions = {
         minBufferForPlayback: 0.5,
         preferredForwardBufferDuration: 20,
         waitsToMinimizeStalling: true,
-      },
-    };
-
-    const player = useVideoPlayer(source, p => {
-      p.loop  = true;
-      p.muted = true;
-    });
+        };
+        },
+        );
 
     /* play / pause when visible */
     useEffect(() => {
@@ -212,7 +216,7 @@ export default function FeedScreen() {
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
-        <ActivityIndicator size="large" color="#FF6B35" />
+        <ActivityIndicator size="large" color={Colors.light.primary} />
       </View>
     );
   }
