@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, FlatList, Dimensions, TouchableOpacity, Alert} from 'react-native';
 import { Text, View } from '@/components/Themed';
+import { Video, ResizeMode } from 'expo-av';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { Database } from '@/lib/supabase';
@@ -12,6 +13,7 @@ const { height: SCREEN_HEIGHT} = Dimensions.get('window');
 
 export default function FeedScreen() {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
     const { signOut } = useAuthStore();
 
@@ -45,26 +47,49 @@ export default function FeedScreen() {
         );
     };
 
-    const renderRestaurant = ({ item }: { item: Restaurant }) => (
-        <View style={styles.restaurantCard}>
-            <View style={styles.restaurantInfo}>
-                <Text style={styles.restaurantName}>{item.name}</Text>
-                <Text style={styles.restaurantDescription}>{item.description}</Text>
+    const renderRestaurant = ({ item }: { item: Restaurant }) => {
+        const restaurantMenuItems = menuItems[item.id] || [];
+        const currentMenuItem = restaurantMenuItems[0];
 
-                <TouchableOpacity
-                  style={styles.orderButton}
-                  onPress={() => handleOrder(item)}
-                >
-                    <Text style={styles.orderButtonText}>Order Now</Text>
-                </TouchableOpacity>
-            </View>
+        return (
+            <View style={styles.restaurantCard}>
+                <View style={styles.restaurantInfo}>
+                    <Text style={styles.restaurantName}>{item.name}</Text>
+                    <Text style={styles.restaurantDescription}>{item.description}</Text>
 
-            {/* TODO: Add video player and horizontal menu carousel */}
-            <View style={styles.videoPlaceholder}>
-                <Text style={styles.placeholderText}>View Player Coming Soon</Text>
+                    {currentMenuItem && (
+                        <View style={styles.menuItemInfo}>
+                            <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
+                            <Text style={styles.menuItemDescription}>{currentMenuItem.description}</Text>
+                            <Text style={styles.menuItemPrice}>${currentMenuItem.price.toFixed(2)}</Text>
+                        </View>
+                    )}
+
+                    <TouchableOpacity 
+                      style={styles.orderButton}
+                      onPress={() => handleOrder(item)}
+                    >
+                        <Text style={styles.orderButtonText}>Order Now</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {currentMenuItem?.video_url ? (
+                    <Video 
+                        source={{ uri: currentMenuItem.video_url }}
+                        style={styles.video}
+                        useNativeControls 
+                        resizeMode={ResizeMode.CONTAIN}
+                        isLooping
+                        shouldPlay={false}
+                    />
+                ): (
+                    <View style={styles.videoPlaceholder}>
+                        <Text style={styles.placeholderText}>No video available</Text>
+                    </View>
+                )}
             </View>
-        </View>
-    );
+        );
+    };
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -155,6 +180,33 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 18, 
         fontWeight: '600'
+    },
+    menuItemInfo: {
+        marginBottom: 16, 
+        padding: 12, 
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 8
+    },
+    menuItemName: {
+        fontSize: 20, 
+        fontWeight: '600',
+        color: '#fff',
+        marginBottom: 4, 
+    },
+    menuItemDescription: {
+        fontSize: 14, 
+        color: '#ccc',
+        marginBottom: 4, 
+    },
+    menuItemPrice: {
+        fontSize: 18, 
+        fontWeight: 'bold',
+        color: '#FF6B35',
+    },
+    video: {
+        flex: 1, 
+        borderRadius: 12, 
+        marginTop: 20
     },
     videoPlaceholder: {
         flex: 1, 
