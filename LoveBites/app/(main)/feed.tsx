@@ -124,6 +124,10 @@ const styles = StyleSheet.create({
         flex: 1, 
         backgroundColor: '#000'
     },
+    center: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -147,6 +151,11 @@ const styles = StyleSheet.create({
     },
     feed: {
         flex: 1, 
+    },
+    overlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
     },
     restaurantCard: {
         height: SCREEN_HEIGHT - 100,

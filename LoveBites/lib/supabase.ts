@@ -1,4 +1,3 @@
-import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import Constants from 'expo-constants';
 import { Database } from './supabase.d';
