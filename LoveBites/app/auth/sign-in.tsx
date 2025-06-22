@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Text, View } from '@/components/Themed';
+import { Text } from '@/components/Themed';
 import { useAuthStore } from '@/store/authStore';
 import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
