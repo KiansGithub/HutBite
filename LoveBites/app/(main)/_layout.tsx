@@ -5,5 +5,5 @@ export default function MainLayout() {
         <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="feed"/>
         </Stack>
-    )
+    );
 }
