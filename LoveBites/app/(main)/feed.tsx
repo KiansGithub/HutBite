@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, FlatList, Dimensions, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Text, View } from '@/components/Themed';
-import { Video, ResizeMode } from 'expo-av';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import { Database } from '@/lib/supabase.d';
+import { useEvent } from 'expo';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'];
@@ -64,6 +65,44 @@ export default function FeedScreen() {
         );
     };
 
+    const MenuItemVideo = ({ uri, isCurrent }: { uri: string; isCurrent: boolean }) => {
+        const player = useVideoPlayer(
+            uri, 
+            p => {
+              p.loop = true;
+              p.muted = true; 
+              p.play();
+        });
+
+        useEffect(() => {
+            if (isCurrent) {
+                player.play();
+            } else {
+                player.pause();
+            }
+        }, [isCurrent]);
+
+        const { status } = useEvent(player, 'statusChange', 
+                                           { status: player.status }
+        );
+
+        useEffect(() => {
+            console.log('[expo-vidoe]', status)
+        }, [status]);
+
+        return (
+            <VideoView
+                key={uri}
+                player={player}
+                style={styles.video}
+                contentFit="cover"
+                allowsFullscreen={false}
+                useExoShutter={false}
+                surfaceType="textureView"
+            />
+        );
+    };
+
     const renderRestaurant = ({ item }: { item: Restaurant }) => {
         const restaurantMenuItems = menuItems[item.id] || [];
         const currentIndex = currentMenuItemIndex[item.id] || 0;
@@ -76,6 +115,7 @@ export default function FeedScreen() {
 
         return (
             <View style={styles.restaurantCard}>
+                <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}>
 
 {restaurantMenuItems.length > 0 ? (
                     <FlatList
@@ -85,27 +125,24 @@ export default function FeedScreen() {
                         showsHorizontalScrollIndicator={false}
                         keyExtractor={(menuItem) => menuItem.id.toString()}
                         onMomentumScrollEnd={handleScrollEnd}
-                        renderItem={({ item: menuItem }) =>
+                        renderItem={({ item: menuItem, index }) =>
                             menuItem.video_url ? (
-                                <Video
-                                    source={{ uri: menuItem.video_url }}
-                                    style={styles.video}
-                                    resizeMode={ResizeMode.COVER}
-                                    isLooping
-                                    shouldPlay
+                                <MenuItemVideo
+                                    uri={menuItem.video_url}
+                                    isCurrent={index === currentIndex}
                                 />
-                            ) : (
-                                <View style={styles.videoPlaceholder}>
-                                    <Text style={styles.placeholderText}>No video available</Text>
-                                </View>
-                            )
-                        }
+                                ) : (
+                                    <View style={styles.videoPlaceholder}>
+                                        <Text style={styles.placeholderText}>No video available</Text>
+                                    </View>
+                                )}
                     />
                 ) : (
                     <View style={styles.videoPlaceholder}>
                         <Text style={styles.placeholderText}>No video available</Text>
                     </View>
                 )}
+                </View>
                 <View style={styles.overlay}>
                 <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
                         <Text style={styles.signOutText}>Sign Out</Text>
@@ -253,8 +290,8 @@ const styles = StyleSheet.create({
         color: '#FF6B35',
     },
     video: {
-        width: '100%',
-        height: '100%',
+        width: SCREEN_HEIGHT,
+        height: SCREEN_WIDTH,
     },
     videoPlaceholder: {
         flex: 1, 
