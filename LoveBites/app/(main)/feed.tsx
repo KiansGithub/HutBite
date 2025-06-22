@@ -18,25 +18,41 @@ export default function FeedScreen() {
     const { signOut } = useAuthStore();
 
     useEffect(() => {
-        fetchRestaurants();
-    }, []);
+        const fetchData = async () => {
+            try {
+                const { data: restaurantData, error: restaurantError} = await supabase
+                                                                            .from('restaurants')
+                                                                            .select('*')
+                                                                            .order('created_at', { ascending: false });
+                if (restaurantError) throw restaurantError; 
+                setRestaurants(restaurantData || []);
 
-    const fetchRestaurants = async () => {
-        try {
-            const { data, error } = await supabase 
-              .from('restaurants')
-              .select('*')
-              .order('created_at', { ascending: false });
-            
-            if (error) throw error; 
-            setRestaurants(data || []);
-        } catch (error) {
-            console.error('Error fetching restaurants:', error);
-            Alert.alert('Error', 'Failed to load restaurants');
-        } finally {
-            setLoading(false);
-        }
-    };
+                const { data: menuData, error: menuError }= await supabase 
+                                                                .from('menu_items')
+                                                                .select('*');
+                
+                if (menuError) throw menuError; 
+
+                const grouped: Record<string, MenuItem[]> = {};
+
+                (menuData || []).forEach((item) => {
+                    if (!grouped[item.restaurant_id]) {
+                        grouped[item.restaurant_id] = [];
+                    }
+                    grouped[item.restaurant_id].push(item);
+                });
+
+                setMenuItems(grouped);
+            } catch (error) {
+                console.error('Error fetching restaurants: ', error);
+                Alert.alert('Error', 'Failed to load restaurants');
+            } finally {
+                setLoading(false)
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleOrder = (restaurant: Restaurant) => {
         // TODO: Implement deep linking ot order platforms 

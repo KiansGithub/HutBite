@@ -33,7 +33,6 @@
     "react-native-web": "~0.20.0",
     "zustand": "^5.0.5",
     "expo-av": "~15.1.6",
-    "undefined": "react-native-url-polyfill/auto",
     "expo-video": "~2.2.2"
   },
   "devDependencies": {
