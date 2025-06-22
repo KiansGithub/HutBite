@@ -84,6 +84,9 @@ export default function FeedScreen() {
                     </View>
                 )}
                 <View style={styles.overlay}>
+                <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
+                        <Text style={styles.signOutText}>Sign Out</Text>
+                    </TouchableOpacity>
                     <View style={styles.restaurantInfo}>
                         <Text style={styles.restaurantName}>{item.name}</Text>
                         <Text style={styles.restaurantDescription}>{item.description}</Text>
@@ -128,9 +131,6 @@ export default function FeedScreen() {
               decelerationRate="fast"
               snapToInterval={SCREEN_HEIGHT}
             />
-             <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
-                <Text style={styles.signOutText}>Sign Out</Text>
-            </TouchableOpacity>
         </View>
     );
 }
@@ -160,6 +160,9 @@ const styles = StyleSheet.create({
     },
     signOutButton: {
         padding: 8,
+        alignSelf: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        borderRadius: 8,
     },
     signOutText: {
         color: '#fff',
@@ -170,13 +173,13 @@ const styles = StyleSheet.create({
     },
     overlay: {
         ...StyleSheet.absoluteFillObject,
-        justifyContent: 'flex-end',
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        justifyContent: 'space-between',
+        padding: 20,
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
     },
     restaurantCard: {
-        height: SCREEN_HEIGHT - 100,
-        justifyContent: 'space-between',
-        padding: 20
+        height: SCREEN_HEIGHT,
+        width: SCREEN_WIDTH,
     },
     restaurantInfo: {
         zIndex: 1,
@@ -227,9 +230,8 @@ const styles = StyleSheet.create({
         color: '#FF6B35',
     },
     video: {
-        flex: 1, 
-        borderRadius: 12, 
-        marginTop: 20
+        width: '100%',
+        height: '100%',
     },
     videoPlaceholder: {
         flex: 1, 
