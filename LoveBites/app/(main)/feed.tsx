@@ -14,6 +14,7 @@ const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH} = Dimensions.get('window');
 export default function FeedScreen() {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
+    const [currentMenuItemIndex, setCurrentMenuItemIndex] = useState<Record<string, number>>({});
     const [loading, setLoading] = useState(true);
     const { signOut } = useAuthStore();
 
@@ -65,20 +66,42 @@ export default function FeedScreen() {
 
     const renderRestaurant = ({ item }: { item: Restaurant }) => {
         const restaurantMenuItems = menuItems[item.id] || [];
-        const currentMenuItem = restaurantMenuItems[0];
+        const currentIndex = currentMenuItemIndex[item.id] || 0;
+        const currentMenuItem = restaurantMenuItems[currentIndex];
+
+        const handleScrollEnd = (e: any) => {
+            const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+            setCurrentMenuItemIndex((prev) => ({ ...prev, [item.id]: index }));
+        };
 
         return (
             <View style={styles.restaurantCard}>
 
-                {currentMenuItem?.video_url ? (
-                    <Video 
-                        source={{ uri: currentMenuItem.video_url }}
-                        style={styles.video}
-                        resizeMode={ResizeMode.COVER}
-                        isLooping
-                        shouldPlay={true}
+{restaurantMenuItems.length > 0 ? (
+                    <FlatList
+                        data={restaurantMenuItems}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        keyExtractor={(menuItem) => menuItem.id.toString()}
+                        onMomentumScrollEnd={handleScrollEnd}
+                        renderItem={({ item: menuItem }) =>
+                            menuItem.video_url ? (
+                                <Video
+                                    source={{ uri: menuItem.video_url }}
+                                    style={styles.video}
+                                    resizeMode={ResizeMode.COVER}
+                                    isLooping
+                                    shouldPlay
+                                />
+                            ) : (
+                                <View style={styles.videoPlaceholder}>
+                                    <Text style={styles.placeholderText}>No video available</Text>
+                                </View>
+                            )
+                        }
                     />
-                ): (
+                ) : (
                     <View style={styles.videoPlaceholder}>
                         <Text style={styles.placeholderText}>No video available</Text>
                     </View>
@@ -175,7 +198,7 @@ const styles = StyleSheet.create({
         ...StyleSheet.absoluteFillObject,
         justifyContent: 'space-between',
         padding: 20,
-        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+        backgroundColor: 'transparent',
     },
     restaurantCard: {
         height: SCREEN_HEIGHT,
@@ -210,7 +233,7 @@ const styles = StyleSheet.create({
     menuItemInfo: {
         marginBottom: 16, 
         padding: 12, 
-        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        backgroundColor: 'transparent',
         borderRadius: 8
     },
     menuItemName: {
