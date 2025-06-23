@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   ViewToken,
   View,
+  Linking
 } from 'react-native';
 import Colors from '@/constants/Colors';
 import { Text } from '@/components/Themed';
@@ -34,6 +35,7 @@ export default function FeedScreen() {
   const [hIndex,      setHIndex]      = useState<Record<string, number>>({});
   const [vIndex,      setVIndex]      = useState(0);
   const [loading,     setLoading]     = useState(true);
+  const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
   const { signOut } = useAuthStore();
 
   /* hidden players used only to warm the disk/network cache */
@@ -202,7 +204,7 @@ export default function FeedScreen() {
             <TouchableOpacity
               style={styles.orderButton}
               onPress={() =>
-                Alert.alert(`Order from ${item.name}`, 'Deep-link coming soon')
+                setOrderLinks(item.order_links as Record<string, string> | null)
               }>
               <Text style={styles.orderButtonText}>Order Now</Text>
             </TouchableOpacity>
@@ -235,6 +237,23 @@ export default function FeedScreen() {
         onViewableItemsChanged={onViewableChange}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
       />
+
+{orderLinks && (
+        <View style={styles.linksOverlay} pointerEvents="box-none">
+          <TouchableOpacity style={styles.linksBackdrop} onPress={() => setOrderLinks(null)} />
+          <View style={styles.linksContainer} pointerEvents="auto">
+            {Object.entries(orderLinks).map(([platform, url]) => (
+              <TouchableOpacity
+                key={platform}
+                style={styles.linkButton}
+                onPress={() => Linking.openURL(url)}
+              >
+                <Text style={styles.linkText}>{platform}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
     </View>
   );
 }
@@ -289,4 +308,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   placeholderText: { color: '#999', fontSize: 18 },
+  linksOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+  },
+  linksBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  linksContainer: {
+    backgroundColor: '#fff',
+    paddingTop: 20,
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  linkButton: {
+    paddingVertical: 12,
+  },
+  linkText: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: Colors.light.primary,
+    fontWeight: '600',
+  },
 });

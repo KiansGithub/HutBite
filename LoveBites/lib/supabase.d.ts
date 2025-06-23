@@ -15,18 +15,21 @@ export interface Database {
           created_at: string
           name: string
           description: string | null
+          order_links: Json | null
         }
         Insert: {
           id?: string
           created_at?: string
           name: string
           description?: string | null
+          order_links?: Json | null
         }
         Update: {
           id?: string
           created_at?: string
           name?: string
           description?: string | null
+          order_links?: Json | null
         }
       }
       menu_items: {
