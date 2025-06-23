@@ -11,40 +11,12 @@ import {
   Text
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import MaskedView from "@react-native-masked-view/masked-view";
-import { BlurView } from "expo-blur";
 import { router } from "expo-router";
 
 import { useAuthStore } from "@/store/authStore";
 import Colors from "@/constants/Colors";
-
-/**
- * Gradient-filled headline text.
- * Uses MaskedView: Text becomes the alpha mask that reveals the gradient below.
- */
-const GradientText: React.FC<{ text: string; style?: any }> = ({ text, style }) => (
-    <MaskedView
-      // ⬇️ 1. Let MaskedView stretch the full row
-      style={{ alignSelf: 'stretch' }}
-      maskElement={
-        // ⬇️ 2. Wrap the mask-text in a full-width view so it defines a proper mask area
-        <View style={{ alignItems: 'center', backgroundColor: 'transparent' }}>
-          <Text style={style}>{text}</Text>
-        </View>
-      }
-    >
-      {/* ⬇️ 3. Give the gradient the same width by also stretching it */}
-      <LinearGradient
-        colors={['#FFFFFF', '#FFE680']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{ alignSelf: 'stretch' }}
-      >
-        {/* Invisible duplicate keeps intrinsic line-height */}
-        <Text style={[style, { opacity: 0 }]}>{text}</Text>
-      </LinearGradient>
-    </MaskedView>
-  );
+import { GradientText } from "@/components/GradientText";
+import { GlassPanel } from "@/components/GlassPanel";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -95,13 +67,7 @@ export default function SignInScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <View style={styles.wrapper}>
-          {/* ONE glass-panel card that encloses everything */}
-          <BlurView intensity={60} tint="light" style={styles.panel}>
-            <LinearGradient
-              colors={["rgba(255,255,255,0.12)", "rgba(255,255,255,0.04)"]}
-              style={StyleSheet.absoluteFill}
-            />
-
+          <GlassPanel>
             {/* Header */}
             <GradientText text="Welcome to LiveBites" style={styles.title} />
             <Text style={styles.subtitle}>Your culinary adventure awaits</Text>
@@ -176,7 +142,7 @@ export default function SignInScreen() {
             <Text style={styles.legal}>
               By continuing, you agree to our <Text style={styles.link}>Terms of Service</Text> and <Text style={styles.link}>Privacy Policy</Text>
             </Text>
-          </BlurView>
+          </GlassPanel>
         </View>
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -190,17 +156,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-  },
-  panel: {
-    borderRadius: 32,
-    overflow: "hidden",
-    padding: 28,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.18)",
-    shadowColor: "#000",
-    shadowOpacity: 0.25,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 12 },
   },
   title: {
     fontSize: 32,
