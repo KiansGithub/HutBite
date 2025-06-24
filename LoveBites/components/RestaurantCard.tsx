@@ -4,6 +4,7 @@ import { Text } from '@/components/Themed';
 import { VideoPlayer } from './VideoPlayer';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
+import { LinearGradient } from 'expo-linear-gradient';
  
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -66,26 +67,43 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         <TouchableOpacity onPress={onSignOut} style={styles.signOutButton}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </TouchableOpacity>
- 
-        <View style={styles.restaurantInfo} pointerEvents="auto">
-          <Text style={styles.restaurantName}>{restaurant.name}</Text>
-          <Text style={styles.restaurantDescription}>{restaurant.description}</Text>
- 
-          {currentMenuItem && (
-            <View style={styles.menuItemInfo}>
-              <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
-              <Text style={styles.menuItemDescription}>{currentMenuItem.description}</Text>
-              <Text style={styles.menuItemPrice}>£{currentMenuItem.price.toFixed(2)}</Text>
-            </View>
-          )}
- 
-          <TouchableOpacity
-            style={styles.orderButton}
-            onPress={() => onOrderPress(restaurant.order_links as Record<string, string> | null)}
-          >
-            <Text style={styles.orderButtonText}>Order Now</Text>
-          </TouchableOpacity>
+
+        <View style={styles.indicatorContainer} pointerEvents="none">
+          {menuItems.map((_, idx) => (
+            <View 
+              key={idx}
+              style={[styles.indicatorDot, idx === horizontalIndex && styles.indicatorDotActive]}
+            />
+          ))}
         </View>
+ 
+        <LinearGradient
+          pointerEvents="box-none"
+          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          style={styles.bottomGradient}
+        >
+          <View style={styles.restaurantInfo} pointerEvents="auto">
+            <Text style={styles.restaurantName}>{restaurant.name}</Text>
+            <Text style={styles.restaurantDescription}>{restaurant.description}</Text>
+
+            {currentMenuItem && (
+              <View style={styles.menuItemInfo}>
+                <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
+                <Text style={styles.menuItemDescription}>{currentMenuItem.description}</Text>
+                <Text style={styles.menuItemPrice}>£{currentMenuItem.price.toFixed(2)}</Text>
+              </View>
+            )}
+
+            <TouchableOpacity
+              style={styles.orderButton}
+              onPress={() =>
+                onOrderPress(restaurant.order_links as Record<string, string> | null)
+              }
+            >
+              <Text style={styles.orderButtonText}>Order Now</Text>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
       </View>
     </View>
   );
@@ -101,6 +119,16 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: 'transparent',
   },
+  bottomGradient: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    paddingTop: 80,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    justifyContent: 'flex-end',
+  },
   signOutButton: {
     padding: 8,
     alignSelf: 'flex-end',
@@ -109,8 +137,23 @@ const styles = StyleSheet.create({
   },
   signOutText: { color: '#fff', fontSize: 16 },
   restaurantInfo: { zIndex: 1, backgroundColor: 'transparent' },
-  restaurantName: { fontSize: 32, fontWeight: 'bold', color: '#fff', marginBottom: 8 },
-  restaurantDescription: { fontSize: 16, color: '#ccc', marginBottom: 20 },
+  restaurantName: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginBottom: 8,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  restaurantDescription: {
+    fontSize: 16,
+    color: '#eee',
+    marginBottom: 20,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
   orderButton: {
     backgroundColor: Colors.light.primary,
     borderRadius: 25,
@@ -119,10 +162,37 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   orderButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  menuItemInfo: { marginBottom: 16, padding: 12, backgroundColor: 'transparent', borderRadius: 8 },
-  menuItemName: { fontSize: 20, fontWeight: '600', color: '#fff', marginBottom: 4 },
-  menuItemDescription: { fontSize: 14, color: '#ccc', marginBottom: 4 },
-  menuItemPrice: { fontSize: 18, fontWeight: 'bold', color: Colors.light.primary },
+  menuItemInfo: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    borderRadius: 8,
+  },
+  menuItemName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 4,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  menuItemDescription: {
+    fontSize: 14,
+    color: '#ddd',
+    marginBottom: 4,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  menuItemPrice: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.light.primary,
+    textShadowColor: '#000',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
   videoPlaceholder: {
     width: W,
     height: H,
@@ -131,4 +201,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   placeholderText: { color: '#999', fontSize: 18 },
+  indicatorContainer: {
+    position: 'absolute',
+    top: 60, 
+    left: 0, 
+    right: 0, 
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  indicatorDot: {
+    width: 8, 
+    height: 8, 
+    borderRadius: 4, 
+    backgroundColor: '#777',
+    marginHorizontal: 4,
+  },
+  indicatorDotActive: { backgroundColor: '#fff' },
 });
