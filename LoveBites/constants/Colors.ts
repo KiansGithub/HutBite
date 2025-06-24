@@ -2,7 +2,7 @@ const tintColorLight = '#2f95dc';
 const tintColorDark = '#fff';
 const primaryStart = '#FFD200';
 const primaryEnd = '#FF9900';
-const primary = '#FFC107';
+const primary = '#FF7A00';
 
 export default {
   light: {

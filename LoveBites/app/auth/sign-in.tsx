@@ -69,7 +69,7 @@ export default function SignInScreen() {
         <View style={styles.wrapper}>
           <GlassPanel>
             {/* Header */}
-            <GradientText text="Welcome to LiveBites" style={styles.title} />
+            <Text style={styles.title}>Welcome to LiveBites</Text>
             <Text style={styles.subtitle}>Your culinary adventure awaits</Text>
 
             {/* OAUTH buttons – same width */}
@@ -162,6 +162,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textAlign: "center",
     marginBottom: 4,
+    color: "#fff"
   },
   subtitle: {
     fontSize: 16,
@@ -215,12 +216,16 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   inputWrapper: {
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
+    borderColor: "rgba(255,255,255,0.6)",
     marginBottom: 16,
     paddingHorizontal: 14,
+    shadowColor: "#000",
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
   },
   input: {
     height: 46,
