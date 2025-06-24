@@ -54,7 +54,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           key={uri}
           player={player}
           style={[styles.video, { width, height }]}
-          contentFit="cover"
+          contentFit="contain"
           allowsFullscreen
           allowsPictureInPicture
           useExoShutter={false}

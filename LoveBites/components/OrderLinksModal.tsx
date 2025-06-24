@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, TouchableOpacity, Linking, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
  
 interface OrderLinksModalProps {
   orderLinks: Record<string, string> | null;
@@ -24,6 +25,7 @@ export const OrderLinksModal: React.FC<OrderLinksModalProps> = ({
             style={styles.linkButton}
             onPress={() => Linking.openURL(url)}
           >
+            <FontAwesome name="link" size={24} color="#fff" />
             <Text style={styles.linkText}>{platform}</Text>
           </TouchableOpacity>
         ))}
@@ -42,20 +44,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: '#333',
     paddingTop: 20,
     paddingBottom: 40,
     paddingHorizontal: 20,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
   linkButton: {
-    paddingVertical: 12,
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginHorizontal: 10,
   },
   linkText: {
-    fontSize: 18,
+    fontSize: 12,
+    marginTop: 4,
     textAlign: 'center',
-    color: Colors.light.primary,
+    color: '#fff',
     fontWeight: '600',
   },
 });
