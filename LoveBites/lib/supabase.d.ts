@@ -37,7 +37,7 @@ export interface Database {
           id: string
           created_at: string
           restaurant_id: string
-          name: string
+          title: string
           description: string | null
           price: number
           video_url: string | null
@@ -46,7 +46,7 @@ export interface Database {
           id?: string
           created_at?: string
           restaurant_id: string
-          name: string
+          title: string
           description?: string | null
           price: number
           video_url?: string | null
@@ -55,7 +55,7 @@ export interface Database {
           id?: string
           created_at?: string
           restaurant_id?: string
-          name?: string
+          title?: string
           description?: string | null
           price?: number
           video_url?: string | null

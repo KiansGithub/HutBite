@@ -1,16 +1,23 @@
 import React from 'react';
-import { StyleSheet, FlatList, TouchableOpacity, View, Dimensions } from 'react-native';
+import {
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  View,
+  Dimensions,
+} from 'react-native';
 import { Text } from '@/components/Themed';
 import { VideoPlayer } from './VideoPlayer';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { LinearGradient } from 'expo-linear-gradient';
- 
+
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
-type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
- 
+type MenuItem =
+  Database['public']['Tables']['menu_items']['Row'] & { id: string };
+
 const { height: H, width: W } = Dimensions.get('window');
- 
+
 interface RestaurantCardProps {
   restaurant: Restaurant;
   menuItems: MenuItem[];
@@ -19,7 +26,7 @@ interface RestaurantCardProps {
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
 }
- 
+
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   restaurant,
   menuItems,
@@ -29,15 +36,16 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   onOrderPress,
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
- 
+
   return (
     <View style={styles.container}>
+      {/* ──────────────── Media carousel ──────────────── */}
       <FlatList
         data={menuItems}
         horizontal
         pagingEnabled
-        keyExtractor={mi => mi.id.toString()}
-        onMomentumScrollEnd={e => {
+        keyExtractor={(mi) => mi.id.toString()}
+        onMomentumScrollEnd={(e) => {
           const idx = Math.round(e.nativeEvent.contentOffset.x / W);
           onHorizontalScroll(idx);
         }}
@@ -61,108 +69,148 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         style={styles.flatList}
       />
 
-        <View style={styles.indicatorContainer} pointerEvents="none">
-          {menuItems.map((_, idx) => (
-            <View 
-              key={idx}
-              style={[styles.indicatorDot, idx === horizontalIndex && styles.indicatorDotActive]}
-            />
-          ))}
-        </View>
+      {/* ──────────────── Paging dots ──────────────── */}
+      <View style={styles.indicatorContainer} pointerEvents="none">
+        {menuItems.map((_, idx) => (
+          <View
+            key={idx}
+            style={[
+              styles.indicatorDot,
+              idx === horizontalIndex && styles.indicatorDotActive,
+            ]}
+          />
+        ))}
+      </View>
 
-        <View style={styles.restaurantBubble} pointerEvents="none">
-          <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
-        </View>
-        <LinearGradient
-          pointerEvents="box-none"
-          colors={["transparent", "rgba(0,0,0,0.7)"]}
-          style={styles.bottomGradient}
-        >
-          {currentMenuItem && (
+      {/* ──────────────── Restaurant name ──────────────── */}
+      <View style={styles.restaurantBubble} pointerEvents="none">
+        <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
+      </View>
+
+      {/* ──────────────── Bottom overlay ──────────────── */}
+      <LinearGradient
+        pointerEvents="box-none"
+        colors={['transparent', 'rgba(0,0,0,0.7)']}
+        style={styles.bottomGradient}
+      >
+        {currentMenuItem && (
+          <View style={styles.menuItemInfo}>
+            {/* name + price on one row */}
+            <View style={styles.topRow}>
+              <Text numberOfLines={1} style={styles.menuItemName}>
+                {currentMenuItem.title}
+              </Text>
+              <Text style={styles.menuItemPrice}>
+                £{currentMenuItem.price.toFixed(2)}
+              </Text>
+            </View>
+
+            {/* full-width button below */}
             <TouchableOpacity
-            style={styles.menuItemInfo}
+              style={styles.orderButton}
               onPress={() =>
-                onOrderPress(restaurant.order_links as Record<string, string> | null)
+                onOrderPress(restaurant.order_links as Record<
+                  string,
+                  string
+                > | null)
               }
             >
-              <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
-              <Text style={styles.menuItemPrice}>£{currentMenuItem.price.toFixed(2)}</Text>
-              <View style={styles.orderButton} pointerEvents="none">
-                <Text style={styles.orderButtonText}>Order Now</Text>
-                </View>
+              <Text style={styles.orderButtonText}>Order Now</Text>
             </TouchableOpacity>
-          )}
-        </LinearGradient>
-      </View>
+          </View>
+        )}
+      </LinearGradient>
+    </View>
   );
 };
 
+/* ─────────────────────── Styles ─────────────────────── */
+
 const styles = StyleSheet.create({
+  /* layout roots */
   container: { width: W, height: H },
   videoContainer: { width: W, height: H },
   flatList: { width: W, height: H },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'space-between',
-    padding: 20,
-    backgroundColor: 'transparent',
-  },
-  bottomGradient: {
+
+  /* indicator dots */
+  indicatorContainer: {
     position: 'absolute',
+    top: 60,
     left: 0,
     right: 0,
-    bottom: 0,
-    paddingTop: 80,
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
+  indicatorDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#777',
+    marginHorizontal: 4,
+  },
+  indicatorDotActive: { backgroundColor: '#fff' },
+
+  /* restaurant name bubble */
   restaurantBubble: {
     position: 'absolute',
     top: 90,
     alignSelf: 'center',
     paddingVertical: 6,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
     borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
-  restaurantBubbleText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  orderButton: {
-    backgroundColor: Colors.light.primary,
-    borderRadius: 25,
-    paddingVertical: 12,
+  restaurantBubbleText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+
+  /* bottom gradient */
+  bottomGradient: {
+    ...StyleSheet.absoluteFillObject,
+    top: undefined,
+    paddingTop: 120,
+    paddingBottom: 48,
     paddingHorizontal: 24,
-    alignSelf: 'flex-start',
+    justifyContent: 'flex-end',
   },
-  orderButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+
+  /* translucent card holding info + CTA */
   menuItemInfo: {
-    marginBottom: 32,
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    borderRadius: 8,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+  },
+
+  /* row for name + price */
+  topRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
   },
-  menuItemName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 4,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
+  menuItemName: { fontSize: 22, fontWeight: '700', color: '#fff', flexShrink: 1 },
   menuItemPrice: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: Colors.light.primary,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    marginLeft: 12,
   },
+
+  /* full-width centred CTA */
+  orderButton: {
+    alignSelf: 'stretch',
+    backgroundColor: Colors.light.primary,
+    borderRadius: 30,
+    paddingVertical: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  orderButtonText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+
+  /* placeholders */
   videoPlaceholder: {
     width: W,
     height: H,
@@ -171,20 +219,4 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   placeholderText: { color: '#999', fontSize: 18 },
-  indicatorContainer: {
-    position: 'absolute',
-    top: 60, 
-    left: 0, 
-    right: 0, 
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  indicatorDot: {
-    width: 8, 
-    height: 8, 
-    borderRadius: 4, 
-    backgroundColor: '#777',
-    marginHorizontal: 4,
-  },
-  indicatorDotActive: { backgroundColor: '#fff' },
 });
