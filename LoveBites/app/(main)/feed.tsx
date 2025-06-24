@@ -7,7 +7,6 @@ import {
   View,
 } from 'react-native';
 import Colors from '@/constants/Colors';
-import { useAuthStore } from '@/store/authStore';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { useVideoManagement } from '@/hooks/useVideoManagement';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
@@ -18,7 +17,6 @@ const { height: H } = Dimensions.get('window');
 
 export default function FeedScreen() {
   const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
-  const { signOut } = useAuthStore();
 
   const { restaurants, menuItems, loading } = useRestaurantData();
   const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
@@ -38,7 +36,6 @@ export default function FeedScreen() {
         isVisible={vVisible}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
-        onSignOut={signOut}
       />
     );
   };

@@ -18,7 +18,6 @@ interface RestaurantCardProps {
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
-  onSignOut: () => void;
 }
  
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
@@ -28,7 +27,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   isVisible,
   onHorizontalScroll,
   onOrderPress,
-  onSignOut,
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
  
@@ -62,11 +60,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         }
         style={styles.flatList}
       />
- 
-      <View style={styles.overlay} pointerEvents="box-none">
-        <TouchableOpacity onPress={onSignOut} style={styles.signOutButton}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
 
         <View style={styles.indicatorContainer} pointerEvents="none">
           {menuItems.map((_, idx) => (
@@ -76,39 +69,34 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
             />
           ))}
         </View>
- 
+
+        <View style={styles.restaurantBubble} pointerEvents="none">
+          <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
+        </View>
         <LinearGradient
           pointerEvents="box-none"
           colors={["transparent", "rgba(0,0,0,0.7)"]}
           style={styles.bottomGradient}
         >
-          <View style={styles.restaurantInfo} pointerEvents="auto">
-            <Text style={styles.restaurantName}>{restaurant.name}</Text>
-            <Text style={styles.restaurantDescription}>{restaurant.description}</Text>
-
-            {currentMenuItem && (
-              <View style={styles.menuItemInfo}>
-                <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
-                <Text style={styles.menuItemDescription}>{currentMenuItem.description}</Text>
-                <Text style={styles.menuItemPrice}>£{currentMenuItem.price.toFixed(2)}</Text>
-              </View>
-            )}
-
+          {currentMenuItem && (
             <TouchableOpacity
-              style={styles.orderButton}
+            style={styles.menuItemInfo}
               onPress={() =>
                 onOrderPress(restaurant.order_links as Record<string, string> | null)
               }
             >
-              <Text style={styles.orderButtonText}>Order Now</Text>
+              <Text style={styles.menuItemName}>{currentMenuItem.name}</Text>
+              <Text style={styles.menuItemPrice}>£{currentMenuItem.price.toFixed(2)}</Text>
+              <View style={styles.orderButton} pointerEvents="none">
+                <Text style={styles.orderButtonText}>Order Now</Text>
+                </View>
             </TouchableOpacity>
-          </View>
+          )}
         </LinearGradient>
       </View>
-    </View>
   );
 };
- 
+
 const styles = StyleSheet.create({
   container: { width: W, height: H },
   videoContainer: { width: W, height: H },
@@ -129,30 +117,19 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     justifyContent: 'flex-end',
   },
-  signOutButton: {
-    padding: 8,
-    alignSelf: 'flex-end',
+  restaurantBubble: {
+    position: 'absolute',
+    top: 90,
+    alignSelf: 'center',
+    paddingVertical: 6,
     backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
-  signOutText: { color: '#fff', fontSize: 16 },
-  restaurantInfo: { zIndex: 1, backgroundColor: 'transparent' },
-  restaurantName: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  restaurantBubbleText: {
     color: '#fff',
-    marginBottom: 8,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  restaurantDescription: {
-    fontSize: 16,
-    color: '#eee',
-    marginBottom: 20,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
+    fontSize: 18,
+    fontWeight: '600',
   },
   orderButton: {
     backgroundColor: Colors.light.primary,
@@ -163,23 +140,16 @@ const styles = StyleSheet.create({
   },
   orderButtonText: { color: '#fff', fontSize: 18, fontWeight: '600' },
   menuItemInfo: {
-    marginBottom: 16,
-    padding: 12,
+    marginBottom: 32,
+    padding: 16,
     backgroundColor: 'rgba(0,0,0,0.4)',
     borderRadius: 8,
+    alignItems: 'center',
   },
   menuItemName: {
     fontSize: 20,
     fontWeight: '600',
     color: '#fff',
-    marginBottom: 4,
-    textShadowColor: '#000',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  },
-  menuItemDescription: {
-    fontSize: 14,
-    color: '#ddd',
     marginBottom: 4,
     textShadowColor: '#000',
     textShadowOffset: { width: 0, height: 1 },
