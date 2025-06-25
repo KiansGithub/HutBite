@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "LoveBites",
-    "slug": "LoveBites",
+    "name": "LiveBites",
+    "slug": "LiveBites",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -14,14 +14,18 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.livebites.livebites",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.livebites.livebites",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "googleServicesFile": "./google-services.json",
     },
     "web": {
       "bundler": "metro",
@@ -29,6 +33,13 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      [
+        "@react-native-firebase/app",
+        {
+          "configFiles": {
+            "ios": "./GoogleService-Info.plist",
+            "android": "./google-services.json"
+          }}],
       "expo-router",
       [
         "expo-video",

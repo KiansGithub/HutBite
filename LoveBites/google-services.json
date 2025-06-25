@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "342250160381",
+    "project_id": "lovebites-86766",
+    "storage_bucket": "lovebites-86766.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:342250160381:android:cc47ea347c91366d957e94",
+        "android_client_info": {
+          "package_name": "com.livebites.livebites"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCo6dVyn_EEolOCBg64HWXIE9BFKqJ7pgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
