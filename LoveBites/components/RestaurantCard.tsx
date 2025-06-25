@@ -11,6 +11,7 @@ import { VideoPlayer } from './VideoPlayer';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { LinearGradient } from 'expo-linear-gradient';
+import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem =
@@ -108,12 +109,19 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
             {/* full-width button below */}
             <TouchableOpacity
               style={styles.orderButton}
-              onPress={() =>
+              onPress={() => {
+                AnalyticsService.logCustomEvent('order_button_click', {
+                  restaurant_id: restaurant.id.toString(),
+                  restaurant_name: restaurant.name, 
+                  menu_item_id: currentMenuItem.id.toString(),
+                  menu_item_name: currentMenuItem.title, 
+                  menu_item_price: currentMenuItem.price
+                });
                 onOrderPress(restaurant.order_links as Record<
                   string,
                   string
                 > | null)
-              }
+              }}
             >
               <Text style={styles.orderButtonText}>Order Now</Text>
             </TouchableOpacity>

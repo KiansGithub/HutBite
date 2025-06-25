@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/authStore";
 import Colors from "@/constants/Colors";
 import { GradientText } from "@/components/GradientText";
 import { GlassPanel } from "@/components/GlassPanel";
+import AnalyticsService from "@/lib/analytics";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
@@ -25,6 +26,10 @@ export default function SignInScreen() {
   const [isSignUp, setIsSignUp] = useState(false);
 
   const { signIn, signUp } = useAuthStore();
+
+  React.useEffect(() => {
+    AnalyticsService.logScreenView('SignIn', 'AuthScreen');
+  }, []);
 
   const handleAuth = async () => {
     if (!email || !password) {

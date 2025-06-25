@@ -66,6 +66,11 @@ export class AnalyticsService {
             category
         });
     }
+
+    // Custom event for additional tracking 
+    static async logCustomEvent(eventName: string, parameters: Record<string, any>) {
+        await analytics().logEvent(eventName, parameters);
+    }
 }
 
 export default AnalyticsService; 

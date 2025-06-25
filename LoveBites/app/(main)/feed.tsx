@@ -12,6 +12,7 @@ import { useVideoManagement } from '@/hooks/useVideoManagement';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
+import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('window');
 
@@ -22,6 +23,10 @@ export default function FeedScreen() {
   const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
 
   useVideoManagement(restaurants, menuItems, vIndex);
+
+  React.useEffect(() => {
+    AnalyticsService.logScreenView('Feed', 'MainScreen');
+  }, []);
 
   const renderRestaurant = ({ item, index }: { item: any; index: number }) => {
     const menu = menuItems[item.id] || [];
