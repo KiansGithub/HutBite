@@ -9,6 +9,8 @@ interface AuthState {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
+  signInWithApple: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -44,7 +46,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // await AnalyticsService.logSignUp('email');
       // await AnalyticsService.setUserId(data.user.id);
     }
- 
+    return { error };
+  },
+
+  signInWithGoogle: async () => {
+    const { data, error} = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'lovebites://auth/callback',
+      },
+    });
+
+    return {error};
+  },
+
+  signInWithApple: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: 'lovebites://auth/callback',
+      },
+    });
+
     return { error };
   },
  
