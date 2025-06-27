@@ -25,7 +25,7 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const { signIn, signUp } = useAuthStore();
+  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuthStore();
 
   React.useEffect(() => {
     // AnalyticsService.logScreenView('SignIn', 'AuthScreen');
@@ -45,6 +45,25 @@ export default function SignInScreen() {
       Alert.alert("Error", error.message);
     } else {
       router.replace("/(main)/feed");
+    }
+
+    setLoading(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      Alert.alert("Error", error.message);
+    }
+    setLoading(false);
+  };
+
+  const handleAppleSignIn = async () => {
+    setLoading(true);
+    const { error } = await signInWithApple();
+    if (error) {
+      Alert.alert("Error", error.message);
     }
 
     setLoading(false);
@@ -77,15 +96,25 @@ export default function SignInScreen() {
             <Text style={styles.title}>Welcome to LiveBites</Text>
             <Text style={styles.subtitle}>Your culinary adventure awaits</Text>
 
-            {/* OAUTH buttons – same width */}
-            {/* <TouchableOpacity activeOpacity={0.9} style={styles.oauthBtn}>
+             {/* OAUTH buttons – same width */}
+             <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.oauthBtn}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+            >
               <Text style={styles.oauthText}>Continue with Google</Text>
             </TouchableOpacity>
-            <TouchableOpacity activeOpacity={0.9} style={styles.oauthBtn}>
+            <TouchableOpacity
+              activeOpacity={0.9}
+              style={styles.oauthBtn}
+              onPress={handleAppleSignIn}
+              disabled={loading}
+            >
               <Text style={styles.oauthText}>Continue with Apple</Text>
             </TouchableOpacity>
-
-            <Text style={styles.dividerText}>OR CONTINUE WITH EMAIL</Text> */}
+ 
+            <Text style={styles.dividerText}>OR CONTINUE WITH EMAIL</Text>
 
             {/* Sign-in / Sign-up segmented */}
             <View style={styles.segmentedWrapper}>
