@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { StyleSheet } from 'react-native';
 import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
 import { useEvent } from 'expo';
-import AnalyticsService from '@/lib/analytics';
+// import AnalyticsService from '@/lib/analytics';
 
 interface VideoPlayerProps {
     uri: string; 
@@ -36,7 +36,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (isVisible) {
             player.currentTime = 0; 
             player.play();
-            AnalyticsService.logVideoPlay(uri, itemId);
+            // AnalyticsService.logVideoPlay(uri, itemId);
         } else {
             player.pause();
         }
@@ -51,7 +51,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (__DEV__) console.log('[expo-video]', status, error?.message);
 
         if (error) {
-            AnalyticsService.logError(`Video error: ${error.message}`, `Video ID: ${itemId}`);
+            // AnalyticsService.logError(`Video error: ${error.message}`, `Video ID: ${itemId}`);
         }
     }, [status, error]);
 

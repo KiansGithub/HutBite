@@ -9,7 +9,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
 
-import AnalyticsService from '@/lib/analytics';
+// import AnalyticsService from '@/lib/analytics';
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -49,7 +49,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     initialize();
-    AnalyticsService.initialize();
+    // AnalyticsService.initialize();
   }, []);
 
     /* 🔑 make both light & dark themes transparent */

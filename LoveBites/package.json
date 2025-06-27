@@ -14,8 +14,6 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
-    "@react-native-firebase/analytics": "^22.2.1",
-    "@react-native-firebase/app": "^22.2.1",
     "@react-native-masked-view/masked-view": "0.3.2",
     "@react-navigation/native": "^7.1.6",
     "@supabase/supabase-js": "^2.50.0",

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { AnalyticsService } from '@/lib/analytics';
+// import { AnalyticsService } from '@/lib/analytics';
  
 interface AuthState {
   user: User | null;
@@ -26,8 +26,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
  
     if (data.user && data.session) {
       set({ user: data.user, session: data.session });
-      await AnalyticsService.logLogin('email');
-      await AnalyticsService.setUserId(data.user.id);
+      // await AnalyticsService.logLogin('email');
+      // await AnalyticsService.setUserId(data.user.id);
     }
  
     return { error };
@@ -41,8 +41,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
  
     if (data.user && data.session) {
       set({ user: data.user, session: data.session });
-      await AnalyticsService.logSignUp('email');
-      await AnalyticsService.setUserId(data.user.id);
+      // await AnalyticsService.logSignUp('email');
+      // await AnalyticsService.setUserId(data.user.id);
     }
  
     return { error };

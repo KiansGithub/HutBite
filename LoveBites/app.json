@@ -25,7 +25,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "googleServicesFile": "./google-services.json",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -33,13 +33,6 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      [
-        "@react-native-firebase/app",
-        {
-          "configFiles": {
-            "ios": "./GoogleService-Info.plist",
-            "android": "./google-services.json"
-          }}],
       "expo-router",
       [
         "expo-video",
@@ -55,7 +48,11 @@
     },
     "extra": {
       "SUPABASE_URL": "https://tanexoecudctdtlmuqhr.supabase.co",
-      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhbmV4b2VjdWRjdGR0bG11cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzc2NTEsImV4cCI6MjA2NTkxMzY1MX0.t1GE9cjHsXwTDzDRWImLFY22CXctC9ikbQb39OyD75Y"
+      "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhbmV4b2VjdWRjdGR0bG11cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzc2NTEsImV4cCI6MjA2NTkxMzY1MX0.t1GE9cjHsXwTDzDRWImLFY22CXctC9ikbQb39OyD75Y",
+      "router": {},
+      "eas": {
+        "projectId": "166d213b-c90c-4e09-b0a0-d21a5f4078b3"
+      }
     }
   }
 }
