@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/authStore";
 import Colors from "@/constants/Colors";
 import { GradientText } from "@/components/GradientText";
 import { GlassPanel } from "@/components/GlassPanel";
+import { GoogleSignInButton, AppleSignInButton } from "@/components/OAuthButtons";
 // import AnalyticsService from "@/lib/analytics";
 
 export default function SignInScreen() {
@@ -86,20 +87,15 @@ export default function SignInScreen() {
             <Text style={styles.title}>Welcome to LiveBites</Text>
             <Text style={styles.subtitle}>Your culinary adventure awaits</Text>
 {/* OAUTH buttons – same width */}
-<TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.oauthBtn}
+<GoogleSignInButton
               onPress={() => handleOAuth('google')}
-            >
-              <Text style={styles.oauthText}>Continue with Google</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              activeOpacity={0.9}
-              style={styles.oauthBtn}
+              loading={loading}
+            />
+              
+            <AppleSignInButton
               onPress={() => handleOAuth('apple')}
-            >
-              <Text style={styles.oauthText}>Continue with Apple</Text>
-            </TouchableOpacity>
+              loading={loading}
+            />
 
             <Text style={styles.dividerText}>OR CONTINUE WITH EMAIL</Text>
 
