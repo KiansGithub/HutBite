@@ -2,6 +2,7 @@
   "expo": {
     "name": "LiveBites",
     "slug": "LiveBites",
+    "owner": "kiandev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -49,6 +50,7 @@
     "extra": {
       "SUPABASE_URL": "https://tanexoecudctdtlmuqhr.supabase.co",
       "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhbmV4b2VjdWRjdGR0bG11cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzc2NTEsImV4cCI6MjA2NTkxMzY1MX0.t1GE9cjHsXwTDzDRWImLFY22CXctC9ikbQb39OyD75Y",
+      "GOOGLE_WEB_CLIENT_ID": "YOUR_GOOGLE_WEB_CLIENT_ID_HERE",
       "router": {},
       "eas": {
         "projectId": "166d213b-c90c-4e09-b0a0-d21a5f4078b3"

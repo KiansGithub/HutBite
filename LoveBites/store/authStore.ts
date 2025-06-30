@@ -57,10 +57,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const Linking = await import('expo-linking');
  
       // Use the custom scheme for production, exp:// for development
-      const redirectTo = makeRedirectUri({
-        scheme: 'exp',
-        path: 'auth/callback'
-      });
+      const redirectTo = 'livebites://auth/callback';
  
       console.log('Redirect URI:', redirectTo);
  
