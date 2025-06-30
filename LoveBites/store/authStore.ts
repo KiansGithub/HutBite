@@ -52,10 +52,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithProvider: async (provider: 'google' | 'apple') => {
     const AuthSession = await import('expo-auth-session');
+    const WebBrowser = await import('expo-web-browser');
+
     const redirectTo = AuthSession.makeRedirectUri();
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo, skipBrowserRedirect: true },
+      options: { redirectTo },
     });
 
     if (error) {
@@ -63,12 +65,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     if (data?.url) {
-      const res = await AuthSession.startAsync({
-        authUrl: data.url,
-        returnUrl: redirectTo,
-      });
-      if (res.type !== 'success') {
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+
+
+      if (result.type !== 'success') {
         return { error: { message: 'OAuth flow cancelled' } };
+      }
+
+      const { data: { session }, error: sessionError} = await supabase.auth.getSession();
+
+      if (sessionError) {
+        return { error: sessionError };
+      }
+
+      if (session) {
+        set({ user: session.user, session });
       }
     }
 
