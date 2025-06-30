@@ -38,6 +38,17 @@ export const useRestaurantData = () => {
                     const distant: Restaurant[] = [];
 
                     sortedRestaurants.forEach(restaurant => {
+                        // Validate restaurant coordinates 
+                        if (
+                            restaurant.longitude == null || 
+                            restaurant.latitude == null || 
+                            isNaN(restaurant.longitude) || 
+                            isNaN(restaurant.latitude)
+                        ) {
+                            // Put restaurant into distant 
+                            distant.push(restaurant);
+                            return;
+                        }
                         const distance = calculateDistance(
                             location.latitude, 
                             location.longitude, 
@@ -72,7 +83,7 @@ export const useRestaurantData = () => {
         };
 
         fetchData();
-    }, []);
+    }, [location]);
 
     return { restaurants, menuItems, loading };
 };

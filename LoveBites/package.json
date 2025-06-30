@@ -42,7 +42,8 @@
     "react-native-web": "~0.20.0",
     "undefined": "@expo/vector-icons/FontAwesome",
     "zustand": "^5.0.5",
-    "expo-location": "~18.1.5"
+    "expo-location": "~18.1.5",
+    "react-native-maps": "1.20.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

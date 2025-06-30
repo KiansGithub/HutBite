@@ -6,12 +6,14 @@ import {
   ActivityIndicator,
   View,
 } from 'react-native';
+import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { useVideoManagement } from '@/hooks/useVideoManagement';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
+import { useLocation } from '@/hooks/useLocation';
 // import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('window');
@@ -19,6 +21,7 @@ const { height: H } = Dimensions.get('window');
 export default function FeedScreen() {
   const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
 
+  const { location, loading: locationLoading } = useLocation();
   const { restaurants, menuItems, loading } = useRestaurantData();
   const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
 
@@ -49,6 +52,9 @@ export default function FeedScreen() {
     return (
       <View style={[styles.container, styles.center]}>
         <ActivityIndicator size="large" color={Colors.light.primary} />
+        {locationLoading && (
+          <Text style={styles.locationText}>Getting your location...</Text>
+        )}
       </View>
     );
   }
@@ -56,12 +62,19 @@ export default function FeedScreen() {
   return (
     <View style={styles.container}>
       <FlatList
+      {...!location && (
+        <View style={styles.locationBanner}>
+          <Text style={styles.locationBannerText}>
+            Enable location for nearby restaurants
+          </Text>
+        </View>
+      )}
         data={restaurants}
         pagingEnabled
         snapToInterval={H}
         decelerationRate="fast"
         showsVerticalScrollIndicator={false}
-        keyExtractor={r => r.id.toString()}
+        keyExtractor={(r) => r.id.toString()}
         renderItem={renderRestaurant}
         onViewableItemsChanged={onViewableChange}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
@@ -78,4 +91,25 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { justifyContent: 'center', alignItems: 'center' },
+  locationText: {
+    color: Colors.light.primary, 
+    marginTop: 10, 
+    fontSize: 16
+  },
+  locationBanner: {
+    position: 'absolute',
+    top: 50, 
+    left: 20, 
+    right: 20, 
+    backgroundColor: 'rgba(255, 122, 0, 0.9)',
+    padding: 10,
+    borderRadius: 8, 
+    zIndex: 1000, 
+  },
+  locationBannerText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 14, 
+    fontWeight: '600'
+  },
 });
