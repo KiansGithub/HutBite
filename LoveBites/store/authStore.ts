@@ -54,7 +54,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { makeRedirectUri } = await import('expo-auth-session');
     const WebBrowser = await import('expo-web-browser');
 
-    const redirectTo = makeRedirectUri({ scheme: 'exp' });
+    const redirectTo = makeRedirectUri({ scheme: 'livebites' });
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo },
