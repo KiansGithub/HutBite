@@ -51,39 +51,73 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithProvider: async (provider: 'google' | 'apple') => {
-    const { makeRedirectUri } = await import('expo-auth-session');
-    const WebBrowser = await import('expo-web-browser');
-
-    const redirectTo = makeRedirectUri({ scheme: 'livebites' });
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo },
-    });
-
-    if (error) {
-      return { error };
+    try {
+      const { makeRedirectUri } = await import('expo-auth-session');
+      const WebBrowser = await import('expo-web-browser');
+ 
+      const redirectTo = makeRedirectUri();
+      console.log('Redirect URI:', redirectTo);
+ 
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo },
+      });
+ 
+      if (error) {
+        console.error('OAuth initiation error:', error);
+        return { error };
+      }
+ 
+      if (data?.url) {
+        console.log('Opening OAuth URL:', data.url);
+        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+ 
+        console.log('OAuth result:', result);
+ 
+        if (result.type === 'success') {
+          // Wait a moment for the session to be established
+          await new Promise(resolve => setTimeout(resolve, 1000));
+ 
+          // Try to get the session multiple times if needed
+          let attempts = 0;
+          let session = null;
+ 
+          while (attempts < 5 && !session) {
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+ 
+            if (sessionError) {
+              console.error('Session error:', sessionError);
+              return { error: sessionError };
+            }
+ 
+            if (sessionData.session) {
+              session = sessionData.session;
+              break;
+            }
+ 
+            attempts++;
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+ 
+          if (session) {
+            console.log('OAuth success, setting session');
+            set({ user: session.user, session });
+            return { error: null };
+          } else {
+            console.error('No session found after OAuth');
+            return { error: { message: 'Authentication completed but no session found' } };
+          }
+        } else {
+          console.log('OAuth cancelled or failed:', result);
+          return { error: { message: 'OAuth flow cancelled or failed' } };
+        }
+      }
+ 
+      return { error: { message: 'No OAuth URL received' } };
+    } catch (err) {
+      console.error('OAuth error:', err);
+      return { error: { message: 'OAuth flow failed' } };
     }
-
-    if (data?.url) {
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-
-
-      if (result.type !== 'success') {
-        return { error: { message: 'OAuth flow cancelled' } };
-      }
-
-      const { data: { session }, error: sessionError} = await supabase.auth.getSession();
-
-      if (sessionError) {
-        return { error: sessionError };
-      }
-
-      if (session) {
-        set({ user: session.user, session });
-      }
-    }
-
-    return { error: null };
   },
  
   signOut: async () => {
