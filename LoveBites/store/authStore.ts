@@ -9,8 +9,9 @@ interface AuthState {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
-  signInWithApple: () => Promise<{ error: any }>;
+  signInWithProvider: (
+    provider: 'google' | 'apple'
+  ) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -49,26 +50,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { error };
   },
 
-  signInWithGoogle: async () => {
-    const { data, error} = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: 'lovebites://auth/callback',
-      },
-    });
-
-    return {error};
-  },
-
-  signInWithApple: async () => {
+  signInWithProvider: async (provider: 'google' | 'apple') => {
+    const AuthSession = await import('expo-auth-session');
+    const redirectTo = AuthSession.makeRedirectUri();
     const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'apple',
-      options: {
-        redirectTo: 'lovebites://auth/callback',
-      },
+      provider,
+      options: { redirectTo, skipBrowserRedirect: true },
     });
 
-    return { error };
+    if (error) {
+      return { error };
+    }
+
+    if (data?.url) {
+      const res = await AuthSession.startAsync({
+        authUrl: data.url,
+        returnUrl: redirectTo,
+      });
+      if (res.type !== 'success') {
+        return { error: { message: 'OAuth flow cancelled' } };
+      }
+    }
+
+    return { error: null };
   },
  
   signOut: async () => {

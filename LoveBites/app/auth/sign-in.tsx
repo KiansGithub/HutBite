@@ -25,7 +25,7 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const { signIn, signUp, signInWithGoogle, signInWithApple } = useAuthStore();
+  const { signIn, signUp, signInWithProvider } = useAuthStore();
 
   React.useEffect(() => {
     // AnalyticsService.logScreenView('SignIn', 'AuthScreen');
@@ -50,22 +50,12 @@ export default function SignInScreen() {
     setLoading(false);
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleOAuth = async (provider: 'google' | 'apple') => {
     setLoading(true);
-    const { error } = await signInWithGoogle();
+    const { error } = await signInWithProvider(provider);
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert('Error', error.message);
     }
-    setLoading(false);
-  };
-
-  const handleAppleSignIn = async () => {
-    setLoading(true);
-    const { error } = await signInWithApple();
-    if (error) {
-      Alert.alert("Error", error.message);
-    }
-
     setLoading(false);
   };
 
@@ -95,26 +85,24 @@ export default function SignInScreen() {
             {/* Header */}
             <Text style={styles.title}>Welcome to LiveBites</Text>
             <Text style={styles.subtitle}>Your culinary adventure awaits</Text>
-
-             {/* OAUTH buttons – same width */}
-             <TouchableOpacity
+{/* OAUTH buttons – same width */}
+<TouchableOpacity
               activeOpacity={0.9}
               style={styles.oauthBtn}
-              onPress={handleGoogleSignIn}
-              disabled={loading}
+              onPress={() => handleOAuth('google')}
             >
               <Text style={styles.oauthText}>Continue with Google</Text>
             </TouchableOpacity>
             <TouchableOpacity
               activeOpacity={0.9}
               style={styles.oauthBtn}
-              onPress={handleAppleSignIn}
-              disabled={loading}
+              onPress={() => handleOAuth('apple')}
             >
               <Text style={styles.oauthText}>Continue with Apple</Text>
             </TouchableOpacity>
- 
+
             <Text style={styles.dividerText}>OR CONTINUE WITH EMAIL</Text>
+
 
             {/* Sign-in / Sign-up segmented */}
             <View style={styles.segmentedWrapper}>
