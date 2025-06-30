@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/supabase.d';
+import { calculateDistance, shuffleArray } from '@/utils/distance';
+import { useLocation } from './useLocation';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -10,6 +12,7 @@ export const useRestaurantData = () => {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
+    const { location } = useLocation();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -28,7 +31,37 @@ export const useRestaurantData = () => {
                     (grouped[mi.restaurant_id] ??= []).push(mi as MenuItem);
                 });
 
-                setRestaurants(rs ?? []);
+                let sortedRestaurants = rs ?? [];
+
+                if (location) {
+                    const nearby: Restaurant[] = [];
+                    const distant: Restaurant[] = [];
+
+                    sortedRestaurants.forEach(restaurant => {
+                        const distance = calculateDistance(
+                            location.latitude, 
+                            location.longitude, 
+                            restaurant.latitude, 
+                            restaurant.longitude
+                        );
+
+                        if (distance <= 3) {
+                            nearby.push(restaurant);
+                        } else {
+                            distant.push(restaurant);
+                        }
+                    });
+
+                    sortedRestaurants = [
+                        ...shuffleArray(nearby),
+                        ...shuffleArray(distant)
+                    ];
+                } else {
+                    sortedRestaurants = shuffleArray(sortedRestaurants);
+                }
+
+                setRestaurants(sortedRestaurants);
+
                 setMenuItems(grouped);
             } catch (err) {
                 console.error(err);
