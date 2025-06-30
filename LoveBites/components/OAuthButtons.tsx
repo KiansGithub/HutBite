@@ -1,13 +1,17 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
- 
+
 interface OAuthButtonProps {
   onPress: () => void;
   loading?: boolean;
 }
- 
-export const GoogleSignInButton: React.FC<OAuthButtonProps> = ({ onPress, loading }) => {
+
+/* ------------ GOOGLE BUTTON ------------ */
+export const GoogleSignInButton: React.FC<OAuthButtonProps> = ({
+  onPress,
+  loading,
+}) => {
   return (
     <TouchableOpacity
       style={[styles.googleButton, loading && styles.disabled]}
@@ -15,15 +19,24 @@ export const GoogleSignInButton: React.FC<OAuthButtonProps> = ({ onPress, loadin
       disabled={loading}
       activeOpacity={0.9}
     >
-      <View style={styles.googleIconContainer}>
-        <Text style={styles.googleIcon}>G</Text>
-      </View>
+      {/* 1️⃣  Replace with your own local logo if you like */}
+      <Image
+        source={require('@/assets/images/google_logo.png')}
+        style={styles.googleLogo}
+      />
+      {/* 2️⃣  Text is now visually centred, but the icon’s fixed width
+              means we need a LITTLE right-hand padding to keep it centred.
+              Feel free to tweak the 24 → 28 if your label length changes. */}
       <Text style={styles.googleText}>Continue with Google</Text>
     </TouchableOpacity>
   );
 };
- 
-export const AppleSignInButton: React.FC<OAuthButtonProps> = ({ onPress, loading }) => {
+
+/* ------------ APPLE BUTTON ------------ */
+export const AppleSignInButton: React.FC<OAuthButtonProps> = ({
+  onPress,
+  loading,
+}) => {
   return (
     <TouchableOpacity
       style={[styles.appleButton, loading && styles.disabled]}
@@ -36,14 +49,16 @@ export const AppleSignInButton: React.FC<OAuthButtonProps> = ({ onPress, loading
     </TouchableOpacity>
   );
 };
- 
+
+/* ------------ STYLES ------------ */
 const styles = StyleSheet.create({
+  /* Google */
   googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 8,
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     marginBottom: 12,
     borderWidth: 1,
@@ -54,18 +69,11 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
-  googleIconContainer: {
+  googleLogo: {
     width: 20,
     height: 20,
-    marginRight: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleIcon: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#4285f4',
-    fontFamily: 'Product Sans', // Falls back to system font
+    resizeMode: 'contain',
+    marginRight: 12, // tighter than before
   },
   googleText: {
     flex: 1,
@@ -73,8 +81,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: '#3c4043',
-    marginRight: 32, // Compensate for icon space to center text
+    marginRight: 24,  // small compensation keeps text dead-centre
   },
+
+  /* Apple */
   appleButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -93,8 +103,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff',
-    marginRight: 32, // Compensate for icon space to center text
+    marginRight: 32, // same centring trick as before
   },
+
+  /* Shared */
   disabled: {
     opacity: 0.6,
   },
