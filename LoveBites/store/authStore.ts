@@ -51,10 +51,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signInWithProvider: async (provider: 'google' | 'apple') => {
-    const AuthSession = await import('expo-auth-session');
+    const { makeRedirectUri } = await import('expo-auth-session');
     const WebBrowser = await import('expo-web-browser');
 
-    const redirectTo = AuthSession.makeRedirectUri({ useProxy: true })
+    const redirectTo = makeRedirectUri({ scheme: 'exp' });
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo },
