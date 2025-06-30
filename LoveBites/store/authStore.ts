@@ -84,9 +84,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         console.log('Opening OAuth URL:', data.url);
  
         // Set up a listener for the redirect
-        const handleRedirect = (url: string) => {
-          console.log('Received redirect URL:', url);
-          if (url.includes('access_token') || url.includes('code')) {
+        const handleRedirect = (event: { url: string }) => {
+          console.log('Received redirect URL:', event.url);
+          if (event.url.includes('access_token') || event.url.includes('code')) {
             WebBrowser.dismissBrowser();
           }
         };
