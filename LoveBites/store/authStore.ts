@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { User, Session } from '@supabase/supabase-js';
+import { Platform } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '@/lib/supabase';
 // import { AnalyticsService } from '@/lib/analytics';
  
@@ -12,6 +14,7 @@ interface AuthState {
   signInWithProvider: (
     provider: 'google' | 'apple'
   ) => Promise<{ error: any | null }>;
+  signInWithAppleNative: () => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -48,6 +51,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // await AnalyticsService.setUserId(data.user.id);
     }
     return { error };
+  },
+
+  signInWithAppleNative: async () => {
+    if (Platform.OS !== 'ios') {
+      return { error: { message: 'Apple sign-in is only available on iOS.' } };
+    }
+
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        throw new Error('No identityToken');
+      }
+
+      const { data, error } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+
+      if (data.session && data.user) {
+        set({ user: data.user, session: data.session });
+      }
+
+      return { error };
+    } catch (e: any) {
+      return { error: e };
+    }
   },
 
   signInWithProvider: async (provider: 'google' | 'apple') => {

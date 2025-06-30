@@ -26,7 +26,7 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
-  const { signIn, signUp, signInWithProvider } = useAuthStore();
+  const { signIn, signUp, signInWithProvider, signInWithAppleNative } = useAuthStore();
 
   React.useEffect(() => {
     // AnalyticsService.logScreenView('SignIn', 'AuthScreen');
@@ -53,7 +53,13 @@ export default function SignInScreen() {
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
     setLoading(true);
-    const { error } = await signInWithProvider(provider);
+    let error;
+    if (provider === 'apple' && Platform.OS === 'ios') {
+      ({ error } = await signInWithAppleNative());
+    } else {
+      ({ error } = await signInWithProvider(provider));
+    }
+
     if (error) {
       Alert.alert('Error', error.message);
     }

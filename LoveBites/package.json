@@ -39,7 +39,8 @@
     "undefined": "@expo/vector-icons/FontAwesome",
     "zustand": "^5.0.5",
     "expo-build-properties": "~0.14.6",
-    "expo-auth-session": "~6.2.0"
+    "expo-auth-session": "~6.2.0",
+    "expo-apple-authentication": "~5.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
