@@ -54,13 +54,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const { makeRedirectUri } = await import('expo-auth-session');
       const WebBrowser = await import('expo-web-browser');
+      const Linking = await import('expo-linking');
  
-      const redirectTo = makeRedirectUri();
+      // Use the custom scheme for production, exp:// for development
+      const redirectTo = makeRedirectUri({
+        scheme: 'exp',
+        path: 'auth/callback'
+      });
+ 
       console.log('Redirect URI:', redirectTo);
  
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo },
+        options: {
+          redirectTo,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
+        },
       });
  
       if (error) {
@@ -70,24 +82,42 @@ export const useAuthStore = create<AuthState>((set, get) => ({
  
       if (data?.url) {
         console.log('Opening OAuth URL:', data.url);
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
  
+        // Set up a listener for the redirect
+        const handleRedirect = (url: string) => {
+          console.log('Received redirect URL:', url);
+          if (url.includes('access_token') || url.includes('code')) {
+            WebBrowser.dismissBrowser();
+          }
+        };
+ 
+        const subscription = Linking.addEventListener('url', handleRedirect);
+ 
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectTo,
+          {
+            showInRecents: false,
+          }
+        );
+ 
+        subscription?.remove();
         console.log('OAuth result:', result);
  
-        if (result.type === 'success') {
-          // Wait a moment for the session to be established
-          await new Promise(resolve => setTimeout(resolve, 1000));
+        if (result.type === 'success' || result.type === 'cancel') {
+          // Wait for the session to be established
+          await new Promise(resolve => setTimeout(resolve, 2000));
  
-          // Try to get the session multiple times if needed
+          // Check for session multiple times
           let attempts = 0;
           let session = null;
  
-          while (attempts < 5 && !session) {
+          while (attempts < 10 && !session) {
             const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
  
             if (sessionError) {
               console.error('Session error:', sessionError);
-              return { error: sessionError };
+              break;
             }
  
             if (sessionData.session) {
@@ -96,7 +126,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             }
  
             attempts++;
-            await new Promise(resolve => setTimeout(resolve, 500));
+            console.log(`Attempt ${attempts}: No session found, retrying...`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
           }
  
           if (session) {
@@ -105,18 +136,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             return { error: null };
           } else {
             console.error('No session found after OAuth');
-            return { error: { message: 'Authentication completed but no session found' } };
+            return { error: { message: 'Authentication completed but no session found. Please try again.' } };
           }
         } else {
           console.log('OAuth cancelled or failed:', result);
-          return { error: { message: 'OAuth flow cancelled or failed' } };
+          return { error: { message: 'Authentication was cancelled' } };
         }
       }
  
       return { error: { message: 'No OAuth URL received' } };
     } catch (err) {
       console.error('OAuth error:', err);
-      return { error: { message: 'OAuth flow failed' } };
+      return { error: { message: 'Authentication failed. Please try again.' } };
     }
   },
  
