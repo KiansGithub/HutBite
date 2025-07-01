@@ -11,6 +11,8 @@ import { VideoPlayer } from './VideoPlayer';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { useLikes } from '@/hooks/useLikes';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -127,8 +129,44 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
             </TouchableOpacity>
           </View>
         )}
+
+        {/* Like button */}
+        {currentMenuItem && (
+          <LikeButton 
+            restaurantId={restaurant.id}
+            menuItemId={currentMenuItem.id}
+          />
+        )}
       </LinearGradient>
     </View>
+  );
+};
+
+interface LikeButtonProps {
+  restaurantId: string; 
+  menuItemId: string; 
+}
+
+const LikeButton: React.FC<LikeButtonProps> = ({ restaurantId, menuItemId }) => {
+  const { isLiked, loading, toggleLike, canLike } = useLikes({
+    restaurantId, 
+    menuItemId, 
+  });
+
+  if (!canLike) return null; 
+
+  return (
+    <TouchableOpacity 
+      style={styles.likeButton}
+      onPress={toggleLike}
+      disabled={loading}
+    >
+      <Ionicons 
+        name={isLiked ? 'heart' : 'heart-outline'}
+        size={32}
+        color={isLiked ? '#ff3040' : '#fff'}
+      />
+    </TouchableOpacity>
   );
 };
 
@@ -217,6 +255,26 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   orderButtonText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+
+
+
+  /* like button */
+  likeButton: {
+    position: 'absolute',
+    right: 24, 
+    bottom: 200, 
+    width: 56, 
+    height: 56, 
+    borderRadius: 28, 
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25, 
+    shadowRadius: 4, 
+    elevation: 2
+  },
 
   /* placeholders */
   videoPlaceholder: {
