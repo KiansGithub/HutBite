@@ -22,30 +22,50 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
  
   signIn: async (email: string, password: string) => {
+    console.log('🔍 SIGN IN: Starting sign in with email:', email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    console.log('🔍 SIGN IN: Response data:', data);
+    console.log('🔍 SIGN IN: Response error:', error);
+    console.log('🔍 SIGN IN: User from response:', data?.user);
+    console.log('🔍 SIGN IN: Session from response:', data?.session);
  
     if (data.user && data.session) {
+      console.log('🔍 SIGN IN: Setting user and session in store');
       set({ user: data.user, session: data.session });
+      console.log('🔍 SIGN IN: Store updated successfully');
       // await AnalyticsService.logLogin('email');
       // await AnalyticsService.setUserId(data.user.id);
+    } else {
+      console.log('🔍 SIGN IN: No user or session in response');
     }
  
     return { error };
   },
  
   signUp: async (email: string, password: string) => {
+    console.log('🔍 SIGN UP: Starting sign up with email:', email);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
+
+    console.log('🔍 SIGN UP: Response data:', data);
+      console.log('🔍 SIGN UP: Response error:', error);
+      console.log('🔍 SIGN UP: User from response:', data?.user);
+      console.log('🔍 SIGN UP: Session from response:', data?.session);
  
     if (data.user && data.session) {
+      console.log('🔍 SIGN UP: Setting user and session in store');
       set({ user: data.user, session: data.session });
+      console.log('🔍 SIGN UP: Store updated successfully');
       // await AnalyticsService.logSignUp('email');
       // await AnalyticsService.setUserId(data.user.id);
+    } else {
+      console.log('🔍 SIGN UP: No user or session in response');
     }
     return { error };
   },
@@ -152,17 +172,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await supabase.auth.signOut();
     set({ user: null, session: null });
   },
+
+  debugAuthState: () => {
+    const state = get();
+    console.log('🔍 AUTH STORE STATE:');
+    console.log('  User:', state.user);
+    console.log('  Session:', state.session);
+    console.log('  Loading:', state.loading);
+    return state;
+  },
  
   initialize: async () => {
+    console.log('🔍 AUTH STORE: Starting initialization...');
     set({ loading: true });
  
     const { data: { session } } = await supabase.auth.getSession();
+    console.log('🔍 AUTH STORE: Retrieved session:', session);
+    console.log('🔍 AUTH STORE: Session user:', session?.user);
  
     if (session) {
+      console.log('🔍 AUTH STORE: Setting user from session');
       set({ user: session.user, session });
+    } else {
+      console.log('🔍 AUTH STORE: No session found');
     }
  
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log('🔍 AUTH STORE: Auth state changed:', event);
+      console.log('🔍 AUTH STORE: New session:', session);
+      console.log('🔍 AUTH STORE: New user:', session?.user);
       set({
         user: session?.user ?? null,
         session,
@@ -171,5 +209,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
  
     set({ loading: false });
+
+    console.log('🔍 AUTH STORE: Initialization complete');
   },
 }));

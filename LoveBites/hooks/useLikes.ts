@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
+import uuid from 'react-native-uuid';
 
 interface UseLikesProps {
     restaurantId: string; 
@@ -11,6 +12,15 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
     const [isLiked, setIsLiked] = useState(false);
     const [loading, setLoading] = useState(false);
     const { user } = useAuthStore();
+
+    // Debug: Log detailed user state
+    console.log('=== LIKES HOOK DEBUG ===');
+    console.log('User object:', user);
+    console.log('User ID:', user?.id);
+    console.log('User email:', user?.email);
+    console.log('Can like:', !!user);
+    console.log('Restaurant ID:', restaurantId);
+    console.log('Menu Item ID:', menuItemId);
 
     useEffect(() => {
         if (user && restaurantId && menuItemId) {
@@ -60,6 +70,7 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                 const { error } = await supabase 
                   .from('user_likes')
                   .insert({
+                    id: uuid.v4() as string,
                     user_id: user.id, 
                     restaurant_id: restaurantId, 
                     menu_item_id: menuItemId, 
