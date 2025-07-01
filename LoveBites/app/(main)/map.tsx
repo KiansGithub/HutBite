@@ -9,7 +9,7 @@ export default function MapScreen() {
     const { restaurants, loading: restaurantsLoading } = useRestaurantData();
     const { location, loading: locationLoading } = useLocation();
  
-    const loading = restaurantsLoading || locationLoading;
+    const loading = restaurantsLoading;
  
     // Filter restaurants with valid coordinates
     const validRestaurants = restaurants.filter(restaurant =>
