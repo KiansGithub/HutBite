@@ -39,12 +39,14 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         } else {
             console.log('Not checking like status - missing required data');
             setIsLiked(false);
+            return undefined;
         }
     }, [user?.id, restaurantId, menuItemId]);
 
     const checkLikeStatus = async () => {
         if (!user?.id) {
             console.log('No user ID available for like check');
+            setIsLiked(false);
             return;
         }
 
@@ -64,14 +66,17 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
 
               if (error) {
                 console.error('Error checking like status:', error);
+                setIsLiked(false);
                 return;
             }
  
-            const liked = data && data.length > 0;
+            const liked = !!data
+            console.log('Raw data from query:', data);
             console.log('Setting isLiked to:', liked);
             setIsLiked(liked);
         } catch (err) {
             console.error('Exception in checkLikeStatus:', err);
+            setIsLiked(false);
         }
     };
 
