@@ -67,6 +67,29 @@ export interface Database {
           video_url?: string | null
         }
       }
+      user_likes: {
+        Row: {
+          id: string 
+          created_at: string 
+          user_id: string 
+          restaurant_id: string 
+          menu_item_id: string
+        }
+        Insert: {
+          id?: string 
+          created_at?: string 
+          user_id: string 
+          restaurant_id: string 
+          menu_item_id: string
+        }
+        Update: {
+          id?: string 
+          created_at?: string 
+          user_id?: string 
+          restaurant_id?: string 
+          menu_item_id?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
