@@ -13,6 +13,7 @@ import { Database } from '@/lib/supabase.d';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useLikes } from '@/hooks/useLikes';
+import { LikeButton } from './LikeButton';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -139,36 +140,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         )}
       </LinearGradient>
     </View>
-  );
-};
-
-interface LikeButtonProps {
-  restaurantId: string; 
-  menuItemId: string; 
-}
-
-const LikeButton: React.FC<LikeButtonProps> = ({ restaurantId, menuItemId }) => {
-  const { isLiked, loading, toggleLike, canLike } = useLikes({
-    restaurantId, 
-    menuItemId, 
-  });
-
-  console.log('Can like:', canLike);
-
-  if (!canLike) return null; 
-
-  return (
-    <TouchableOpacity 
-      style={styles.likeButton}
-      onPress={toggleLike}
-      disabled={loading}
-    >
-      <Ionicons 
-        name={isLiked ? 'heart' : 'heart-outline'}
-        size={32}
-        color={isLiked ? '#ff3040' : '#fff'}
-      />
-    </TouchableOpacity>
   );
 };
 

@@ -44,7 +44,8 @@
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.20.0",
     "undefined": "@expo/vector-icons/FontAwesome",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.5",
+    "expo-haptics": "~14.1.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
