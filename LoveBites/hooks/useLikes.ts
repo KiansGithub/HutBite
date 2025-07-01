@@ -19,65 +19,102 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
     console.log('User ID:', user?.id);
     console.log('User email:', user?.email);
     console.log('Can like:', !!user);
-    console.log('Restaurant ID:', restaurantId);
-    console.log('Menu Item ID:', menuItemId);
+    console.log('Restaurant ID:', restaurantId, 'Type:', typeof restaurantId);
+    console.log('Menu Item ID:', menuItemId, 'Type:', typeof menuItemId);
+    console.log('Current isLiked state:', isLiked);
 
     useEffect(() => {
+        console.log('=== LIKES HOOK useEffect triggered ===');
+        console.log('User exists:', !!user);
+        console.log('Restaurant ID exists:', !!restaurantId);
+        console.log('Menu Item ID exists:', !!menuItemId);
+
         if (user && restaurantId && menuItemId) {
-            checkLikeStatus();
+            // Add a small delay to ensure auth is fully settled
+            const timer = setTimeout(() => {
+                checkLikeStatus();
+            }, 100);
+ 
+            return () => clearTimeout(timer);
+        } else {
+            console.log('Not checking like status - missing required data');
+            setIsLiked(false);
         }
-    }, [user, restaurantId, menuItemId]);
+    }, [user?.id, restaurantId, menuItemId]);
 
     const checkLikeStatus = async () => {
-        if (!user) return; 
+        if (!user?.id) {
+            console.log('No user ID available for like check');
+            return;
+        }
+
+        console.log('=== CHECKING LIKE STATUS ===');
+        console.log('Checking for user_id:', user.id);
+        console.log('restaurant_id:', restaurantId);
+        console.log('menu_item_id:', menuItemId);
 
         try {
             const { data, error } = await supabase 
               .from('user_likes')
               .select('id')
               .eq('user_id', user.id)
-              .eq('restaurant_id', restaurantId)
-              .eq('menu_item_id', menuItemId)
-              .single();
+              .eq('restaurant_id', restaurantId.toString()) // Ensure string
+              .eq('menu_item_id', menuItemId.toString()) // Ensure string
+              .limit(1); // Just get one to check existence
 
-        if (error && error.code !== 'PGRST116') {
-            console.error('Error checking like status:', error);
-            return;
-        }
-
-        setIsLiked(!!data);
+              if (error) {
+                console.error('Error checking like status:', error);
+                return;
+            }
+ 
+            const liked = data && data.length > 0;
+            console.log('Setting isLiked to:', liked);
+            setIsLiked(liked);
         } catch (err) {
-            console.error('Error checking like status:', err);
+            console.error('Exception in checkLikeStatus:', err);
         }
     };
 
     const toggleLike = async () => {
-        if (!user || loading) return; 
+        if (!user?.id || loading) {
+            console.log('Cannot toggle like - no user or loading');
+            return;
+        }
+ 
+        console.log('=== TOGGLING LIKE ===');
+        console.log('Current isLiked:', isLiked);
+        console.log('User ID:', user.id);
+        console.log('Restaurant ID:', restaurantId);
+        console.log('Menu Item ID:', menuItemId);
 
         setLoading(true);
         try {
             if (isLiked) {
-                const { error } = await supabase 
+                console.log('Removing like...');
+                const { error } = await supabase
                   .from('user_likes')
                   .delete()
                   .eq('user_id', user.id)
-                  .eq('restaurant_id', restaurantId)
-                  .eq('menu_item_id', menuItemId);
+                  .eq('restaurant_id', restaurantId.toString())
+                  .eq('menu_item_id', menuItemId.toString());
 
-                  if (error) throw error; 
-                  setIsLiked(false);
+                  if (error) throw error;
+                setIsLiked(false);
+                console.log('Successfully removed like');
             } else {
-                const { error } = await supabase 
+                console.log('Adding like...');
+                const { error } = await supabase
                   .from('user_likes')
                   .insert({
                     id: uuid.v4() as string,
-                    user_id: user.id, 
-                    restaurant_id: restaurantId, 
-                    menu_item_id: menuItemId, 
+                    user_id: user.id,
+                    restaurant_id: restaurantId.toString(),
+                    menu_item_id: menuItemId.toString(),
                   });
                 
                 if (error) throw error; 
                 setIsLiked(true);
+                console.log('Successfully added like');
             }
         } catch (err) {
             console.error('Error toggling like:', err);
