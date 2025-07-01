@@ -70,7 +70,7 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                 return;
             }
  
-            const liked = !!data
+            const liked = Array.isArray(data) && data.length > 0;
             console.log('Raw data from query:', data);
             console.log('Setting isLiked to:', liked);
             setIsLiked(liked);
