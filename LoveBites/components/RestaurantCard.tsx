@@ -48,6 +48,11 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
 
   return (
     <View style={styles.container}>
+      {/* <ExpandableSearchBar
+    value={searchQuery}
+    onChangeText={onSearchQueryChange}
+    onClear={() => onSearchQueryChange('')}
+  /> */}
       {/* ──────────────── Media carousel ──────────────── */}
       <FlatList
         data={menuItems}
@@ -95,18 +100,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
       <View style={styles.restaurantBubble} pointerEvents="none">
         <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
       </View>
-
-      {/* ──────────────── Search bubble ──────────────── */}
-<View style={styles.searchBubble}>
-  <ExpandableSearchBar
-    value={searchQuery}
-    onChangeText={onSearchQueryChange}
-    containerStyle={styles.searchBarInner}   // keeps padding tight
-    onClear={() => onSearchQueryChange('')}
-  />
-</View>
-
-      
 
       {/* ──────────────── Bottom overlay ──────────────── */}
       <LinearGradient
@@ -294,7 +287,7 @@ searchBubble: {
   borderRadius: 20,
   paddingVertical: 4,
   paddingHorizontal: 6,
-
+  pointerEvents: "box-none",
   zIndex: 10,
   flexDirection: 'row',
   alignItems: 'center',
