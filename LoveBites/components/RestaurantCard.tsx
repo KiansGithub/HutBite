@@ -14,6 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useLikes } from '@/hooks/useLikes';
 import { LikeButton } from './LikeButton';
+import { ExpandableSearchBar } from './ExpandableSearchBar';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -29,6 +30,8 @@ interface RestaurantCardProps {
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
+  searchQuery: string;
+  onSearchQueryChange: (text: string) => void;
 }
 
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
@@ -38,6 +41,8 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   isVisible,
   onHorizontalScroll,
   onOrderPress,
+  searchQuery,
+  onSearchQueryChange,
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
 
@@ -90,6 +95,18 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
       <View style={styles.restaurantBubble} pointerEvents="none">
         <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
       </View>
+
+      {/* ──────────────── Search bubble ──────────────── */}
+<View style={styles.searchBubble}>
+  <ExpandableSearchBar
+    value={searchQuery}
+    onChangeText={onSearchQueryChange}
+    containerStyle={styles.searchBarInner}   // keeps padding tight
+    onClear={() => onSearchQueryChange('')}
+  />
+</View>
+
+      
 
       {/* ──────────────── Bottom overlay ──────────────── */}
       <LinearGradient
@@ -229,7 +246,16 @@ const styles = StyleSheet.create({
   },
   orderButtonText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 
-
+  /* search bar */
+  searchBarWrapper: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+  },
+  searchBarContainer: {
+    paddingHorizontal: 0,
+    paddingVertical: 0,
+  },
 
   /* like button */
   likeButton: {
@@ -260,4 +286,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
   },
   placeholderText: { color: '#999', fontSize: 18 },
+  /* pill matching restaurantBubble, but interactive */
+searchBubble: {
+  position: 'absolute',
+  top: 88,          // same “level” as the name
+  right: 20,
+  borderRadius: 20,
+  paddingVertical: 4,
+  paddingHorizontal: 6,
+
+  zIndex: 10,
+  flexDirection: 'row',
+  alignItems: 'center',
+},
+
+/* trims default padding from ExpandableSearchBar’s root */
+searchBarInner: {
+  paddingHorizontal: 0,
+  paddingVertical: 0,
+},
 });
