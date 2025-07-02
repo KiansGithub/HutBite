@@ -70,9 +70,9 @@ const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingVertical: 10,
+    alignItems: 'flex-end',
   },
   iconButton: {
-    alignSelf: 'flex-end',
     padding: 8,
     backgroundColor: 'rgba(0,0,0,0.8)',
     borderRadius: 20,
