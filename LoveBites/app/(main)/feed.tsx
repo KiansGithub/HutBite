@@ -16,6 +16,8 @@ import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchBar } from '@/components/SearchBar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ExpandableSearchBar } from '@/components/ExpandableSearchBar';
 // import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('window');
@@ -66,8 +68,8 @@ export default function FeedScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <SearchBar 
+    <SafeAreaView style={styles.container}>
+      <ExpandableSearchBar 
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -94,7 +96,7 @@ export default function FeedScreen() {
         orderLinks={orderLinks}
         onClose={() => setOrderLinks(null)}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
