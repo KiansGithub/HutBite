@@ -14,6 +14,8 @@ import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
+import { useSearch } from '@/hooks/useSearch';
+import { SearchBar } from '@/components/SearchBar';
 // import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('window');
@@ -22,7 +24,11 @@ export default function FeedScreen() {
   const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
 
   const { location, loading: locationLoading } = useLocation();
-  const { restaurants, menuItems, loading } = useRestaurantData();
+  const { restaurants: allRestaurants, menuItems, loading } = useRestaurantData();
+  const { searchQuery, setSearchQuery, searchResults, isSearching } = useSearch(allRestaurants);
+
+  // Use search results when searching, otherwise use all restaurants 
+  const restaurants = isSearching? searchResults: allRestaurants;
   const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
 
   useVideoManagement(restaurants, menuItems, vIndex);
@@ -61,6 +67,10 @@ export default function FeedScreen() {
 
   return (
     <View style={styles.container}>
+      <SearchBar 
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
       <FlatList
       {...!location && (
         <View style={styles.locationBanner}>

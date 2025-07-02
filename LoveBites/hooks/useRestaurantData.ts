@@ -8,7 +8,7 @@ import { useLocation } from './useLocation';
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
 
-export const useRestaurantData = () => {
+export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
@@ -33,7 +33,9 @@ export const useRestaurantData = () => {
 
                 let sortedRestaurants = rs ?? [];
 
-                if (location) {
+                if (searchResults && searchResults.length > 0) {
+                    sortedRestaurants = searchResults; 
+                } else if (location) {
                     const nearby: Restaurant[] = [];
                     const distant: Restaurant[] = [];
 
@@ -83,7 +85,7 @@ export const useRestaurantData = () => {
         };
 
         fetchData();
-    }, [location]);
+    }, [location, searchResults]);
 
     return { restaurants, menuItems, loading };
 };
