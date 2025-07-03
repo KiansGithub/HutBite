@@ -23,7 +23,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         { uri, useCaching: true },
         p => {
             p.loop = true; 
-            p.muted = true; 
+            p.muted = false; 
             p.bufferOptions = {
                 minBufferForPlayback: 0.5, 
                 preferredForwardBufferDuration: 20, 
@@ -63,6 +63,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           contentFit="contain"
           allowsFullscreen
           allowsPictureInPicture
+          nativeControls={false}
           useExoShutter={false}
           surfaceType="textureView"
         />

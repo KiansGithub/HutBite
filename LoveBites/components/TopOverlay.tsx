@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StyleSheet, View, Animated } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
 import { ExpandableSearchBar } from './ExpandableSearchBar';
 
@@ -59,10 +60,16 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
 
                     {distance !== undefined && (
                         <View style={styles.distanceBadge}>
-                        <Text style={styles.distanceBadgeText}>
-                          {distance < 1 ? '<1' : distance.toFixed(1)} mi
-                        </Text>
-                      </View>
+                        <Ionicons
+                              name="location-outline"
+                              size={12}
+                              color="#fff"
+                              style={styles.distanceBadgeIcon}
+                            />
+                            <Text style={styles.distanceBadgeText}>
+                              {distance < 1 ? '<1' : distance.toFixed(1)} mi
+                            </Text>
+                        </View>
                     )}
                 </View>
             )}
@@ -136,10 +143,15 @@ const styles = StyleSheet.create({
     },
      /* Distance badge */
   distanceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 4,
     paddingHorizontal: 12,
     borderRadius: 12,
     backgroundColor: 'rgba(255, 122, 0, 0.9)',
+  },
+  distanceBadgeIcon: {
+    marginRight: 4,
   },
   distanceBadgeText: {
     color: '#fff',
