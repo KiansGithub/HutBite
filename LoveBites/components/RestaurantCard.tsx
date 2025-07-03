@@ -109,9 +109,9 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
               <Text numberOfLines={1} style={styles.menuItemName}>
                 {currentMenuItem.title}
               </Text>
-              <Text style={styles.menuItemPrice}>
+              {/* <Text style={styles.menuItemPrice}>
                 £{currentMenuItem.price.toFixed(2)}
-              </Text>
+              </Text> */}
             </View>
 
             {/* description section */}
@@ -153,7 +153,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
                 > | null)
               }}
             >
-              <Text style={styles.orderButtonText}>Order Now</Text>
+              <Text style={styles.orderButtonText}>Order Now   |    £{currentMenuItem.price.toFixed(2)}</Text>
             </TouchableOpacity>
           </View>
         )}
