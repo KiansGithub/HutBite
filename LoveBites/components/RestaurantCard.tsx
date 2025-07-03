@@ -14,8 +14,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useLikes } from '@/hooks/useLikes';
 import { LikeButton } from './LikeButton';
-import { ExpandableSearchBar } from './ExpandableSearchBar';
-import { TopOverlay } from './TopOverlay';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -31,8 +29,6 @@ interface RestaurantCardProps {
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
-  searchQuery: string;
-  onSearchQueryChange: (text: string) => void;
   distance?: number; 
 }
 
@@ -43,8 +39,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   isVisible,
   onHorizontalScroll,
   onOrderPress,
-  searchQuery,
-  onSearchQueryChange,
   distance, 
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
@@ -79,16 +73,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           )
         }
         style={styles.flatList}
-      />
-
-      {/* ──────────────── Top Overlay with organized elements ──────────────── */}
-      <TopOverlay
-        restaurantName={restaurant.name}
-        distance={distance}
-        currentIndex={horizontalIndex}
-        totalItems={menuItems.length}
-        searchQuery={searchQuery}
-        onSearchQueryChange={onSearchQueryChange}
       />
 
       {/* ──────────────── Bottom overlay ──────────────── */}

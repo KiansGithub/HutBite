@@ -15,6 +15,7 @@ import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
+import { TopOverlay } from '@/components/TopOverlay';
 // import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('window');
@@ -49,8 +50,6 @@ export default function FeedScreen() {
         isVisible={vVisible}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
         distance={item.distance}
       />
     );
@@ -110,6 +109,16 @@ export default function FeedScreen() {
         renderItem={renderRestaurant}
         onViewableItemsChanged={onViewableChange}
         viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
+      />
+
+      {/* TopOverlay at page level */}
+      <TopOverlay
+        restaurantName={restaurants[vIndex]?.name || ''}
+        distance={restaurants[vIndex]?.distance}
+        currentIndex={hIndex[restaurants[vIndex]?.id] ?? 0}
+        totalItems={menuItems[restaurants[vIndex]?.id]?.length ?? 0}
+        searchQuery={searchQuery}
+        onSearchQueryChange={setSearchQuery}
       />
 
       <OrderLinksModal
