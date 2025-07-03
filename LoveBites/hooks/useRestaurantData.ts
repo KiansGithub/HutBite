@@ -7,9 +7,10 @@ import { useLocation } from './useLocation';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
+type RestaurantWithDistance = Restaurant & { distance?: number };
 
 export const useRestaurantData = (searchResults?: Restaurant[]) => {
-    const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+    const [restaurants, setRestaurants] = useState<RestaurantWithDistance[]>([]);
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
     const { location } = useLocation();
@@ -33,24 +34,18 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
 
                 let sortedRestaurants = rs ?? [];
 
-                if (searchResults && searchResults.length > 0) {
-                    sortedRestaurants = searchResults; 
-                } else if (location) {
-                    const nearby: Restaurant[] = [];
-                    const distant: Restaurant[] = [];
-
-                    sortedRestaurants.forEach(restaurant => {
-                        // Validate restaurant coordinates 
+                // Calculate distances for all restaurants if location is available 
+                if (location) {
+                    sortedRestaurants = sortedRestaurants.map(restaurant => {
                         if (
-                            restaurant.longitude == null || 
-                            restaurant.latitude == null || 
-                            isNaN(restaurant.longitude) || 
+                            restaurant.longitude == null ||
+                            restaurant.latitude == null ||
+                            isNaN(restaurant.longitude) ||
                             isNaN(restaurant.latitude)
                         ) {
-                            // Put restaurant into distant 
-                            distant.push(restaurant);
-                            return;
+                            return { ...restaurant, distance: undefined };
                         }
+
                         const distance = calculateDistance(
                             location.latitude, 
                             location.longitude, 
@@ -58,7 +53,27 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                             restaurant.longitude
                         );
 
-                        if (distance <= 3) {
+                        return { ...restaurant, distance };
+                    });
+                }
+
+                if (searchResults && searchResults.length > 0) {
+                    sortedRestaurants = searchResults.map(restaurant => {
+                        const existingRestaurant = sortedRestaurants.find(r => r.id === restaurant.id);
+                        return existingRestaurant || restaurant; 
+                    });
+                } else if (location) {
+                    const nearby: Restaurant[] = [];
+                    const distant: Restaurant[] = [];
+
+                    sortedRestaurants.forEach(restaurant => {
+                        if (restaurant.distance === undefined) {
+                            // Put restaurant into distant 
+                            distant.push(restaurant);
+                            return;
+                        }
+
+                        if (restaurant.distance <= 3) {
                             nearby.push(restaurant);
                         } else {
                             distant.push(restaurant);
