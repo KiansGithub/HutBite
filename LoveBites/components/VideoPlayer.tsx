@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
 import { useEvent } from 'expo';
 // import AnalyticsService from '@/lib/analytics';
@@ -19,6 +19,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     width, 
     height,
 }) => {
+    const [isPlaying, setIsPlaying] = useState(false);
     const player = useVideoPlayer(
         { uri, useCaching: true },
         p => {
@@ -32,13 +33,25 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
     );
 
+    const handleTap = () => {
+        if (isPlaying) {
+            player.pause();
+            setIsPlaying(false);
+        } else {
+            player.play();
+            setIsPlaying(true);
+        }
+    };
+
     useEffect(() => {
         if (isVisible) {
             player.currentTime = 0; 
             player.play();
+            setIsPlaying(true);
             // AnalyticsService.logVideoPlay(uri, itemId);
         } else {
             player.pause();
+            setIsPlaying(false);
         }
     }, [isVisible]);
 
@@ -56,6 +69,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, [status, error]);
 
     return (
+        <TouchableWithoutFeedback onPress={handleTap}>
         <VideoView
           key={uri}
           player={player}
@@ -67,6 +81,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           useExoShutter={false}
           surfaceType="textureView"
         />
+        </TouchableWithoutFeedback>
       );
     };
      
