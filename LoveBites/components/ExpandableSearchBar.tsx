@@ -1,5 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { StyleSheet, View, TextInput, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TextInput,
+  TouchableOpacity,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface ExpandableSearchBarProps {
@@ -7,6 +14,7 @@ interface ExpandableSearchBarProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   onClear?: () => void;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
@@ -14,6 +22,7 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
   onChangeText,
   placeholder = 'Search restaurants, cuisines...',
   onClear,
+  style
 }) => {
   const [expanded, setExpanded] = useState(false);
   const inputRef = useRef<TextInput>(null);
@@ -29,7 +38,7 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, style]}>
       {expanded ? (
         <View style={styles.searchContainer}>
           <TouchableOpacity onPress={collapse} style={styles.backButton}>
@@ -70,6 +79,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     position: 'absolute',
     top: 100,
+    left: 20,
     right: 20,
     zIndex: 20
   },

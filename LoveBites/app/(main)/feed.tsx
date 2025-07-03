@@ -51,6 +51,7 @@ export default function FeedScreen() {
         onOrderPress={setOrderLinks}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
+        distance={item.distance}
       />
     );
   };

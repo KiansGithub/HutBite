@@ -32,6 +32,7 @@ interface RestaurantCardProps {
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
   searchQuery: string;
   onSearchQueryChange: (text: string) => void;
+  distance?: number; 
 }
 
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
@@ -43,6 +44,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   onOrderPress,
   searchQuery,
   onSearchQueryChange,
+  distance, 
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
 
@@ -100,6 +102,15 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
       <View style={styles.restaurantBubble} pointerEvents="none">
         <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
       </View>
+
+     {/* ──────────────── Distance badge ──────────────── */}
+     {distance !== undefined && (
+      <View style={styles.distanceBadge} pointerEvents="none">
+        <Text style={styles.distanceBadgeText}>
+          {distance < 1 ? '<1' : distance.toFixed(1)} mi
+        </Text>
+      </View>
+     )}
 
       {/* ──────────────── Bottom overlay ──────────────── */}
       <LinearGradient
@@ -190,6 +201,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   restaurantBubbleText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+
+  /* distance badge */
+  distanceBadge: {
+    position: 'absolute',
+    top: 125, 
+    alignSelf: 'center',
+    paddingVertical: 4, 
+    paddingHorizontal: 12, 
+    borderRadius: 12, 
+    backgroundColor: 'rgba(255, 122, 0, 0.9)'
+  },
+  distanceBadgeText: {
+    color: '#fff',
+    fontSize: 12, 
+    fontWeight: '600'
+  },
 
   /* bottom gradient */
   bottomGradient: {
