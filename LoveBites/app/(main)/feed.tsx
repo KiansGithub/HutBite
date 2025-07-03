@@ -67,6 +67,30 @@ export default function FeedScreen() {
     );
   }
 
+  // Handle empty search results 
+  if (isSearching && restaurants.length === 0) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.noResultsText}>No restuarants found</Text>
+        <Text style={styles.noResultsSubtext}>
+          Try adjusting your search terms
+        </Text>
+      </View>
+    );
+  }
+
+  // Handle no restaurants at all 
+  if (!isSearching && restaurants.length === 0) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={styles.noResultsText}>No restaurants available</Text>
+        <Text style={styles.noResultsSubtext}>
+          Check back later for new restaurants
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -119,5 +143,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14, 
     fontWeight: '600'
+  },
+  noResultsText: {
+    color: '#fff',
+    fontSize: 18, 
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 8, 
+  },
+  noResultsSubtext: {
+    color: '#999',
+    fontSize: 14, 
+    textAlign: 'center'
   },
 });
