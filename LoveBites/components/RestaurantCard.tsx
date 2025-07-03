@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLikes } from '@/hooks/useLikes';
 import { LikeButton } from './LikeButton';
 import { ExpandableSearchBar } from './ExpandableSearchBar';
+import { TopOverlay } from './TopOverlay';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -80,37 +81,15 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         style={styles.flatList}
       />
 
-      {/* ──────────────── Paging dots ──────────────── */}
-      <View style={styles.indicatorContainer} pointerEvents="none">
-        {menuItems.map((_, idx) => (
-          <View
-            key={idx}
-            style={[
-              styles.indicatorDot,
-              idx === horizontalIndex && styles.indicatorDotActive,
-            ]}
-          />
-        ))}
-      </View>
-      <ExpandableSearchBar
-    value={searchQuery}
-    onChangeText={onSearchQueryChange}
-    onClear={() => onSearchQueryChange('')}
-  />
-
-      {/* ──────────────── Restaurant name ──────────────── */}
-      <View style={styles.restaurantBubble} pointerEvents="none">
-        <Text style={styles.restaurantBubbleText}>{restaurant.name}</Text>
-      </View>
-
-     {/* ──────────────── Distance badge ──────────────── */}
-     {distance !== undefined && (
-      <View style={styles.distanceBadge} pointerEvents="none">
-        <Text style={styles.distanceBadgeText}>
-          {distance < 1 ? '<1' : distance.toFixed(1)} mi
-        </Text>
-      </View>
-     )}
+      {/* ──────────────── Top Overlay with organized elements ──────────────── */}
+      <TopOverlay
+        restaurantName={restaurant.name}
+        distance={distance}
+        currentIndex={horizontalIndex}
+        totalItems={menuItems.length}
+        searchQuery={searchQuery}
+        onSearchQueryChange={onSearchQueryChange}
+      />
 
       {/* ──────────────── Bottom overlay ──────────────── */}
       <LinearGradient
@@ -171,52 +150,6 @@ const styles = StyleSheet.create({
   container: { width: W, height: H },
   videoContainer: { width: W, height: H },
   flatList: { width: W, height: H },
-
-  /* indicator dots */
-  indicatorContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  indicatorDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#777',
-    marginHorizontal: 4,
-  },
-  indicatorDotActive: { backgroundColor: '#fff' },
-
-  /* restaurant name bubble */
-  restaurantBubble: {
-    position: 'absolute',
-    top: 90,
-    alignSelf: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-  },
-  restaurantBubbleText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-
-  /* distance badge */
-  distanceBadge: {
-    position: 'absolute',
-    top: 125, 
-    alignSelf: 'center',
-    paddingVertical: 4, 
-    paddingHorizontal: 12, 
-    borderRadius: 12, 
-    backgroundColor: 'rgba(255, 122, 0, 0.9)'
-  },
-  distanceBadgeText: {
-    color: '#fff',
-    fontSize: 12, 
-    fontWeight: '600'
-  },
 
   /* bottom gradient */
   bottomGradient: {

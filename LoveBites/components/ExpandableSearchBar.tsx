@@ -14,6 +14,8 @@ interface ExpandableSearchBarProps {
   onChangeText: (text: string) => void;
   placeholder?: string;
   onClear?: () => void;
+  onExpand?: () => void; 
+  onCollapse?: () => void; 
   style?: StyleProp<ViewStyle>;
 }
 
@@ -22,6 +24,8 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
   onChangeText,
   placeholder = 'Search restaurants, cuisines...',
   onClear,
+  onExpand, 
+  onCollapse, 
   style
 }) => {
   const [expanded, setExpanded] = useState(false);
@@ -29,11 +33,13 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
 
   const expand = () => {
     setExpanded(true);
+    onExpand?.();
     setTimeout(() => inputRef.current?.focus(), 100);
   };
 
   const collapse = () => {
     setExpanded(false);
+    onCollapse?.();
     onClear?.();
   };
 
@@ -75,13 +81,8 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    right: 20,
-    zIndex: 20
+    paddingHorizontal: 0,
+    paddingVertical: 0,
   },
   iconButton: {
     alignSelf: 'flex-end',
