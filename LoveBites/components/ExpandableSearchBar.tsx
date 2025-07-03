@@ -70,7 +70,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     position: 'absolute',
     top: 100,
-    right: 20
+    right: 20,
+    zIndex: 20
   },
   iconButton: {
     alignSelf: 'flex-end',

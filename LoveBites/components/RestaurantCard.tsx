@@ -48,11 +48,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* <ExpandableSearchBar
-    value={searchQuery}
-    onChangeText={onSearchQueryChange}
-    onClear={() => onSearchQueryChange('')}
-  /> */}
       {/* ──────────────── Media carousel ──────────────── */}
       <FlatList
         data={menuItems}
@@ -95,6 +90,11 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           />
         ))}
       </View>
+      <ExpandableSearchBar
+    value={searchQuery}
+    onChangeText={onSearchQueryChange}
+    onClear={() => onSearchQueryChange('')}
+  />
 
       {/* ──────────────── Restaurant name ──────────────── */}
       <View style={styles.restaurantBubble} pointerEvents="none">
