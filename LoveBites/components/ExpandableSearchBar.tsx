@@ -63,7 +63,10 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
           />
           {value.length > 0 && (
             <TouchableOpacity
-              onPress={onClear || (() => onChangeText(''))}
+              onPress={() => {
+                onClear?.();
+                collapse();
+              }}
               style={styles.clearButton}
             >
               <Ionicons name="close-circle" size={20} color="#666" />

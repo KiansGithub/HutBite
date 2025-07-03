@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -42,6 +42,27 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   distance, 
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  const truncateDescription = (text: string, maxLength: number = 80) => {
+    if (text.length <= maxLength) return text; 
+
+    // Find the last complete sentence within the limit 
+    const truncated = text.substring(0, maxLength);
+    const lastSentenceEnd = Math.max(
+      truncated.lastIndexOf('.'),
+      truncated.lastIndexOf('!'),
+      truncated.lastIndexOf('?')
+    );
+
+    if (lastSentenceEnd > 0) {
+      return truncated.substring(0, lastSentenceEnd + 1);
+    }
+
+    // If no sentence end found, truncate at word bounday 
+    const lastSpace = truncated.lastIndexOf(' ');
+    return lastSpace > 0 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
+  };
 
   return (
     <View style={styles.container}>
@@ -92,6 +113,28 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
                 £{currentMenuItem.price.toFixed(2)}
               </Text>
             </View>
+
+            {/* description section */}
+            {currentMenuItem.description && (
+              <View style={styles.descriptionSection}>
+                <Text style={styles.menuItemDescription}>
+                  {isDescriptionExpanded 
+                    ? currentMenuItem.description 
+                    : truncateDescription(currentMenuItem.description)
+                  }
+                </Text>
+                {currentMenuItem.description.length > 80 && (
+                  <TouchableOpacity 
+                    onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    style={styles.expandButton}
+                  >
+                    <Text style={styles.expandButtonText}>
+                      {isDescriptionExpanded ? 'View less': 'View more'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             {/* full-width button below */}
             <TouchableOpacity
@@ -166,6 +209,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.light.primary,
     marginLeft: 12,
+  },
+
+  /* description section */
+  descriptionSection: {
+    marginBottom: 14,
+  },
+  menuItemDescription: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.85)',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  expandButton: {
+    alignSelf: 'flex-start',
+  },
+  expandButtonText: {
+    fontSize: 12,
+    color: Colors.light.primary,
+    fontWeight: '600',
   },
 
   /* full-width centred CTA */
