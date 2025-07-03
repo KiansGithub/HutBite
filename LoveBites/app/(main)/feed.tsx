@@ -66,51 +66,8 @@ export default function FeedScreen() {
     );
   }
 
-  // Handle empty search results 
-  if (isSearching && restaurants.length === 0) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <Text style={styles.noResultsText}>No restuarants found</Text>
-        <Text style={styles.noResultsSubtext}>
-          Try adjusting your search terms
-        </Text>
-      </View>
-    );
-  }
-
-  // Handle no restaurants at all 
-  if (!isSearching && restaurants.length === 0) {
-    return (
-      <View style={[styles.container, styles.center]}>
-        <Text style={styles.noResultsText}>No restaurants available</Text>
-        <Text style={styles.noResultsSubtext}>
-          Check back later for new restaurants
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <FlatList
-      {...!location && (
-        <View style={styles.locationBanner}>
-          <Text style={styles.locationBannerText}>
-            Enable location for nearby restaurants
-          </Text>
-        </View>
-      )}
-        data={restaurants}
-        pagingEnabled
-        snapToInterval={H}
-        decelerationRate="fast"
-        showsVerticalScrollIndicator={false}
-        keyExtractor={(r) => r.id.toString()}
-        renderItem={renderRestaurant}
-        onViewableItemsChanged={onViewableChange}
-        viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
-      />
-
       {/* TopOverlay at page level */}
       <TopOverlay
         restaurantName={restaurants[vIndex]?.name || ''}
@@ -120,6 +77,41 @@ export default function FeedScreen() {
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
       />
+
+{isSearching && restaurants.length === 0 ? (
+        <View style={[styles.container, styles.center, styles.noResultsContainer]}>
+          <Text style={styles.noResultsText}>No restaurants found</Text>
+          <Text style={styles.noResultsSubtext}>
+            Try adjusting your search terms
+          </Text>
+        </View>
+      ) : !isSearching && restaurants.length === 0 ? (
+        <View style={[styles.container, styles.center]}>
+          <Text style={styles.noResultsText}>No restaurants available</Text>
+          <Text style={styles.noResultsSubtext}>
+            Check back later for new restaurants
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          {...!location && (
+            <View style={styles.locationBanner}>
+              <Text style={styles.locationBannerText}>
+                Enable location for nearby restaurants
+              </Text>
+            </View>
+          )}
+          data={restaurants}
+          pagingEnabled
+          snapToInterval={H}
+          decelerationRate="fast"
+          showsVerticalScrollIndicator={false}
+          keyExtractor={(r) => r.id.toString()}
+          renderItem={renderRestaurant}
+          onViewableItemsChanged={onViewableChange}
+          viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
+        />
+      )}
 
       <OrderLinksModal
         orderLinks={orderLinks}
@@ -132,6 +124,9 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   center: { justifyContent: 'center', alignItems: 'center' },
+  noResultsContainer: {
+    paddingTop: 0, 
+  },
   locationText: {
     color: Colors.light.primary, 
     marginTop: 10, 
