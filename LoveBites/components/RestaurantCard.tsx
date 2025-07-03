@@ -30,6 +30,8 @@ interface RestaurantCardProps {
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
   distance?: number; 
+  isDescriptionExpanded: boolean; 
+  setIsDescriptionExpanded: (expanded: boolean) => void; 
 }
 
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
@@ -40,9 +42,10 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   onHorizontalScroll,
   onOrderPress,
   distance, 
+  isDescriptionExpanded, 
+  setIsDescriptionExpanded
 }) => {
   const currentMenuItem = menuItems[horizontalIndex];
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const truncateDescription = (text: string, maxLength: number = 80) => {
     if (text.length <= maxLength) return text; 

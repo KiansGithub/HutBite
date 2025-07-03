@@ -22,6 +22,7 @@ const { height: H } = Dimensions.get('window');
 
 export default function FeedScreen() {
   const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, menuItems, loading } = useRestaurantData();
@@ -32,6 +33,10 @@ export default function FeedScreen() {
   const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
 
   useVideoManagement(restaurants, menuItems, vIndex);
+
+  React.useEffect(() => {
+    setIsDescriptionExpanded(false);
+  }, [vIndex, hIndex]);
 
   React.useEffect(() => {
     // AnalyticsService.logScreenView('Feed', 'MainScreen');
@@ -51,6 +56,8 @@ export default function FeedScreen() {
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
         distance={item.distance}
+        isDescriptionExpanded={isDescriptionExpanded}
+        setIsDescriptionExpanded={setIsDescriptionExpanded}
       />
     );
   };
