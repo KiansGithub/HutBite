@@ -14,13 +14,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useLikes } from '@/hooks/useLikes';
 import { LikeButton } from './LikeButton';
+import { ShareButton } from './ShareButton';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem =
   Database['public']['Tables']['menu_items']['Row'] & { id: string };
 
-const { height: H, width: W } = Dimensions.get('window');
+const { height: H, width: W } = Dimensions.get('screen');
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
@@ -166,6 +167,12 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           <LikeButton 
             restaurantId={restaurant.id}
             menuItemId={currentMenuItem.id}
+          />
+        )}
+        {currentMenuItem && (
+          <ShareButton
+            restaurantName={restaurant.name}
+            menuItemTitle={currentMenuItem.title}
           />
         )}
       </LinearGradient>

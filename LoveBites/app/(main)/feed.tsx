@@ -18,7 +18,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 // import AnalyticsService from '@/lib/analytics';
 
-const { height: H } = Dimensions.get('window');
+const { height: H } = Dimensions.get('screen');
 
 export default function FeedScreen() {
   const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
