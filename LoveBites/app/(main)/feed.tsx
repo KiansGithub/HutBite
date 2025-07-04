@@ -107,13 +107,6 @@ export default function FeedScreen() {
         </View>
       ) : (
         <FlatList
-          {...!location && (
-            <View style={styles.locationBanner}>
-              <Text style={styles.locationBannerText}>
-                Enable location for nearby restaurants
-              </Text>
-            </View>
-          )}
           data={restaurants}
           pagingEnabled
           snapToInterval={H}
@@ -126,8 +119,19 @@ export default function FeedScreen() {
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
           getItemLayout={getItemLayout}
           removeClippedSubviews={false}
+          snapToOffsets={restaurants.map((_, index) => index * H)}
+          disableIntervalMomentum={true}
+          scrollEventThrottle={16}
         />
       )}
+
+      {!location && (
+            <View style={styles.locationBanner}>
+              <Text style={styles.locationBannerText}>
+                Enable location for nearby restaurants
+              </Text>
+            </View>
+          )}
 
       <OrderLinksModal
         orderLinks={orderLinks}
