@@ -17,7 +17,8 @@
     "ios": {
       "bundleIdentifier": "com.livebites.livebites",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "usesAppleSignIn": true
     },
     "android": {
       "package": "com.livebites.livebites",
@@ -42,7 +43,9 @@
           "supportsPictureInPicture": true
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+
+      "expo-apple-authentication"
     ],
     "experiments": {
       "typedRoutes": true

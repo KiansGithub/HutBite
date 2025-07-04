@@ -62,6 +62,12 @@ export default function FeedScreen() {
     );
   };
 
+  const getItemLayout = (data: any, index: number) => ({
+    length: H, 
+    offset: H * index, 
+    index, 
+  });
+
   if (loading) {
     return (
       <View style={[styles.container, styles.center]}>
@@ -111,12 +117,15 @@ export default function FeedScreen() {
           data={restaurants}
           pagingEnabled
           snapToInterval={H}
+          snapToAlignment="start"
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
           keyExtractor={(r) => r.id.toString()}
           renderItem={renderRestaurant}
           onViewableItemsChanged={onViewableChange}
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
+          getItemLayout={getItemLayout}
+          removeClippedSubviews={false}
         />
       )}
 
