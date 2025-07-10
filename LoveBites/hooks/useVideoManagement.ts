@@ -19,18 +19,6 @@ export const useVideoManagement = (
         const nextItem = menuItems[nextRow.id]?.[0];
         if (!nextItem || preloadPlayers[nextItem.id]) return; 
 
-        // Clean up old preloaded players to free memory
-        const currentKeys = Object.keys(preloadPlayers);
-        if (currentKeys.length > 2) { // Keep max 2 preloaded videos
-            const oldestKey = currentKeys[0];
-            try {
-                preloadPlayers[oldestKey]?.pause();
-                delete preloadPlayers[oldestKey];
-            } catch (err) {
-                console.log('[Preload Cleanup Error]', err);
-            }
-        }
-
         const src: VideoSource = {
             uri: nextItem.video_url, 
             useCaching: true, 
@@ -41,25 +29,8 @@ export const useVideoManagement = (
             },
         };
 
-        try {
-            preloadPlayers[nextItem.id] = createVideoPlayer(src);
-        } catch (err) {
-            console.log('[Preload Creation Error]', { itemId: nextItem.id, error: err });
-        }
+        preloadPlayers[nextItem.id] = createVideoPlayer(src);
     }, [vIndex, restaurants, menuItems]);
-
-     // Cleanup on unmount
-     useEffect(() => {
-        return () => {
-            Object.values(preloadPlayers).forEach(player => {
-                try {
-                    player?.pause();
-                } catch (err) {
-                    console.log('[Cleanup Error]', err);
-                }
-            });
-        };
-    }, []);
 
     return { preloadPlayers };
 };
