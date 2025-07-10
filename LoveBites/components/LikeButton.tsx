@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useLikes } from '@/hooks/useLikes';
+import { FAB_SIZE, FAB_RADIUS, FAB_BG, FAB_BLUR } from '@/ui/tokens';
 
 interface LikeButtonProps {
   restaurantId: string;
@@ -52,9 +53,9 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 
   return (
     <AnimatedBlur
-      intensity={40}
-      tint="dark"
-      style={[styles.wrapper, animStyle]}
+    intensity={FAB_BLUR}
+    tint="dark"
+    style={[styles.fab, animStyle, isLiked && styles.fabLiked]}
       onTouchEnd={handlePress}
       accessible
       accessibilityRole="button"
@@ -75,21 +76,21 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    right: 24,
-    top: '35%',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  fab: {
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_RADIUS,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    // tilt shadow slightly red so it “glows” when liked
-    shadowColor: '#ff3040',
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 6 },
+    backgroundColor: FAB_BG,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
     shadowRadius: 8,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  fabLiked: {
+    shadowColor: '#ff4757',
   },
 });

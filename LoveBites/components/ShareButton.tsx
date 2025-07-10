@@ -3,6 +3,7 @@ import { StyleSheet, Share } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
+import { FAB_SIZE, FAB_RADIUS, FAB_BG, FAB_BLUR } from '@/ui/tokens';
 
 interface ShareButtonProps {
   restaurantName: string;
@@ -29,37 +30,32 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
 
   return (
     <AnimatedBlur
-      intensity={40}
-      tint="dark"
-      style={styles.wrapper}
+    intensity={FAB_BLUR}
+    tint="dark"
+    style={styles.fab}
       onTouchEnd={handlePress}
       accessible
       accessibilityRole="button"
       accessibilityLabel="Share"
     >
-      <Ionicons name="share-social-outline" size={28} color="#ffffff" />
+      <Ionicons name="send" size={28} color="#ffffff" />
     </AnimatedBlur>
   );
 };
 
 const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    right: 24,
-    top: '0%',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  fab: {
+    width: FAB_SIZE,
+    height: FAB_SIZE,
+    borderRadius: FAB_RADIUS,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: FAB_BG,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
   },
 });

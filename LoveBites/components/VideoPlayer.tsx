@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { StyleSheet, TouchableWithoutFeedback, View, Text } from 'react-native';
 import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
 import { useEvent } from 'expo';
 // import AnalyticsService from '@/lib/analytics';
@@ -20,66 +20,192 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     height,
 }) => {
     const [isPlaying, setIsPlaying] = useState(false);
+    const [hasError, setHasError] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const playerRef = useRef<any>(null);
+
     const player = useVideoPlayer(
-        { uri, useCaching: true },
+        { 
+            uri, 
+            useCaching: true,
+            headers: {
+                'User-Agent': 'LiveBites/1.0'
+            }
+        },
         p => {
+            playerRef.current = p;
             p.loop = true; 
             p.muted = false; 
             p.bufferOptions = {
-                minBufferForPlayback: 0.5, 
-                preferredForwardBufferDuration: 20, 
-                waitsToMinimizeStalling: true, 
+                minBufferForPlayback: 1.0, 
+                preferredForwardBufferDuration: 10, 
+                waitsToMinimizeStalling: false, 
             };
         }
     );
 
-    const handleTap = () => {
-        if (isPlaying) {
-            player.pause();
-            setIsPlaying(false);
-        } else {
-            player.play();
-            setIsPlaying(true);
-        }
-    };
+    useEvent(player, 'error', nativeError => {
+        console.log('[Video ERROR DETAILS]', {
+            itemId, 
+            uri, 
+            error: nativeError, 
+            errorMessage: nativeError?.message || 'Unknown error',
+            errorCode: nativeError?.code || 'No code'
+        });
+        setHasError(true);
+        setIsLoading(false);
+        // AnalyticsService.logError(`Video error: ${nativeError?.message || 'Unknown'}`, `Video ID: ${itemId}, URI: ${uri}`);
+    });
 
-    useEffect(() => {
-        if (isVisible) {
-            player.currentTime = 0; 
-            player.play();
-            setIsPlaying(true);
-            // AnalyticsService.logVideoPlay(uri, itemId);
-        } else {
-            player.pause();
-            setIsPlaying(false);
-        }
-    }, [isVisible]);
-
+    // Status tracking 
     const { status, error } = useEvent(player, 'statusChange', {
         status: player.status, 
         error: undefined, 
     });
 
     useEffect(() => {
-        if (__DEV__) console.log('[expo-video]', status, error?.message);
+        console.log('[Video Status]', {
+            itemId, 
+            status, 
+            error: error?.message, 
+            isVisible, 
+            uri: uri.substring(0, 50) + '...'
+        });
+
+        switch (status) {
+            case 'loading':
+                setIsLoading(true);
+                setHasError(false);
+                break;
+            case 'readyToPlay':
+                setIsLoading(false);
+                setHasError(false);
+                break;
+            case 'error':
+                setHasError(true);
+                setIsLoading(false);
+                break;            
+        }
 
         if (error) {
-            // AnalyticsService.logError(`Video error: ${error.message}`, `Video ID: ${itemId}`);
+            console.log('[Video Error Details]', {
+                itemId, 
+                message: error.message, 
+                stack: error.stack
+            });
+            setHasError(true);
+            setIsLoading(false);
         }
-    }, [status, error]);
+    }, [status, error, itemId, uri]);
+
+    // Improved visibility when handling delays 
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout; 
+
+        if (isVisible && !hasError) {
+            // Small delay to ensure proper mounting 
+            timeoutId = setTimeout(() => {
+                try {
+                    player.currentTime = 0;
+                    player.play();
+                    setIsPlaying(true);
+                    console.log('[Video Play Attempt]', { itemId, uri: uri.substring(0, 50) + '...'});
+                } catch (err) {
+                    console.log('[Video Play Error]', { itemId, error: err });
+                    setHasError(true);
+                }
+            }, 100);
+
+            try{
+                player.pause();
+                setIsPlaying(false);
+            } catch (err) {
+                console.log('[Video Pause Error]', { itemId, error: err });
+            }
+        } 
+
+        return () => {
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [isVisible, hasError, player, itemId, uri]);
+
+    // Cleanup on unmount 
+    useEffect(() => {
+        return () => {
+            try {
+                if (playerRef.current) {
+                    playerRef.current.pause();
+                    console.log('[Video Cleanup]', { itemId, error: err });
+                }
+            } catch (err) {
+                console.log('[Video Cleanup Error]', { itemId, error: err });
+            }
+        };
+    }, [itemId]);
+
+
+    const handleTap = () => {
+        if (hasError) {
+            // Retry on error 
+            setHasError(false);
+            setIsLoading(true);
+            try {
+                player.currentTime = 0; 
+                player.play();
+                setIsPlaying(true);
+            } catch (err) {
+                console.log('[Video Retry Error]', { itemId, error: err });
+                setHasError(true);
+            }
+            return;
+        }
+
+        try {
+            if (isPlaying) {
+                player.pause();
+                setIsPlaying(false);
+            } else {
+                player.play();
+                setIsPlaying(true);
+            }
+        } catch (err) {
+            console.log('[Video Toggle Error]', { itemId, error: err });
+            setHasError(true);
+        }
+    };
+
+    // Error state
+    if (hasError) {
+        return (
+            <TouchableWithoutFeedback onPress={handleTap}>
+                <View style={[styles.errorContainer, { width, height }]}>
+                    <Text style={styles.errorText}>Video unavailable</Text>
+                    <Text style={styles.retryText}>Tap to retry</Text>
+                </View>
+            </TouchableWithoutFeedback>
+        );
+    }
+ 
+    // Loading state
+    if (isLoading) {
+        return (
+            <View style={[styles.loadingContainer, { width, height }]}>
+                <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+        );
+    }
 
     return (
         <TouchableWithoutFeedback onPress={handleTap}>
         <VideoView
-          key={uri}
           player={player}
           style={[styles.video, { width, height }]}
           contentFit="contain"
-          allowsFullscreen
-          allowsPictureInPicture
+          allowsFullscreen={false}
+          allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={false}
-          surfaceType="textureView"
+          useExoShutter={true}
+          surfaceType="surfaceView"
         />
         </TouchableWithoutFeedback>
       );
@@ -88,5 +214,30 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const styles = StyleSheet.create({
       video: {
         flex: 1,
+      },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1a1a1a',
+      },
+      errorText: {
+        color: '#fff',
+        fontSize: 16, 
+        marginBottom: 8,
+      },
+      retryText: {
+        color: '#999',
+        fontSize: 14,
+      },
+      loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1a1a1a',
+      },
+      loadingText: {
+        color: '#fff',
+        fontSize: 16, 
       },
     });

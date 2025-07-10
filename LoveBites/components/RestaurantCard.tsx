@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLikes } from '@/hooks/useLikes';
 import { LikeButton } from './LikeButton';
 import { ShareButton } from './ShareButton';
+import { FloatingActionRail } from '@/components/FloatingActionRail';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -161,21 +162,14 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
             </TouchableOpacity>
           </View>
         )}
-
-        {/* Like button */}
-        {currentMenuItem && (
-          <LikeButton 
-            restaurantId={restaurant.id}
-            menuItemId={currentMenuItem.id}
-          />
-        )}
-        {currentMenuItem && (
-          <ShareButton
-            restaurantName={restaurant.name}
-            menuItemTitle={currentMenuItem.title}
-          />
-        )}
       </LinearGradient>
+      <FloatingActionRail>
+  <LikeButton restaurantId={restaurant.id} menuItemId={currentMenuItem.id} />
+  <ShareButton
+    restaurantName={restaurant.name}
+    menuItemTitle={currentMenuItem.title}
+  />
+</FloatingActionRail>
     </View>
   );
 };

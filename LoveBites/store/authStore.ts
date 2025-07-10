@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import * as QueryParams from 'expo-auth-session/build/QueryParams';
 // import { AnalyticsService } from '@/lib/analytics';
  
 interface AuthState {
@@ -100,61 +101,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (data?.url) {
         console.log('Opening OAuth URL:', data.url);
  
-        // Set up a listener for the redirect
-        const handleRedirect = (event: { url: string }) => {
-          console.log('Received redirect URL:', event.url);
-          if (event.url.includes('access_token') || event.url.includes('code')) {
-            WebBrowser.dismissBrowser();
-          }
-        };
- 
-        const subscription = Linking.addEventListener('url', handleRedirect);
- 
         const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectTo,
-          {
-            showInRecents: false,
-          }
+          data.url, 
+          redirectTo, 
+          { showInRecents: false }
         );
- 
-        subscription?.remove();
-        console.log('OAuth result:', result);
+        console.log('[OAUTH] WebBrowser result →', result);
+
+        // 2️⃣ If the user cancelled, bail out early
+      if (result.type !== 'success') {
+        return { error: { message: 'User cancelled' } };
+      }
+
+          // 3️⃣ The deep-link URL (with tokens) is right here:
+        const redirectURL = result.url;
+        console.log('[OAUTH] redirectURL →', redirectURL);
+
+        const { params } = QueryParams.getQueryParams(redirectURL);
+        console.log('[TOKENS] →', params)
  
         if (result.type === 'success' || result.type === 'cancel') {
           // Wait for the session to be established
           await new Promise(resolve => setTimeout(resolve, 2000));
  
-          // Check for session multiple times
-          let attempts = 0;
-          let session = null;
- 
-          while (attempts < 10 && !session) {
-            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
- 
-            if (sessionError) {
-              console.error('Session error:', sessionError);
-              break;
-            }
- 
-            if (sessionData.session) {
-              session = sessionData.session;
-              break;
-            }
- 
-            attempts++;
-            console.log(`Attempt ${attempts}: No session found, retrying...`);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+          const { data: sessionData, error: setErr } = await supabase.auth.setSession({
+            access_token: params.access_token, 
+            refresh_token: params.refresh_token,
+          });
+          console.log('[SET-SESSION] data →', sessionData, 'err →', setErr);
+
+          if (setErr) {
+            return { error: setErr };
           }
- 
-          if (session) {
-            console.log('OAuth success, setting session');
-            set({ user: session.user, session });
-            return { error: null };
-          } else {
-            console.error('No session found after OAuth');
-            return { error: { message: 'Authentication completed but no session found. Please try again.' } };
-          }
+
+          set({
+            user: sessionData.session.user, 
+            session: sessionData.session,
+          });
+          console.log('[AUTH] Signed in 🎉');
+          return { error: null };
         } else {
           console.log('OAuth cancelled or failed:', result);
           return { error: { message: 'Authentication was cancelled' } };

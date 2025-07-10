@@ -56,6 +56,8 @@ export default function SignInScreen() {
     const { error } = await signInWithProvider(provider);
     if (error) {
       Alert.alert('Error', error.message);
+    } else {
+      router.replace('/(main)/feed');
     }
     setLoading(false);
   };
