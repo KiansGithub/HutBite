@@ -118,10 +118,14 @@ export default function FeedScreen() {
           onViewableItemsChanged={onViewableChange}
           viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
           getItemLayout={getItemLayout}
-          removeClippedSubviews={false}
+          removeClippedSubviews={true}
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          initialNumToRender={1}
+          updateCellsBatchingPeriod={100}
         />
       )}
 

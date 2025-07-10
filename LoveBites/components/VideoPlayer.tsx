@@ -24,15 +24,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const playerRef = useRef<any>(null);
 
+    const videoSource: VideoSource = useMemo(() => ({
+        uri, 
+        useCaching: true, 
+        headers: {
+            'User-Agent': 'LiveBites/1.0',
+            'Accept': 'video/*'
+        }
+    }), [uri]);
+
     const player = useVideoPlayer(
-        { 
-            uri, 
-            useCaching: true,
-            headers: {
-                'User-Agent': 'LiveBites/1.0',
-                'Accept': 'video/*'
-            }
-        },
+        videoSource,
         p => {
             playerRef.current = p;
             p.loop = true; 
