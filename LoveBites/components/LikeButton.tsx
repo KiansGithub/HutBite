@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     right: 24,
-    top: '25%',
+    top: '35%',
     width: 56,
     height: 56,
     borderRadius: 28,

@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
     right: 24,
-    top: '40%',
+    top: '0%',
     width: 56,
     height: 56,
     borderRadius: 28,
