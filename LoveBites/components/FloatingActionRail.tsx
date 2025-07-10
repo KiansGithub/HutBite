@@ -14,7 +14,7 @@ export const FloatingActionRail: React.FC<Props> = ({ children }) => {
           pointerEvents='box-none'
           style={[
             styles.rail,
-            { top: insets.top + 80, right: insets.right + 16 },
+            { top: '65%', right: insets.right + 16, transform: [{ translateY: -50 }] },
           ]}
         >
             {children}

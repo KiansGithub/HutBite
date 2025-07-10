@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, ViewStyle, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
  
@@ -14,9 +14,16 @@ export const GlassPanel: React.FC<GlassPanelProps> = ({
   style,
   intensity = 60
 }) => (
-  <BlurView intensity={intensity} tint="light" style={[styles.panel, style]}>
+  <BlurView 
+    intensity={Platform.OS === 'ios' ? intensity : 20} 
+    tint={Platform.OS === 'ios' ? "light": "default"}
+    style={[styles.panel, style]}
+    >
     <LinearGradient
-      colors={["rgba(255,255,255,0.12)", "rgba(255,255,255,0.04)"]}
+      colors={Platform.OS === 'ios'
+        ? ["rgba(255,255,255,0.12)", "rgba(255,255,255,0.04)"]
+        : ["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)"]
+      }
       style={StyleSheet.absoluteFill}
     />
     {children}

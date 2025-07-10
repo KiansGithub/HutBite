@@ -38,7 +38,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       accessibilityRole="button"
       accessibilityLabel="Share"
     >
-      <Ionicons name="send" size={28} color="#ffffff" />
+      <Ionicons name="send" size={28} color="#ffffff" style={{ transform: [{ rotate: '-45deg' }] }}/>
     </AnimatedBlur>
   );
 };
