@@ -27,10 +27,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const player = useVideoPlayer(
         { 
             uri, 
-            useCaching: true,
+            useCaching: false,
             headers: {
                 'User-Agent': 'LiveBites/1.0',
-                'Accet': 'video/*'
+                'Accept': 'video/*'
             }
         },
         p => {
@@ -38,9 +38,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             p.loop = true; 
             p.muted = false; 
             p.bufferOptions = {
-                minBufferForPlayback: 1.0,
-                preferredForwardBufferDuration: 10,
-                waitsToMinimizeStalling: false,
+                minBufferForPlayback: 0.5,
+                preferredForwardBufferDuration: 3,
+                waitsToMinimizeStalling: true,
             };
         }
     );
@@ -100,36 +100,47 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, [status, error, itemId, uri]);
 
     useEffect(() => {
-        let timeoutId: NodeJS.Timeout;
-      
-        if (isVisible && !hasError) {
-          timeoutId = setTimeout(() => {
-            if (!player) return;
-            try {
-                player.currentTime = 0;
-                player.play();
-                setIsPlaying(true);
-              } catch (err) {
-                console.log('[Video Play Error]', { itemId, error: err });
-                setHasError(true);
-              }
-            }, 300); // Increase delay for Android
-          } else {
+        let playTimeoutId: NodeJS.Timeout;
+ 
+        if (isVisible && !hasError && player) {
+            // Clear any existing timeouts
+            if (timeoutId) clearTimeout(timeoutId);
+            if (playTimeoutId) clearTimeout(playTimeoutId);
+ 
             timeoutId = setTimeout(() => {
-              if (!player) return;
-              try {
-                player.pause();
-                setIsPlaying(false);
-              } catch (err) {
-                console.log('[Video Pause Error]', { itemId, error: err });
-              }
-            }, 100); 
-          }
-   
-          return () => {
-            clearTimeout(timeoutId);
-          };
-        }, [isVisible, hasError, player]);
+                if (!player) return;
+                try {
+                    player.currentTime = 0;
+                    // Add additional delay before playing
+                    playTimeoutId = setTimeout(() => {
+                        if (player && isVisible) {
+                            player.play();
+                            setIsPlaying(true);
+                        }
+                    }, 200);
+                } catch (err) {
+                    console.log('[Video Play Error]', { itemId, error: err });
+                    setHasError(true);
+                }
+            }, 500);
+        } else if (!isVisible && player) {
+            // Clear play timeout if switching away
+            if (playTimeoutId) clearTimeout(playTimeoutId);
+ 
+            timeoutId = setTimeout(() => {
+                if (!player) return;
+                try {
+                    player.pause();
+                    setIsPlaying(false);
+                } catch (err) {
+                    console.log('[Video Pause Error]', { itemId, error: err });
+                }
+            }, 100);
+        }
+            if (timeoutId) clearTimeout(timeoutId);
+            if (playTimeoutId) clearTimeout(playTimeoutId);
+ 
+        }, [isVisible, hasError, player, itemId]);
 
     // Cleanup on unmount 
     useEffect(() => {
@@ -202,12 +213,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <VideoView
           player={player}
           style={[styles.video, { width, height }]}
-          contentFit="contain"
+          contentFit="cover"
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={false}
-          surfaceType="surfaceView"
+          useExoShutter={true}
+          surfaceType="textureView"
         />
         </TouchableWithoutFeedback>
       );
