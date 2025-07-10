@@ -29,7 +29,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             uri, 
             useCaching: true,
             headers: {
-                'User-Agent': 'LiveBites/1.0'
+                'User-Agent': 'LiveBites/1.0',
+                'Accet': 'video/*'
             }
         },
         p => {
@@ -37,9 +38,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             p.loop = true; 
             p.muted = false; 
             p.bufferOptions = {
-                minBufferForPlayback: 3.0, 
-                preferredForwardBufferDuration: 15, 
-                waitsToMinimizeStalling: true, 
+                minBufferForPlayback: 1.0,
+                preferredForwardBufferDuration: 10,
+                waitsToMinimizeStalling: false,
             };
         }
     );
@@ -104,22 +105,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         if (isVisible && !hasError) {
           timeoutId = setTimeout(() => {
             if (!player) return;
-            player.currentTime = 0;
-            player.play();
-            setIsPlaying(true);
-          }, 200); // Slightly increase delay to let rendering settle
-        } else {
-          timeoutId = setTimeout(() => {
-            if (!player) return;
-            player.pause();
-            setIsPlaying(false);
-          }, 100); 
-        }
-      
-        return () => {
-          clearTimeout(timeoutId);
-        };
-      }, [isVisible, hasError]);
+            try {
+                player.currentTime = 0;
+                player.play();
+                setIsPlaying(true);
+              } catch (err) {
+                console.log('[Video Play Error]', { itemId, error: err });
+                setHasError(true);
+              }
+            }, 300); // Increase delay for Android
+          } else {
+            timeoutId = setTimeout(() => {
+              if (!player) return;
+              try {
+                player.pause();
+                setIsPlaying(false);
+              } catch (err) {
+                console.log('[Video Pause Error]', { itemId, error: err });
+              }
+            }, 100); 
+          }
+   
+          return () => {
+            clearTimeout(timeoutId);
+          };
+        }, [isVisible, hasError, player]);
 
     // Cleanup on unmount 
     useEffect(() => {
@@ -127,7 +137,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             try {
                 if (playerRef.current) {
                     playerRef.current.pause();
-                    console.log('[Video Cleanup]', { itemId, error: err });
+                    console.log('[Video Cleanup]', { itemId });
                 }
             } catch (err) {
                 console.log('[Video Cleanup Error]', { itemId, error: err });
@@ -196,8 +206,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={true}
-          surfaceType="textureView"
+          useExoShutter={false}
+          surfaceType="surfaceView"
         />
         </TouchableWithoutFeedback>
       );
