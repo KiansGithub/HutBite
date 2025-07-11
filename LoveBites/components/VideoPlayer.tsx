@@ -191,7 +191,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={false}
+          useExoShutter={true}
           surfaceType="textureView"
         />
         </TouchableWithoutFeedback>
