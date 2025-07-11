@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -14,7 +14,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LikeButton } from './LikeButton';
 import { ShareButton } from './ShareButton';
 import { FloatingActionRail } from '@/components/FloatingActionRail';
-import { useVideoPlayer } from 'expo-video';
 // import AnalyticsService from '@/lib/analytics';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -66,49 +65,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
     const lastSpace = truncated.lastIndexOf(' ');
     return lastSpace > 0 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
   };
-
-  /* ── active player (what the user sees) ──────────────────────── */
-  const currentItem   = menuItems[hIndex];
-  const currentPlayer = useVideoPlayer(currentItem?.video_url);
-
-  /* ── PRELOAD player for the NEXT item ────────────────────────── */
-  const preloadRef = useRef<ReturnType<typeof useVideoPlayer> | null>(null);
-  const nextItem   = menuItems[hIndex + 1];
-
-  // create / update the hidden player
-  useEffect(() => {
-    if (!nextItem?.video_url) return;
-
-    // 1. create once
-    if (!preloadRef.current) {
-      preloadRef.current = useVideoPlayer(null);
-    }
-
-    // 2. start buffering
-    preloadRef.current.replace(nextItem.video_url);
-    preloadRef.current.muted = true;
-    preloadRef.current.play();        // fills buffers but no decoder yet
-
-    return () => {
-      // when the card unmounts, free memory
-      preloadRef.current?.replace(null);
-    };
-  }, [nextItem?.video_url]);
-
-  /* when the user swipes, swap players */
-  useEffect(() => {
-    if (!isVisible) return;              // only if this card is on screen
-    const pre = preloadRef.current;
-    if (pre && nextItem && hIndex + 1 === nextVisibleIndex) {
-      currentPlayer.pause();
-      currentPlayer.replace(null);       // free decoder
-      pre.currentTime = 0;               // start from beginning
-      pre.muted = false;
-      pre.play();                        // now owns the single decoder
-      currentPlayer = pre;               // becomes the active player
-      preloadRef.current = null;         // and we’ll create a new “next”
-    }
-  }, [hIndex, isVisible]);
 
   return (
     <View style={styles.container}>

@@ -172,16 +172,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </TouchableWithoutFeedback>
         );
     }
- 
-    // Loading state
-    if (isLoading) {
-        return (
-            <View style={[styles.loadingContainer, { width, height }]}>
-                <Text style={styles.loadingText}>Loading...</Text>
-            </View>
-        );
-    }
-
     return (
         <TouchableWithoutFeedback onPress={handleTap}>
         <VideoView
