@@ -43,7 +43,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             p.bufferOptions = {
                 minBufferForPlayback: 3.0,
                 preferredForwardBufferDuration: 10,
-                waitsToMinimizeStalling: false,
+                waitsToMinimizeStalling: true,
             };
         }
     );
@@ -192,7 +192,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           allowsPictureInPicture={false}
           nativeControls={false}
           useExoShutter={false}
-          surfaceType="surfaceView"
+          surfaceType="textureView"
         />
         </TouchableWithoutFeedback>
       );
