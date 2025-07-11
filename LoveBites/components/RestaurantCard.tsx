@@ -97,7 +97,6 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           )
         }
         style={styles.flatList}
-        removeClippedSubviews={true}
         maxToRenderPerBatch={3}
         windowSize={5}
         initialNumToRender={1}

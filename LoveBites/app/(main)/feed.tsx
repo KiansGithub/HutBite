@@ -122,7 +122,7 @@ export default function FeedScreen() {
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
           maxToRenderPerBatch={5}
-          windowSize={3}
+          windowSize={7}
           initialNumToRender={1}
           updateCellsBatchingPeriod={100}
         />
