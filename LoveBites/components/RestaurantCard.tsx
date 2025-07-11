@@ -80,26 +80,25 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
 +         onHorizontalScroll(idx);
         }}
         renderItem={({ item: mi, index: hPos }) =>
-          mi.video_url ? (
-            <View style={styles.videoContainer}>
-              <VideoPlayer
-                uri={mi.video_url}
-                itemId={mi.id}
-                isVisible={isVisible && hPos === hIndex}
-                width={W}
-                height={H}
-              />
-            </View>
-          ) : (
-            <View style={styles.videoPlaceholder}>
-              <Text style={styles.placeholderText}>No video available</Text>
-            </View>
-          )
+          hPos === hIndex && mi.video_url ? (        // ← only mount the focused item
+                <View style={styles.videoContainer}>
+                  <VideoPlayer
+                    uri={mi.video_url}
+                    itemId={mi.id}
+                    isVisible={isVisible}
+                    width={W}
+                    height={H}
+                  />
+                </View>
+              ) : (
+                <View style={{ width: W, height: H }} />
+              )
         }
         style={styles.flatList}
         maxToRenderPerBatch={3}
-        windowSize={5}
+        windowSize={3}
         initialNumToRender={1}
+        removeClippedSubviews
       />
 
       {/* ──────────────── Bottom overlay ──────────────── */}

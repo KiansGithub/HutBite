@@ -46,13 +46,15 @@ export default function FeedScreen() {
 
   const renderRestaurant = ({ item, index }: { item: any; index: number }) => {
     const menu = menuItems[item.id] || [];
-    const vVisible = index === vIndex;
+    if (index !== vIndex) {
+      return <View style={{ width: '100%', height: H }} />;
+    }
 
     return (
       <RestaurantCard
         restaurant={item}
         menuItems={menu}
-        isVisible={vVisible}
+        isVisible={true}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
         distance={item.distance}
@@ -121,10 +123,11 @@ export default function FeedScreen() {
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
-          maxToRenderPerBatch={5}
-          windowSize={7}
+          maxToRenderPerBatch={3}
+          windowSize={3}
           initialNumToRender={1}
           updateCellsBatchingPeriod={100}
+          removeClippedSubviews
         />
       )}
 
