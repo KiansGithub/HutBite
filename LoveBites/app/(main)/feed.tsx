@@ -9,7 +9,6 @@ import {
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
-import { useVideoManagement } from '@/hooks/useVideoManagement';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
@@ -31,8 +30,6 @@ export default function FeedScreen() {
   // Use search results when searching, otherwise use all restaurants 
   const restaurants = isSearching? searchResults: allRestaurants;
   const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
-
-  useVideoManagement(restaurants, menuItems, vIndex);
 
   React.useEffect(() => {
     setIsDescriptionExpanded(false);
