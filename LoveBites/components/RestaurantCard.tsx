@@ -11,8 +11,6 @@ import { VideoPlayer } from './VideoPlayer';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useLikes } from '@/hooks/useLikes';
 import { LikeButton } from './LikeButton';
 import { ShareButton } from './ShareButton';
 import { FloatingActionRail } from '@/components/FloatingActionRail';

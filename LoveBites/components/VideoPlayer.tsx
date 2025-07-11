@@ -22,7 +22,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasError, setHasError] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const playerRef = useRef<any>(null);
+    const playerRef       = useRef<ReturnType<typeof useVideoPlayer> | null>(null);
+    const startedOnceRef  = useRef(false);   // only seek(0) on FIRST play
 
     const videoSource: VideoSource = useMemo(() => ({
         uri, 
@@ -102,36 +103,31 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }, [status, error, itemId, uri]);
 
     useEffect(() => {
-        let timeoutId: NodeJS.Timeout;
+        const p = playerRef.current;
+        if (!p) return;
       
-        if (isVisible && !hasError) {
-          timeoutId = setTimeout(() => {
-            if (!player) return;
-            try {
-                player.currentTime = 0;
-                player.play();
-                setIsPlaying(true);
-              } catch (err) {
-                console.log('[Video Play Error]', { itemId, error: err });
-                setHasError(true);
-              }
-            }, 300); // Increase delay for Android
+        const shouldPlay =
+          isVisible && status === 'readyToPlay' && !hasError;
+      
+        // Seek to the beginning only the first time we ever start
+        if (shouldPlay && !startedOnceRef.current) {
+          p.currentTime = 0;
+          startedOnceRef.current = true;
+        }
+      
+        try {
+          if (shouldPlay) {
+            p.play();                 // returns void
+            setIsPlaying(true);
           } else {
-            timeoutId = setTimeout(() => {
-              if (!player) return;
-              try {
-                player.pause();
-                setIsPlaying(false);
-              } catch (err) {
-                console.log('[Video Pause Error]', { itemId, error: err });
-              }
-            }, 100); 
+            p.pause();                // returns void
+            setIsPlaying(false);
           }
-   
-          return () => {
-            clearTimeout(timeoutId);
-          };
-        }, [isVisible, hasError, player]);
+        } catch (err) {
+          console.log('[Video play/pause error]', err);
+          setHasError(true);
+        }
+      }, [isVisible, status, hasError]);
 
     // Cleanup on unmount 
     useEffect(() => {
@@ -149,34 +145,35 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
 
     const handleTap = () => {
+        const p = playerRef.current;
+        if (!p) return;
+      
+        /* ──────────────
+           retry on error
+        ───────────────*/
         if (hasError) {
-            // Retry on error 
-            setHasError(false);
-            setIsLoading(true);
-            try {
-                player.currentTime = 0; 
-                player.play();
-                setIsPlaying(true);
-            } catch (err) {
-                console.log('[Video Retry Error]', { itemId, error: err });
-                setHasError(true);
-            }
-            return;
+          setHasError(false);
+          setIsLoading(true);
+          startedOnceRef.current = false;   // allow seek(0) again on next play
+          return;
         }
-
+      
+        /* ──────────────
+           toggle play / pause
+        ───────────────*/
         try {
-            if (isPlaying) {
-                player.pause();
-                setIsPlaying(false);
-            } else {
-                player.play();
-                setIsPlaying(true);
-            }
+          if (isPlaying) {
+            p.pause();              // synchronous → returns void
+            setIsPlaying(false);
+          } else if (status === 'readyToPlay') {
+            p.play();               // synchronous → returns void
+            setIsPlaying(true);
+          }
         } catch (err) {
-            console.log('[Video Toggle Error]', { itemId, error: err });
-            setHasError(true);
+          console.log('[Video toggle play error]', err);
+          setHasError(true);
         }
-    };
+      };
 
     // Error state
     if (hasError) {
