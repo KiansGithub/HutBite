@@ -41,9 +41,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             p.loop = true; 
             p.muted = false; 
             p.bufferOptions = {
-                minBufferForPlayback: 3.0,
+                minBufferForPlayback: 1.0,
                 preferredForwardBufferDuration: 10,
-                waitsToMinimizeStalling: true,
+                waitsToMinimizeStalling: false,
             };
         }
     );
@@ -113,7 +113,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           console.log('[Video play/pause error]', err);
           setHasError(true);
         }
-      }, [isVisible, status, hasError, uri]);
+      }, [isVisible, status, hasError]);
 
     // Cleanup on unmount 
     useEffect(() => {
@@ -185,16 +185,14 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (
         <TouchableWithoutFeedback onPress={handleTap}>
         <VideoView
-        key={itemId}
           player={player}
           style={[styles.video, { width, height }]}
-          contentFit="contain"
+          contentFit="cover"
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
           useExoShutter={false}
-          surfaceType="textureView"
-          onFirstFrameRender={() => console.log('🟢 first frame')}
+          surfaceType="surfaceView"
         />
         </TouchableWithoutFeedback>
       );
