@@ -34,7 +34,7 @@ async function findMovFiles(prefix = '') {
       if (isFolder) {
         // recurse into sub-folders
         keys.push(...await findMovFiles(path));
-      } else if (entry.name.toLowerCase().endsWith('.mov')) {
+      } else if (entry.name.toLowerCase().endsWith('.mp4')) {
         keys.push(path);
       }
     }
@@ -46,10 +46,22 @@ async function transcode(movPath, mp4Path) {
   await new Promise((res, rej) => {
     spawn(ffmpegPath, [
       '-i', movPath,
-      '-vf',  'format=yuv420p',
-      '-c:v', 'libx264',
-      '-preset', 'slow',
-      '-crf', '22',
+      // 1) guaranteed Baseline/Main, safe level
+  '-profile:v', 'main',
+  '-level:v', '4.0',
+
+  // 2) yuv420p & even dimensions
+  '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p',
+
+  // 3) fast start (same as before)
+   '-movflags', '+faststart',
+
+  // 4) keyframe every ~48 frames (2 s at 24 fps, 1.6 s at 30 fps)
+  '-x264-params', 'keyint=48:min-keyint=48:scenecut=0',
+
+  // 5) sensible bitrate/quality
+  '-crf', '23',
+  '-preset', 'medium',
       '-c:a', 'aac',
       '-b:a', '160k',
       '-movflags', '+faststart',

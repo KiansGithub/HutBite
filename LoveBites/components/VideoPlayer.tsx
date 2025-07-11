@@ -185,14 +185,16 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return (
         <TouchableWithoutFeedback onPress={handleTap}>
         <VideoView
+        key={itemId}
           player={player}
           style={[styles.video, { width, height }]}
-          contentFit="cover"
+          contentFit="contain"
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={true}
+          useExoShutter={false}
           surfaceType="textureView"
+          onFirstFrameRender={() => console.log('🟢 first frame')}
         />
         </TouchableWithoutFeedback>
       );
