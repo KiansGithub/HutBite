@@ -29,11 +29,16 @@ export default function FeedScreen() {
 
   // Use search results when searching, otherwise use all restaurants 
   const restaurants = isSearching? searchResults: allRestaurants;
-  const { hIndex, vIndex, onViewableChange, updateHorizontalIndex } = useViewabilityTracking();
+  const {
+       vIndex,
+       visibleHIndex,
+       onViewableChange,
+       updateHorizontalIndex,
+     } = useViewabilityTracking();
 
   React.useEffect(() => {
     setIsDescriptionExpanded(false);
-  }, [vIndex, hIndex]);
+ }, [vIndex]);
 
   React.useEffect(() => {
     // AnalyticsService.logScreenView('Feed', 'MainScreen');
@@ -41,14 +46,12 @@ export default function FeedScreen() {
 
   const renderRestaurant = ({ item, index }: { item: any; index: number }) => {
     const menu = menuItems[item.id] || [];
-    const hCur = hIndex[item.id] ?? 0;
     const vVisible = index === vIndex;
 
     return (
       <RestaurantCard
         restaurant={item}
         menuItems={menu}
-        horizontalIndex={hCur}
         isVisible={vVisible}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
@@ -82,7 +85,7 @@ export default function FeedScreen() {
       <TopOverlay
         restaurantName={restaurants[vIndex]?.name || ''}
         distance={restaurants[vIndex]?.distance}
-        currentIndex={hIndex[restaurants[vIndex]?.id] ?? 0}
+        currentIndex={visibleHIndex}
         totalItems={menuItems[restaurants[vIndex]?.id]?.length ?? 0}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}

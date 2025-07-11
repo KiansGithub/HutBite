@@ -25,7 +25,6 @@ const { height: H, width: W } = Dimensions.get('screen');
 interface RestaurantCardProps {
   restaurant: Restaurant;
   menuItems: MenuItem[];
-  horizontalIndex: number;
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
@@ -37,7 +36,6 @@ interface RestaurantCardProps {
 export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   restaurant,
   menuItems,
-  horizontalIndex,
   isVisible,
   onHorizontalScroll,
   onOrderPress,
@@ -45,7 +43,8 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   isDescriptionExpanded, 
   setIsDescriptionExpanded
 }) => {
-  const currentMenuItem = menuItems[horizontalIndex];
+  const [hIndex, setHIndex] = useState(0);
+  const currentMenuItem = menuItems[hIndex];
 
   const truncateDescription = (text: string, maxLength: number = 80) => {
     if (text.length <= maxLength) return text; 
@@ -77,7 +76,8 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         keyExtractor={(mi) => mi.id.toString()}
         onMomentumScrollEnd={(e) => {
           const idx = Math.round(e.nativeEvent.contentOffset.x / W);
-          onHorizontalScroll(idx);
+          setHIndex(idx);              // local state → only this card re-renders
++         onHorizontalScroll(idx);
         }}
         renderItem={({ item: mi, index: hPos }) =>
           mi.video_url ? (
@@ -85,7 +85,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
               <VideoPlayer
                 uri={mi.video_url}
                 itemId={mi.id}
-                isVisible={isVisible && hPos === horizontalIndex}
+                isVisible={isVisible && hPos === hIndex}
                 width={W}
                 height={H}
               />

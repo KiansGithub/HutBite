@@ -41,25 +41,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             p.loop = true; 
             p.muted = false; 
             p.bufferOptions = {
-                minBufferForPlayback: 1.0,
+                minBufferForPlayback: 3.0,
                 preferredForwardBufferDuration: 10,
                 waitsToMinimizeStalling: false,
             };
         }
     );
-
-    useEvent(player, 'error', nativeError => {
-        console.log('[Video ERROR DETAILS]', {
-            itemId, 
-            uri, 
-            error: nativeError, 
-            errorMessage: nativeError?.message || 'Unknown error',
-            errorCode: nativeError?.code || 'No code'
-        });
-        setHasError(true);
-        setIsLoading(false);
-        // AnalyticsService.logError(`Video error: ${nativeError?.message || 'Unknown'}`, `Video ID: ${itemId}, URI: ${uri}`);
-    });
 
     // Status tracking 
     const { status, error } = useEvent(player, 'statusChange', {
@@ -95,7 +82,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             console.log('[Video Error Details]', {
                 itemId, 
                 message: error.message, 
-                stack: error.stack
             });
             setHasError(true);
             setIsLoading(false);
@@ -127,7 +113,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           console.log('[Video play/pause error]', err);
           setHasError(true);
         }
-      }, [isVisible, status, hasError]);
+      }, [isVisible, status, hasError, uri]);
 
     // Cleanup on unmount 
     useEffect(() => {

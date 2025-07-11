@@ -1,26 +1,39 @@
-import { useState, useRef } from 'react';
+import { useCallback, useState, useRef } from 'react';
 import { ViewToken } from 'react-native';
 
 export const useViewabilityTracking = () => {
-    const [hIndex, setHIndex] = useState<Record<string, number>>({});
     const [vIndex, setVIndex] = useState(0);
 
-    const onViewableChange = useRef(
-        ({ viewableItems}: { viewableItems: ViewToken[]}) => {
-            if (viewableItems.length) {
-                setVIndex(viewableItems[0].index ?? 0);
-            }
-        }
-    ).current; 
+    /* mutable ref for currently visible restaurant id */
+  const currentRestaurantIdRef = useRef<string | null>(null);
 
-    const updateHorizontalIndex = (restaurantId: string, index: number) => {
-        setHIndex(prev => ({ ...prev, [restaurantId]: index }));
-    };
+  /* horizontal index for the *visible* restaurant only */
+  const [visibleHIndex, setVisibleHIndex] = useState(0);
 
-    return {
-        hIndex, 
-        vIndex, 
-        onViewableChange, 
-        updateHorizontalIndex
-    };
+    /* viewability callback – recreated safely on every render */
+  const onViewableChange = useCallback(
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+      if (!viewableItems.length) return;
+
+      const first = viewableItems[0];
+      currentRestaurantIdRef.current = first.item.id as string;
+      setVIndex(first.index ?? 0);
+      /* when vertical row changes, reset visibleHIndex to 0 */
+      setVisibleHIndex(0);
+    },
+    [],
+  );
+
+    /* called inside RestaurantCard; only updates overlay when
+     the index belongs to the *currently* visible row            */
+  const updateHorizontalIndex = useCallback(
+    (restaurantId: string, index: number) => {
+      if (restaurantId === currentRestaurantIdRef.current) {
+        setVisibleHIndex(index);
+      }
+    },
+    [],
+  );
+
+  return { vIndex, visibleHIndex, onViewableChange, updateHorizontalIndex };
 };
