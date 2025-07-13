@@ -21,7 +21,7 @@ export const GoogleSignInButton: React.FC<OAuthButtonProps> = ({
     >
       {/* 1️⃣  Replace with your own local logo if you like */}
       <Image
-        source={require('@/assets/images/google_logo.png')}
+        source={require('@/assets/images/google_logo.svg')}
         style={styles.googleLogo}
       />
       {/* 2️⃣  Text is now visually centred, but the icon’s fixed width
