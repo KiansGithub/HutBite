@@ -47,6 +47,7 @@ export interface Database {
           description: string | null
           price: number
           video_url: string | null
+          thumb_url: string | null;
         }
         Insert: {
           id?: string
@@ -56,6 +57,7 @@ export interface Database {
           description?: string | null
           price: number
           video_url?: string | null
+          thumb_url?: string | null; 
         }
         Update: {
           id?: string
@@ -65,6 +67,7 @@ export interface Database {
           description?: string | null
           price?: number
           video_url?: string | null
+          thumb_url?: string | null; 
         }
       }
       user_likes: {

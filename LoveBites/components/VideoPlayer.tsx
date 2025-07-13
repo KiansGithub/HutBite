@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { StyleSheet, TouchableWithoutFeedback, View, Text } from 'react-native';
+import { StyleSheet, TouchableWithoutFeedback, View, Text, Animated } from 'react-native';
 import { useVideoPlayer, VideoView, type VideoSource } from 'expo-video';
 import { useEvent } from 'expo';
 // import AnalyticsService from '@/lib/analytics';
 
 interface VideoPlayerProps {
     uri: string; 
+    thumbUri: string;
     itemId: string; 
     isVisible: boolean; 
     width: number; 
@@ -14,6 +15,7 @@ interface VideoPlayerProps {
 
 export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     uri, 
+    thumbUri,
     itemId, 
     isVisible, 
     width, 
@@ -24,6 +26,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const playerRef       = useRef<ReturnType<typeof useVideoPlayer> | null>(null);
     const startedOnceRef  = useRef(false);   // only seek(0) on FIRST play
+
+    // thumbnail fade state 
+    const [showThumb, setShowThumb] = useState(true);
+    const opacity = useRef(new Animated.Value(1)).current; 
 
     const videoSource: VideoSource = useMemo(() => ({
         uri, 
@@ -48,11 +54,27 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
     );
 
+    console.log('thumb uri: ', thumbUri);
+
     // Status tracking 
     const { status, error } = useEvent(player, 'statusChange', {
         status: player.status, 
         error: undefined, 
     });
+
+    /* fade thumbnail when ready */
+    useEffect(() => {
+      if (status === 'readyToPlay') {
+        Animated.timing(opacity, {
+          toValue: 0, 
+          duration: 250, 
+          useNativeDriver: true,
+        }).start(() => setShowThumb(false));
+      } else if (status === 'loading') {
+        setShowThumb(true);
+        opacity.setValue(1);
+      }
+    }, [status, opacity]);
 
     useEffect(() => {
         console.log('[Video Status]', {
@@ -174,6 +196,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
     return (
         <TouchableWithoutFeedback onPress={handleTap}>
+          <View style={{ width, height }}>
         <VideoView
           player={player}
           style={[styles.video, { width, height }]}
@@ -184,6 +207,15 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           useExoShutter={false}
           surfaceType="textureView"
         />
+
+        {/* {showThumb && (
+          <Animated.Image 
+            source={{ uri: thumbUri }}
+            style={{ position: 'absolute', width, height, opacity }}
+            resizeMode="cover"
+          />
+        )} */}
+        </View>
         </TouchableWithoutFeedback>
       );
     };

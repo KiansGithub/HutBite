@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  Animated,
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { VideoPlayer } from './VideoPlayer';
@@ -84,6 +85,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
                 <View style={styles.videoContainer}>
                   <VideoPlayer
                     uri={mi.video_url}
+                    thumbUri={mi.thumb_url ?? mi.video_url!.replace('.mp4', '.jpg')}
                     itemId={mi.id}
                     isVisible={isVisible}
                     width={W}
@@ -91,7 +93,13 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
                   />
                 </View>
               ) : (
-                <View style={{ width: W, height: H }} />
+                <View style={styles.videoContainer}>
+       <Animated.Image
+         source={{ uri: mi.thumb_url ?? mi.video_url!.replace('.mp4', '.jpg') }}
+         style={{ width: W, height: H }}
+         resizeMode="cover"
+       />
+     </View>
               )
         }
         style={styles.flatList}
