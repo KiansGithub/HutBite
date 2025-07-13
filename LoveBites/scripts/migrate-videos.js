@@ -1,133 +1,98 @@
 // scripts/migrate-videos.js  (ES module)
-// -------------------------------------
-import { createClient }      from '@supabase/supabase-js';
-import { tmpdir as osTmp }   from 'os';
-import { join }              from 'path';
-import { mkdtemp, unlink,
-         writeFile, readFile } from 'fs/promises';
-import { spawn }  from 'child_process';
-import ffmpegPath from 'ffmpeg-static';    // ← NEW
+import { createClient } from '@supabase/supabase-js';
+import { tmpdir as osTmp } from 'os';
+import { join } from 'path';
+import { mkdtemp, unlink, writeFile, readFile } from 'fs/promises';
+import { spawn } from 'child_process';
+import ffmpegPath from 'ffmpeg-static';
 
-/* ─── your project creds ─── */
 const SUPABASE_URL = 'https://tanexoecudctdtlmuqhr.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhbmV4b2VjdWRjdGR0bG11cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzc2NTEsImV4cCI6MjA2NTkxMzY1MX0.t1GE9cjHsXwTDzDRWImLFY22CXctC9ikbQb39OyD75Y';     // **NOT** the anon key
-/* ─────────────────────────── */
-
-const BUCKET = 'videos';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;          //   ← don't inline keys
+const BUCKET       = 'videos';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   global: { headers: { 'x-application-name': 'video-migrator' } }
 });
 
+/* ──────────────────────────── helpers ─────────────────────────── */
+
 async function findMovFiles(prefix = '') {
-    const { data, error } = await supabase
-      .storage.from(BUCKET)
-      .list(prefix, { limit: 1000 });          // 1000 = API max
-    if (error) throw error;
-  
-    let keys = [];
-  
-    for (const entry of data) {
-      const path = prefix ? `${prefix}/${entry.name}` : entry.name;
-      const isFolder = entry.metadata === null;   // ✅ the reliable check
-  
-      if (isFolder) {
-        // recurse into sub-folders
-        keys.push(...await findMovFiles(path));
-      } else if (entry.name.toLowerCase().endsWith('.mp4')) {
-        keys.push(path);
-      }
+  const { data, error } = await supabase
+    .storage.from(BUCKET)
+    .list(prefix, { limit: 1000 });
+  if (error) throw error;
+
+  const keys = [];
+
+  for (const entry of data) {
+    const path = prefix ? `${prefix}/${entry.name}` : entry.name;
+    const isFolder = entry.metadata === null;  // folders have null metadata
+
+    if (isFolder) {
+      keys.push(...await findMovFiles(path));
+    } else if (entry.name.toLowerCase().endsWith('.mov')) {      // 🟢  correct filter
+      keys.push(path);
     }
-  
-    return keys;
   }
+  return keys;
+}
 
-async function transcode(movPath, mp4Path) {
-  await new Promise((res, rej) => {
+async function transcode(input, output) {
+  await new Promise((resolve, reject) => {
     spawn(ffmpegPath, [
-      '-i', movPath,
-      // 1) guaranteed Baseline/Main, safe level
-  '-profile:v', 'main',
-  '-level:v', '4.0',
-
-  // 2) yuv420p & even dimensions
-  '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p',
-
-  // 3) fast start (same as before)
-   '-movflags', '+faststart',
-
-  // 4) keyframe every ~48 frames (2 s at 24 fps, 1.6 s at 30 fps)
-  '-x264-params', 'keyint=48:min-keyint=48:scenecut=0',
-
-  // 5) sensible bitrate/quality
-  '-crf', '23',
-  '-preset', 'medium',
-      '-c:a', 'aac',
-      '-b:a', '160k',
+      '-i', input,
+      '-profile:v', 'main', '-level:v', '4.0',
+      '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p',
       '-movflags', '+faststart',
-      mp4Path
+      '-x264-params', 'keyint=48:min-keyint=48:scenecut=0',
+      '-crf', '23', '-preset', 'medium',
+      '-c:a', 'aac', '-b:a', '160k',
+      output,
     ], { stdio: 'inherit' })
-      .on('close', code => code === 0 ? res() : rej(new Error(`ffmpeg exited with code ${code}`)));
+    .on('close', code => code === 0 ? resolve() : reject(new Error(`ffmpeg exit ${code}`)));
   });
 }
 
+/* ──────────────────────────── main ─────────────────────────── */
+
 async function main() {
   const movKeys = await findMovFiles();
-  if (!movKeys.length) {
-    console.log('Nothing left to migrate 🎉');
-    return;
-  }
+  if (!movKeys.length) return console.log('Nothing left to migrate 🎉');
 
   for (const key of movKeys) {
-    const base = key.replace(/\.mov$/i, '');
+    const stem   = key.replace(/\.mov$/i, '');   // e.g. path/foo
     const tmpDir = await mkdtemp(join(osTmp(), 'vid-'));
-    const movPath = join(tmpDir, 'in.mov');
-    const mp4Path = join(tmpDir, 'out.mp4');
+    const mov    = join(tmpDir, 'in.mov');
+    const mp4    = join(tmpDir, 'out.mp4');
 
-    console.log(`▶  Processing ${key}`);
+    console.log(`▶  ${key}`);
 
-    // Download
-    const { data: urlData, error: urlErr } = await supabase.storage.from(BUCKET).createSignedUrl(key, 60);
-    if (urlErr) throw urlErr;
+    // download
+    const { data: { signedUrl } } =
+      await supabase.storage.from(BUCKET).createSignedUrl(key, 300);
+    const buf = Buffer.from(await fetch(signedUrl).then(r => r.arrayBuffer()));
+    await writeFile(mov, buf);
 
-    const buf = Buffer.from(await fetch(urlData.signedUrl).then(r => r.arrayBuffer()));
-    await writeFile(movPath, buf);
+    // transcode
+    await transcode(mov, mp4);
 
-    // Transcode
-    await transcode(movPath, mp4Path);
-
-    // Upload .mp4
-    const mp4Buf = await readFile(mp4Path);
-    const { error: upErr } = await supabase.storage.from(BUCKET).upload(`${base}.mp4`, mp4Buf, {
+    // upload
+    const mp4Buf = await readFile(mp4);
+    await supabase.storage.from(BUCKET).upload(`${stem}.mp4`, mp4Buf, {
       upsert: true,
-      contentType: 'video/mp4'
+      contentType: 'video/mp4',
     });
-    if (upErr) throw upErr;
 
-    // Delete .mov
-    const { error: delErr } = await supabase.storage.from(BUCKET).remove([key]);
-    if (delErr) throw delErr;
+    // delete .mov
+    await supabase.storage.from(BUCKET).remove([key]);
 
-    // Clean up local temp files
-    await unlink(movPath);
-    await unlink(mp4Path);
-
-    console.log(`✅  ${key} → ${base}.mp4`);
+    await unlink(mov); await unlink(mp4);
+    console.log(`✅  ${key} → ${stem}.mp4`);
   }
 
-  // Patch DB .mov URLs
-  const { error: patchErr, count } = await supabase
-    .from('menu_items')
-    .update({ video_url: supabase.sql`REPLACE(video_url, '.mov', '.mp4')` })
-    .like('video_url', '%.mov')
-    .select('id', { count: 'exact', head: true });
-  if (patchErr) throw patchErr;
-
-  console.log(`🔧  Patched ${count ?? 0} DB rows`);
-  console.log('🎉  Migration complete');
+  // patch DB
+  await supabase.rpc('replace_menu_item_ext', { from: '.mov', to: '.mp4' });
+  console.log('🔧  DB paths patched');
 }
 
-main().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+main().catch(err => { console.error(err); process.exit(1); });
