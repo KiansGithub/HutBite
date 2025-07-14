@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import * as QueryParams from 'expo-auth-session/build/QueryParams';
+import * as WebBrowser from 'expo-web-browser';
+import { makeRedirectUri } from 'expo-auth-session';
 // import { AnalyticsService } from '@/lib/analytics';
  
 interface AuthState {
@@ -73,85 +75,45 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithProvider: async (provider: 'google' | 'apple') => {
     try {
-      const { makeRedirectUri } = await import('expo-auth-session');
-      const WebBrowser = await import('expo-web-browser');
-      const Linking = await import('expo-linking');
- 
-      // Use the custom scheme for production, exp:// for development
-      const redirectTo = 'livebites://auth/callback';
- 
-      console.log('Redirect URI:', redirectTo);
- 
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      // Build a native/HTTPS deep-link redirect URI
+      const redirectUri = makeRedirectUri({ scheme: 'livebites', path: '/auth/callback' });
+      console.log('Redirect URI:', redirectUri);
+
+      // Initiate OAuth
+      const { data, error: initError } = await supabase.auth.signInWithOAuth({
         provider,
-        options: {
-          redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          }
-        },
+        options: { redirectTo: redirectUri },
       });
- 
-      if (error) {
-        console.error('OAuth initiation error:', error);
-        return { error };
+      if (initError) {
+        console.error('OAuth init failed:', initError);
+        return { error: initError };
       }
- 
-      if (data?.url) {
-        console.log('Opening OAuth URL:', data.url);
- 
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url, 
-          redirectTo, 
-          { showInRecents: false }
-        );
-        console.log('[OAUTH] WebBrowser result →', result);
 
-        // 2️⃣ If the user cancelled, bail out early
+      // Open the browser for user sign-in
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
       if (result.type !== 'success') {
-        return { error: { message: 'User cancelled' } };
+        return { error: { message: 'User cancelled or failed to authenticate' } };
       }
 
-          // 3️⃣ The deep-link URL (with tokens) is right here:
-        const redirectURL = result.url;
-        console.log('[OAUTH] redirectURL →', redirectURL);
-
-        const { params } = QueryParams.getQueryParams(redirectURL);
-        console.log('[TOKENS] →', params)
- 
-        if (result.type === 'success' || result.type === 'cancel') {
-          // Wait for the session to be established
-          await new Promise(resolve => setTimeout(resolve, 2000));
- 
-          const { data: sessionData, error: setErr } = await supabase.auth.setSession({
-            access_token: params.access_token, 
-            refresh_token: params.refresh_token,
-          });
-          console.log('[SET-SESSION] data →', sessionData, 'err →', setErr);
-
-          if (setErr) {
-            return { error: setErr };
-          }
-
-          set({
-            user: sessionData.session.user, 
-            session: sessionData.session,
-          });
-          console.log('[AUTH] Signed in 🎉');
-          return { error: null };
-        } else {
-          console.log('OAuth cancelled or failed:', result);
-          return { error: { message: 'Authentication was cancelled' } };
-        }
+      // Parse the tokens from the redirect URL
+      const { params } = QueryParams.getQueryParams(result.url);
+      const { error: setErr } = await supabase.auth.setSession({
+        access_token: params.access_token!, 
+        refresh_token: params.refresh_token!,
+      });
+      if (setErr) {
+        console.error('setSession error:', setErr);
+        return { error: setErr };
       }
- 
-      return { error: { message: 'No OAuth URL received' } };
+
+      // Success! onAuthStateChange will fire automatically
+      return { error: null };
     } catch (err) {
-      console.error('OAuth error:', err);
+      console.error('Unexpected OAuth error:', err);
       return { error: { message: 'Authentication failed. Please try again.' } };
     }
   },
+
  
   signOut: async () => {
     await supabase.auth.signOut();
