@@ -94,11 +94,11 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
                 </View>
               ) : (
                 <View style={styles.videoContainer}>
-       <Animated.Image
+       {/* <Animated.Image
          source={{ uri: mi.thumb_url ?? mi.video_url!.replace('.mp4', '.jpg') }}
          style={{ width: W, height: H }}
          resizeMode="cover"
-       />
+       /> */}
      </View>
               )
         }
