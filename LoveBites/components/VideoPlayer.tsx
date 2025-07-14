@@ -8,7 +8,7 @@ interface VideoPlayerProps {
     uri: string; 
     thumbUri: string;
     itemId: string; 
-    isVisible: boolean; 
+    mode: 'play' | 'warm'
     width: number; 
     height: number; 
 }
@@ -17,7 +17,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     uri, 
     thumbUri,
     itemId, 
-    isVisible, 
+    mode,
     width, 
     height,
 }) => {
@@ -32,27 +32,38 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const opacity = useRef(new Animated.Value(1)).current; 
 
     const videoSource: VideoSource = useMemo(() => ({
-        uri, 
-        useCaching: true, 
-        headers: {
-            'User-Agent': 'LiveBites/1.0',
-            'Accept': 'video/*'
-        }
-    }), [uri]);
+      uri, 
+      useCaching: true, 
+      preload: mode === 'warm' ? 'auto' : 'none',
+      headers: {
+        'User-Agent': 'LiveBites/1.0',
+        'Accept': 'video/*',
+      },
+    }), [uri, mode]);
 
     const player = useVideoPlayer(
-        videoSource,
-        p => {
-            playerRef.current = p;
-            p.loop = true; 
-            p.muted = false; 
-            p.bufferOptions = {
-                minBufferForPlayback: 1.0,
-                preferredForwardBufferDuration: 10,
-                waitsToMinimizeStalling: false,
-            };
-        }
+      videoSource, 
+      p => {
+        playerRef.current = p; 
+        p.loop = true; 
+        p.muted = false; 
+        p.bufferOptions = {
+          minBufferForPlayback: 1.0, 
+          preferredForwardBufferDuration: 10, 
+          waitsToMinimizeStalling: false, 
+        };
+      }
     );
+
+    useEffect(() => {
+      const p = playerRef.current; 
+      if (!p) return; 
+      if (mode === 'play') {
+        p.play();
+      } else {
+        p.pause();
+      }
+    }, [mode]);
 
     console.log('thumb uri: ', thumbUri);
 
@@ -81,7 +92,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             itemId, 
             status, 
             error: error?.message, 
-            isVisible, 
             uri: uri.substring(0, 50) + '...'
         });
 
@@ -109,33 +119,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             setIsLoading(false);
         }
     }, [status, error, itemId, uri]);
-
-    useEffect(() => {
-        const p = playerRef.current;
-        if (!p) return;
-      
-        const shouldPlay =
-          isVisible && status === 'readyToPlay' && !hasError;
-      
-        // Seek to the beginning only the first time we ever start
-        if (shouldPlay && !startedOnceRef.current) {
-          p.currentTime = 0;
-          startedOnceRef.current = true;
-        }
-      
-        try {
-          if (shouldPlay) {
-            p.play();                 // returns void
-            setIsPlaying(true);
-          } else {
-            p.pause();                // returns void
-            setIsPlaying(false);
-          }
-        } catch (err) {
-          console.log('[Video play/pause error]', err);
-          setHasError(true);
-        }
-      }, [isVisible, status, hasError]);
 
     // Cleanup on unmount 
     useEffect(() => {
@@ -204,7 +187,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={false}
+          useExoShutter={true}
           surfaceType="textureView"
         />
 

@@ -26,6 +26,7 @@ const { height: H, width: W } = Dimensions.get('screen');
 interface RestaurantCardProps {
   restaurant: Restaurant;
   menuItems: MenuItem[];
+  rowMode: string;
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null) => void;
@@ -38,6 +39,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
   restaurant,
   menuItems,
   isVisible,
+  rowMode,
   onHorizontalScroll,
   onOrderPress,
   distance, 
@@ -67,6 +69,8 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
     return lastSpace > 0 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
   };
 
+  
+
   return (
     <View style={styles.container}>
       {/* ──────────────── Media carousel ──────────────── */}
@@ -80,33 +84,43 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           setHIndex(idx);              // local state → only this card re-renders
 +         onHorizontalScroll(idx);
         }}
-        renderItem={({ item: mi, index: hPos }) =>
-          hPos === hIndex && mi.video_url ? (        // ← only mount the focused item
-                <View style={styles.videoContainer}>
-                  <VideoPlayer
-                    uri={mi.video_url}
-                    thumbUri={mi.thumb_url ?? mi.video_url!.replace('.mp4', '.jpg')}
-                    itemId={mi.id}
-                    isVisible={isVisible}
-                    width={W}
-                    height={H}
-                  />
-                </View>
-              ) : (
-                <View style={styles.videoContainer}>
-       {/* <Animated.Image
-         source={{ uri: mi.thumb_url ?? mi.video_url!.replace('.mp4', '.jpg') }}
-         style={{ width: W, height: H }}
-         resizeMode="cover"
-       /> */}
-     </View>
-              )
-        }
+        renderItem={({ item: mi, index: itemIndex }) => {
+          /* -------- ring logic for the ITEM -------- */
+          const isCurrent   = rowMode === 'play' && itemIndex === hIndex;
+          const isPreloaded =
+            rowMode !== 'off' && Math.abs(itemIndex - hIndex) === 1;
+  
+          const mode = isCurrent
+            ? 'play'
+            : isPreloaded
+            ? 'warm'
+            : 'off';
+  
+          if (mode === 'off') {
+            return <View style={styles.videoContainer} />;
+          }
+  
+          return (
+            <View style={styles.videoContainer}>
+              {mi.video_url && (
+                <VideoPlayer
+                  uri={mi.video_url}
+                  thumbUri={
+                    mi.thumb_url ?? mi.video_url.replace('.mp4', '.jpg')
+                  }
+                  itemId={mi.id}
+                  mode={mode}   
+                  width={W}
+                  height={H}
+                />
+              )}
+            </View>
+          );
+        }}
         style={styles.flatList}
         maxToRenderPerBatch={3}
         windowSize={3}
         initialNumToRender={1}
-        removeClippedSubviews
       />
 
       {/* ──────────────── Bottom overlay ──────────────── */}

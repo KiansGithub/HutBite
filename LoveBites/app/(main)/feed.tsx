@@ -46,7 +46,10 @@ export default function FeedScreen() {
 
   const renderRestaurant = ({ item, index }: { item: any; index: number }) => {
     const menu = menuItems[item.id] || [];
-    if (index !== vIndex) {
+    const isCurrent = index === vIndex; 
+    const isPreloaded = Math.abs(index - vIndex) === 1;
+
+    if (!isCurrent && !isPreloaded) {
       return <View style={{ width: '100%', height: H }} />;
     }
 
@@ -54,6 +57,7 @@ export default function FeedScreen() {
       <RestaurantCard
         restaurant={item}
         menuItems={menu}
+        rowMode={isCurrent ? 'play' : 'warm'}
         isVisible={true}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
@@ -123,11 +127,11 @@ export default function FeedScreen() {
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
-          maxToRenderPerBatch={3}
-          windowSize={3}
-          initialNumToRender={1}
-          updateCellsBatchingPeriod={100}
-          removeClippedSubviews
+          maxToRenderPerBatch={7}
+          windowSize={7}
+          initialNumToRender={3}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews={false}
         />
       )}
 
