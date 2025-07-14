@@ -34,7 +34,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const videoSource: VideoSource = useMemo(() => ({
       uri, 
       useCaching: true, 
-      preload: mode === 'warm' ? 'auto' : 'none',
+      preload: 'auto',
       headers: {
         'User-Agent': 'LiveBites/1.0',
         'Accept': 'video/*',
@@ -120,19 +120,17 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         }
     }, [status, error, itemId, uri]);
 
-    // Cleanup on unmount 
     useEffect(() => {
-        return () => {
-            try {
-                if (playerRef.current) {
-                    playerRef.current.pause();
-                    console.log('[Video Cleanup]', { itemId });
-                }
-            } catch (err) {
-                console.log('[Video Cleanup Error]', { itemId, error: err });
-            }
-        };
-    }, [itemId]);
+      return () => {
+        // this will now only run when the entire component unmounts
+        try {
+          playerRef.current?.pause();
+          console.log('[Video Cleanup on unmount]');
+        } catch {
+          // ignore: native player already gone
+        }
+      };
+    }, []);  // ← empty deps
 
 
     const handleTap = () => {

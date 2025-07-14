@@ -115,6 +115,7 @@ export default function FeedScreen() {
         <FlatList
           data={restaurants}
           pagingEnabled
+          bounces={false}
           snapToInterval={H}
           snapToAlignment="start"
           decelerationRate="fast"

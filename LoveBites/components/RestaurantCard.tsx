@@ -78,6 +78,7 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
         data={menuItems}
         horizontal
         pagingEnabled
+        bounces={false}
         keyExtractor={(mi) => mi.id.toString()}
         onMomentumScrollEnd={(e) => {
           const idx = Math.round(e.nativeEvent.contentOffset.x / W);
