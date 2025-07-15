@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     /* Restaurant info container */
     restaurantInfoContainer: {
         position: 'absolute',
-        top: 90, 
+        top: 110, 
         left: 0, 
         right: 0, 
         alignItems: 'center',

@@ -34,10 +34,13 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
   const expand = () => {
     setExpanded(true);
     onExpand?.();
-    setTimeout(() => inputRef.current?.focus(), 100);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+    });
   };
 
   const collapse = () => {
+    inputRef.current?.blur();
     setExpanded(false);
     onCollapse?.();
     onClear?.();
