@@ -25,16 +25,20 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
     onCategoryPress,
 }) => {
     const [searchExpanded, setSearchExpanded] = useState(false);
+    const [shouldFocus, setShouldFocus] = useState(true);
     
     const handleSearchExpand = () => {
+      setShouldFocus(true);
         setSearchExpanded(true);
     };
 
     const handleSearchCollapse = () => {
+      setShouldFocus(true);
         setSearchExpanded(false);
     };
 
     const handleCategoryPress = (category: string) => {
+      setShouldFocus(false);
       onCategoryPress(category);
       setSearchExpanded(true);
     }
@@ -107,6 +111,7 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
         onExpand={handleSearchExpand}
         onCollapse={handleSearchCollapse}
         expanded={searchExpanded}
+        autoFocus={shouldFocus}
         style={styles.searchBarContainer}
       />
         </View>

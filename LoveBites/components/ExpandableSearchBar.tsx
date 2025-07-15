@@ -18,6 +18,7 @@ interface ExpandableSearchBarProps {
   onCollapse?: () => void; 
   style?: StyleProp<ViewStyle>;
   expanded?: boolean;
+  autoFocus?: boolean;
 }
 
 export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
@@ -29,6 +30,7 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
   onCollapse, 
   style,
   expanded: expandedProp,
+  autoFocus = true,
 }) => {
   const [expanded, setExpanded] = useState<boolean>(expandedProp ?? false);
   const inputRef = useRef<TextInput>(null);
@@ -38,9 +40,11 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
     if (expandedProp !== undefined) {
       setExpanded(expandedProp);
       if (expandedProp) {
-        requestAnimationFrame(() => {
-          inputRef.current?.focus();
-        });
+        if (autoFocus) {
+          requestAnimationFrame(() => {
+            inputRef.current?.focus();
+          });
+        }
       } else {
         inputRef.current?.blur();
       }
@@ -52,9 +56,11 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
       setExpanded(true);
     }
     onExpand?.();
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
+    if (autoFocus) {
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    }
   };
 
   const collapse = () => {
