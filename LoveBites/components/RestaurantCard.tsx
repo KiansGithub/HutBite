@@ -47,13 +47,12 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
 
   const handleIndexChange = (index: number) => {
     setHIndex(index);
+    onHorizontalScroll(index);
   };
 
   if (!currentMenuItem) {
     return <View style={styles.container} />;
-  }
-
-  
+  }  
 
   return (
     <View style={styles.container}>
