@@ -20,43 +20,39 @@ export const useSearch = (restaurants: Restaurant[]) => {
     }
  
     const query = searchQuery.toLowerCase().trim();
-    const results: SearchResult[] = [];
+    const resultsMap = new Map<string, SearchResult>();
  
     restaurants.forEach(restaurant => {
-      let score = 0;
-      let matchType: 'name' | 'description' | 'tag' = 'name';
+      let totalScore = 0; 
+      let bestMatchType: 'name' | 'description' | 'tag' | 'cuisine' = 'name';
+      let matchedCuisines: string[] = [];
 
       // Cuisine matching (high priority)
       if (restaurant.cuisines && restaurant.cuisines.length > 0) {
-        const matchedCuisines: string[] = [];
 
         restaurant.cuisines.forEach(cuisine => {
           const normalizedCuisine = normalizeCuisine(cuisine);
           if (normalizedCuisine.includes(query) || query.includes(normalizedCuisine)) {
             matchedCuisines.push(cuisine);
-            score += normalizedCuisine === query ? 90 : 70;
-            matchType = 'cuisine';
+            totalScore += normalizedCuisine === query ? 90 : 70;
+            bestMatchType = 'cuisine';
           }
         });
-
-        if (matchedCuisines.length > 0) {
-          results.push({ restaurant, score, matchType, matchedCuisines });
-        }
       }
  
       // Name matching (highest priority)
       const name = restaurant.name.toLowerCase();
       if (name.includes(query)) {
-        score += name.startsWith(query) ? 100 : 80;
-        matchType = 'name';
+        totalScore += name.startsWith(query) ? 100 : 80;
+        if (totalScore >= 80) bestMatchType = 'name';
       }
  
       // Fuzzy name matching
-      if (score === 0) {
+      if (!name.includes(query)) {
         const nameScore = calculateFuzzyScore(query, name);
         if (nameScore > 0.6) {
-          score += nameScore * 60;
-          matchType = 'name';
+          totalScore += nameScore * 60; 
+          if (totalScore >= 36) bestMatchType = 'name';
         }
       }
  
@@ -67,37 +63,43 @@ export const useSearch = (restaurants: Restaurant[]) => {
  
         // Direct description match
         if (description.includes(query)) {
-          score += 40;
-          matchType = 'description';
+          totalScore == 40; 
+          if (bestMatchType === 'name' && totalScore < 80) bestMatchType = 'description';
         }
  
         // Tag matching
         tags.forEach(tag => {
           if (tag.includes(query)) {
-            score += tag === query ? 70 : 50;
-            matchType = 'tag';
+            totalScore += tag === query ? 70 : 50;
+            if (bestMatchType === 'name' && totalScore < 80) bestMatchType = 'tag';
           }
         });
  
         // Fuzzy tag matching
-        if (score === 0) {
+        if (!tags.some(tag => tags.includes(query))) {
           tags.forEach(tag => {
             const tagScore = calculateFuzzyScore(query, tag);
             if (tagScore > 0.7) {
-              score += tagScore * 30;
-              matchType = 'tag';
+              totalScore += tagScore * 30; 
+              if (bestMatchType === 'name' && totalScore < 80) bestMatchType = 'tag';
             }
           });
         }
       }
  
-      if (score > 0) {
-        results.push({ restaurant, score, matchType });
+      // Only add results if theres a match 
+      if (totalScore > 0) {
+        resultsMap.set(restaurant.id.toString(), {
+          restaurant, 
+          score: totalScore, 
+          matchType: bestMatchType, 
+          ...(matchedCuisines.length > 0 && { matchedCuisines })
+        });
       }
     });
  
     // Sort by score (highest first)
-    return results
+    return Array.from(resultsMap.values())
       .sort((a, b) => b.score - a.score)
       .map(result => result.restaurant);
   }, [restaurants, searchQuery]);
