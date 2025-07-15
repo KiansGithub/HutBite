@@ -134,12 +134,12 @@ export const RestaurantCard: React.FC<RestaurantCardProps> = ({
           <View style={styles.menuItemInfo}>
             {/* name + price on one row */}
             <View style={styles.topRow}>
-              <Text numberOfLines={1} style={styles.menuItemName}>
-                {currentMenuItem.title}
-              </Text>
-              {/* <Text style={styles.menuItemPrice}>
-                £{currentMenuItem.price.toFixed(2)}
-              </Text> */}
+            <View style={styles.nameContainer}>
+                <Text style={styles.restaurantName}>{restaurant.name}</Text>
+                <Text numberOfLines={1} style={styles.menuItemName}>
+                  {currentMenuItem.title}
+                </Text>
+              </View>
             </View>
 
             {/* description section */}
@@ -226,9 +226,19 @@ const styles = StyleSheet.create({
   /* row for name + price */
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 14,
+  },
+  nameContainer: {
+    flex: 1,
+    marginRight: 12,
+  },
+  restaurantName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.75)',
+    marginBottom: 2,
   },
   menuItemName: { fontSize: 22, fontWeight: '700', color: '#fff', flexShrink: 1 },
   menuItemPrice: {

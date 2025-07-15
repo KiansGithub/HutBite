@@ -82,14 +82,9 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
             )}
 
             {/* Restaurant info - hidden when search expanded */}
-            {!searchExpanded && (
+            {!searchExpanded && distance !== undefined && (
 
                 <View style={styles.restaurantInfoContainer} pointerEvents="none">
-                    <View style={styles.restaurantBubble}>
-                        <Text style={styles.restaurantBubbleText}>{restaurantName}</Text>
-                    </View>
-
-                    {distance !== undefined && (
                         <View style={styles.distanceBadge}>
                         <Ionicons
                               name="location-outline"
@@ -101,7 +96,6 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
                               {distance < 1 ? '<1' : distance.toFixed(1)} mi
                             </Text>
                         </View>
-                    )}
                 </View>
             )}
 
@@ -162,18 +156,18 @@ const styles = StyleSheet.create({
     },
 
     /* Restaurant name bubble */
-    restaurantBubble: {
-        paddingVertical: 6, 
-        paddingHorizontal: 18, 
-        borderRadius: 20, 
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        marginBottom: 8, 
-    },
-    restaurantBubbleText: {
-        color: '#fff',
-        fontSize: 18, 
-        fontWeight: '600'
-    },
+    // restaurantBubble: {
+    //     paddingVertical: 6, 
+    //     paddingHorizontal: 18, 
+    //     borderRadius: 20, 
+    //     backgroundColor: 'rgba(0,0,0,0.6)',
+    //     marginBottom: 8, 
+    // },
+    // restaurantBubbleText: {
+    //     color: '#fff',
+    //     fontSize: 18, 
+    //     fontWeight: '600'
+    // },
      /* Distance badge */
   distanceBadge: {
     flexDirection: 'row',
