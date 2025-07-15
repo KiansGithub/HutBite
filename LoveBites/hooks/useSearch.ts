@@ -1,12 +1,14 @@
 import { useState, useMemo } from 'react';
 import { Database } from '@/lib/supabase.d';
+import { normalizeCuisine } from '@/utils/cuisine';
  
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
  
 interface SearchResult {
   restaurant: Restaurant;
   score: number;
-  matchType: 'name' | 'description' | 'tag';
+  matchType: 'name' | 'description' | 'tag' | 'cuisine';
+  matchedCuisines?: string[];
 }
  
 export const useSearch = (restaurants: Restaurant[]) => {
@@ -23,6 +25,24 @@ export const useSearch = (restaurants: Restaurant[]) => {
     restaurants.forEach(restaurant => {
       let score = 0;
       let matchType: 'name' | 'description' | 'tag' = 'name';
+
+      // Cuisine matching (high priority)
+      if (restaurant.cuisines && restaurant.cuisines.length > 0) {
+        const matchedCuisines: string[] = [];
+
+        restaurant.cuisines.forEach(cuisine => {
+          const normalizedCuisine = normalizeCuisine(cuisine);
+          if (normalizedCuisine.includes(query) || query.includes(normalizedCuisine)) {
+            matchedCuisines.push(cuisine);
+            score += normalizedCuisine === query ? 90 : 70;
+            matchType = 'cuisine';
+          }
+        });
+
+        if (matchedCuisines.length > 0) {
+          results.push({ restaurant, score, matchType, matchedCuisines });
+        }
+      }
  
       // Name matching (highest priority)
       const name = restaurant.name.toLowerCase();
