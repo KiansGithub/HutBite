@@ -112,6 +112,7 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
         onClear={() => onSearchQueryChange('')}
         onExpand={handleSearchExpand}
         onCollapse={handleSearchCollapse}
+        expanded={searchExpanded}
         style={styles.searchBarContainer}
       />
         </View>
@@ -215,13 +216,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20
   },
   categoryButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 12, 
-    paddingHorizontal: 12, 
-    paddingVertical: 4, 
-    marginHorizontal: 4, 
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginHorizontal: 4,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)', 
+    borderColor: 'rgba(0, 0, 0, 0.7)',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   categoryText: {
     color: '#fff',

@@ -17,6 +17,7 @@ interface ExpandableSearchBarProps {
   onExpand?: () => void; 
   onCollapse?: () => void; 
   style?: StyleProp<ViewStyle>;
+  expanded?: boolean;
 }
 
 export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
@@ -26,13 +27,30 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
   onClear,
   onExpand, 
   onCollapse, 
-  style
+  style,
+  expanded: expandedProp,
 }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState<boolean>(expandedProp ?? false);
   const inputRef = useRef<TextInput>(null);
 
+  // Keep interal state in sync with controlled prop 
+  React.useEffect(() => {
+    if (expandedProp !== undefined) {
+      setExpanded(expandedProp);
+      if (expandedProp) {
+        requestAnimationFrame(() => {
+          inputRef.current?.focus();
+        });
+      } else {
+        inputRef.current?.blur();
+      }
+    }
+  }, [expandedProp]);
+
   const expand = () => {
-    setExpanded(true);
+    if (expandedProp === undefined) {
+      setExpanded(true);
+    }
     onExpand?.();
     requestAnimationFrame(() => {
       inputRef.current?.focus();
@@ -41,7 +59,9 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
 
   const collapse = () => {
     inputRef.current?.blur();
-    setExpanded(false);
+    if (expandedProp === undefined) {
+      setExpanded(false);
+    }
     onCollapse?.();
     onClear?.();
   };
