@@ -102,6 +102,7 @@ export default function FeedScreen() {
         totalItems={menuItems[restaurants[vIndex]?.id]?.length ?? 0}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
+        onCategoryPress={(category) => setSearchQuery(category)}
       />
 
 {isSearching && restaurants.length === 0 ? (

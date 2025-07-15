@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Animated } from 'react-native';
+import { StyleSheet, View, Animated, ScrollView, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
 import { ExpandableSearchBar } from './ExpandableSearchBar';
+import { COMMON_CUISINES } from '@/utils/cuisine';
 
 interface TopOverlayProps {
     restaurantName: string; 
@@ -11,6 +12,7 @@ interface TopOverlayProps {
     totalItems: number; 
     searchQuery: string; 
     onSearchQueryChange: (text: string) => void; 
+    onCategoryPress: (categiry: string) => void; 
 }
 
 export const TopOverlay: React.FC<TopOverlayProps> = ({
@@ -20,6 +22,7 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
     totalItems, 
     searchQuery, 
     onSearchQueryChange,
+    onCategoryPress,
 }) => {
     const [searchExpanded, setSearchExpanded] = useState(false);
     
@@ -51,8 +54,31 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
                 ))}
             </View>
 
+            {/*Category buttons - only show when search not expanded */}
+            {!searchExpanded && (
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.categoryContainer}
+                contentContainerStyle={styles.categoryContent}
+              >
+                {COMMON_CUISINES.slice(0, 8).map((cuisine) => (
+                  <TouchableOpacity 
+                      key={cuisine}
+                      style={styles.categoryButton}
+                      onPress={() => onCategoryPress(cuisine)}
+                  >
+                    <Text style={styles.categoryText}>
+                      {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
             {/* Restaurant info - hidden when search expanded */}
             {!searchExpanded && (
+
                 <View style={styles.restaurantInfoContainer} pointerEvents="none">
                     <View style={styles.restaurantBubble}>
                         <Text style={styles.restaurantBubbleText}>{restaurantName}</Text>
@@ -167,5 +193,31 @@ const styles = StyleSheet.create({
     right: 20,
     paddingHorizontal: 0,
     paddingVertical: 0,
+  },
+
+  /* Category buttons */
+  categoryContainer: {
+    position: 'absolute',
+    top: 80,
+    left: 0, 
+    right: 0, 
+    maxHeight: 32, 
+  },
+  categoryContent: {
+    paddingHorizontal: 20
+  },
+  categoryButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 12, 
+    paddingHorizontal: 12, 
+    paddingVertical: 4, 
+    marginHorizontal: 4, 
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)', 
+  },
+  categoryText: {
+    color: '#fff',
+    fontSize: 11, 
+    fontWeight: '500',
   },
 })
