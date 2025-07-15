@@ -39,7 +39,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         'User-Agent': 'LiveBites/1.0',
         'Accept': 'video/*',
       },
-    }), [uri, mode]);
+    }), [uri]);
 
     const player = useVideoPlayer(
       videoSource, 
