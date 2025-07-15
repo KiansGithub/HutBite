@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   FlatList,
@@ -29,12 +29,19 @@ export default function FeedScreen() {
 
   // Use search results when searching, otherwise use all restaurants 
   const restaurants = isSearching? searchResults: allRestaurants;
+
+  // Ref to control scrolling when search results change 
+  const listRef = useRef<FlatList<any>>(null);
   const {
        vIndex,
        visibleHIndex,
        onViewableChange,
        updateHorizontalIndex,
      } = useViewabilityTracking();
+
+  React.useEffect(() => {
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+  }, [searchResults]);
 
   React.useEffect(() => {
     setIsDescriptionExpanded(false);
@@ -113,6 +120,7 @@ export default function FeedScreen() {
         </View>
       ) : (
         <FlatList
+          ref={listRef}
           data={restaurants}
           pagingEnabled
           bounces={false}
