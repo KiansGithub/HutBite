@@ -18,6 +18,7 @@ export interface Database {
           order_links: Json | null
           longitude: number
           latitude: number 
+          cuisines: string[]
         }
         Insert: {
           id?: string
@@ -27,6 +28,7 @@ export interface Database {
           order_links?: Json | null
           longitude?: number 
           latitude?: number
+          cuisines?: string[]
         }
         Update: {
           id?: string
@@ -36,6 +38,7 @@ export interface Database {
           order_links?: Json | null
           longitude?: number 
           latitude?: number
+          cuisines?: string[]
         }
       }
       menu_items: {
