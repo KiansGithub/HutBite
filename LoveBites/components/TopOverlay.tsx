@@ -34,6 +34,11 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
         setSearchExpanded(false);
     };
 
+    const handleCategoryPress = (category: string) => {
+      onCategoryPress(category);
+      setSearchExpanded(true);
+    }
+
     return (
         <View style={styles.container} pointerEvents="box-none">
             <View 
@@ -66,7 +71,7 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
                   <TouchableOpacity 
                       key={cuisine}
                       style={styles.categoryButton}
-                      onPress={() => onCategoryPress(cuisine)}
+                      onPress={() => handleCategoryPress(cuisine)}
                   >
                     <Text style={styles.categoryText}>
                       {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
@@ -151,7 +156,8 @@ const styles = StyleSheet.create({
         top: 90, 
         left: 0, 
         right: 0, 
-        alignItems: 'center'
+        alignItems: 'center',
+        zIndex: 15, 
     },
 
     /* Restaurant name bubble */
@@ -193,15 +199,17 @@ const styles = StyleSheet.create({
     right: 20,
     paddingHorizontal: 0,
     paddingVertical: 0,
+    zIndex: 30
   },
 
   /* Category buttons */
   categoryContainer: {
     position: 'absolute',
-    top: 80,
+    top: 75,
     left: 0, 
     right: 0, 
     maxHeight: 32, 
+    zIndex: 25
   },
   categoryContent: {
     paddingHorizontal: 20
