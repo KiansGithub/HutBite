@@ -3,6 +3,7 @@ import { Alert } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/supabase.d';
 import { calculateDistance, shuffleArray } from '@/utils/distance';
+import { getUniqueCuisines, getCuisineCounts } from '@/utils/cuisine';
 import { useLocation } from './useLocation';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
@@ -102,5 +103,11 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
         fetchData();
     }, [location, searchResults]);
 
-    return { restaurants, menuItems, loading };
+    return { 
+        restaurants, 
+        menuItems, 
+        loading,
+        availableCuisines: getUniqueCuisines(restaurants),
+        cuisineCounts: getCuisineCounts(restaurants)
+    };
 };
