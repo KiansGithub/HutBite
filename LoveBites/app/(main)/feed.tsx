@@ -5,6 +5,7 @@ import {
   Dimensions,
   ActivityIndicator,
   View,
+  Image
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
@@ -27,18 +28,8 @@ export default function FeedScreen() {
   const { restaurants: allRestaurants, menuItems, loading } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching } = useSearch(allRestaurants);
 
-  const [isMomentum, setIsMomentum] = useState(false);
-
   // Use search results when searching, otherwise use all restaurants 
   const restaurants = isSearching? searchResults: allRestaurants;
-
-  const snapOffsets = React.useMemo(
-    () => restaurants.map((_, i) => i * H),
-    [restaurants]
-  );
-
-  const onMomentumScrollBegin = () => setIsMomentum(true);
-  const onMomentumScrollEnd = () => setIsMomentum(false);
 
   // Ref to control scrolling when search results change 
   const listRef = useRef<FlatList<any>>(null);
@@ -65,7 +56,7 @@ export default function FeedScreen() {
     ({ item, index }: { item: any; index: number }) => {
     const menu = menuItems[item.id] || [];
     const isCurrent = index === vIndex; 
-    const isPreloaded = Math.abs(index - vIndex) === 1;
+    const isPreloaded = Math.abs(index - vIndex) <= 2;
 
     if (!isCurrent && !isPreloaded) {
       return <View style={{ width: '100%', height: H }} />;
@@ -75,12 +66,10 @@ export default function FeedScreen() {
       <RestaurantCard
         restaurant={item}
         menuItems={menu}
-        rowMode={
-          isMomentum  ? 'warm'
-          : isCurrent ? 'play' 
-          : isPreloaded ? 'warm'
-          : 'off'
-        }
+        rowMode={isCurrent ? 'play' 
+                 : isPreloaded ? 'warm'
+                 : 'off'
+                }
         isVisible={true}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
@@ -149,18 +138,16 @@ export default function FeedScreen() {
           snapToAlignment="start"
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
-          onMomentumScrollBegin={onMomentumScrollBegin}
-          onMomentumScrollEnd={onMomentumScrollEnd}
           keyExtractor={(r) => r.id.toString()}
           renderItem={renderRestaurant}
           onViewableItemsChanged={onViewableChange}
-          viewabilityConfig={{ viewAreaCoveragePercentThreshold: 80 }}
+          viewabilityConfig={{ viewAreaCoveragePercentThreshold: 10 }}
           getItemLayout={getItemLayout}
-          snapToOffsets={snapOffsets}
+          snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
-          maxToRenderPerBatch={3}
-          windowSize={5}
+          maxToRenderPerBatch={7}
+          windowSize={7}
           initialNumToRender={3}
           updateCellsBatchingPeriod={50}
           removeClippedSubviews={false}

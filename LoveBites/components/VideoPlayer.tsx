@@ -75,6 +75,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     /* fade thumbnail when ready */
     useEffect(() => {
       if (status === 'readyToPlay') {
+        if (mode === 'warm' && !startedOnceRef.current) {
+          playerRef.current?.seekBy(0);
+          startedOnceRef.current = true; 
+        }
+
         Animated.timing(opacity, {
           toValue: 0, 
           duration: 250, 
