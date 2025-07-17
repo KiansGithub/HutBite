@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
     StyleSheet, 
     FlatList, 
@@ -19,6 +19,7 @@ interface VideoCarouselProps {
     onHorizontalScroll: (index: number) => void; 
     currentIndex: number; 
     onIndexChange: (index: number) => void; 
+    resetTrigger: number;
 }
 
 const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
@@ -27,7 +28,17 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     onHorizontalScroll,
     currentIndex, 
     onIndexChange, 
+    resetTrigger,
 }) => {
+    const flatListRef = useRef<FlatList>(null);
+
+    useEffect(() => {
+        if (resetTrigger > 0) {
+            flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+            onIndexChange(0);
+        }
+    }, [resetTrigger, onIndexChange]);
+
     const renderItem = ({ item: mi, index: itemIndex }: { item: MenuItem; index: number }) => {
         const isCurrent = rowMode === 'play' && itemIndex === currentIndex; 
         const isPreloaded = rowMode !== 'off' && Math.abs(itemIndex - currentIndex) === 1; 
@@ -56,6 +67,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
 
     return (
         <FlatList 
+          ref={flatListRef}
           data={menuItems}
           horizontal
           pagingEnabled 

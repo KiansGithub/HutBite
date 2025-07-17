@@ -23,6 +23,7 @@ const { height: H } = Dimensions.get('screen');
 export default function FeedScreen() {
   const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
 
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, menuItems, loading } = useRestaurantData();
