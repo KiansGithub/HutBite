@@ -26,7 +26,7 @@ export default function FeedScreen() {
   const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
 
   const { location, loading: locationLoading } = useLocation();
-  const { restaurants: allRestaurants, menuItems, loading } = useRestaurantData();
+  const { restaurants: allRestaurants, menuItems, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching } = useSearch(allRestaurants);
 
   // Use search results when searching, otherwise use all restaurants 

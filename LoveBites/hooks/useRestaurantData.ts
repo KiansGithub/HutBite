@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { Database } from '@/lib/supabase.d';
@@ -14,7 +14,12 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [restaurants, setRestaurants] = useState<RestaurantWithDistance[]>([]);
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
+    const [reshuffleTrigger, setReshuffleTrigger] = useState(0);
     const { location } = useLocation();
+
+    const reshuffleRestaurants = useCallback(() => {
+        setReshuffleTrigger(prev => prev + 1);
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -101,13 +106,14 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
         };
 
         fetchData();
-    }, [location, searchResults]);
+    }, [location, searchResults, reshuffleTrigger]);
 
     return { 
         restaurants, 
         menuItems, 
         loading,
         availableCuisines: getUniqueCuisines(restaurants),
-        cuisineCounts: getCuisineCounts(restaurants)
+        cuisineCounts: getCuisineCounts(restaurants),
+        reshuffleRestaurants
     };
 };
