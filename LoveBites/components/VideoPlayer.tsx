@@ -26,7 +26,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const playerRef       = useRef<ReturnType<typeof useVideoPlayer> | null>(null);
     const startedOnceRef  = useRef(false);   // only seek(0) on FIRST play
-
     // thumbnail fade state 
     const [showThumb, setShowThumb] = useState(true);
     const opacity = useRef(new Animated.Value(1)).current; 

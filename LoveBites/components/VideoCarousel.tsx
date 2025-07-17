@@ -11,6 +11,7 @@ import { Database } from '@/lib/supabase.d';
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
 
 const { width: W, height: H } = Dimensions.get('screen');
+const ITEM_WIDTH = W; 
 
 interface VideoCarouselProps {
     menuItems: MenuItem[];
@@ -20,7 +21,7 @@ interface VideoCarouselProps {
     onIndexChange: (index: number) => void; 
 }
 
-export const VideoCarousel: React.FC<VideoCarouselProps> = ({
+const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     menuItems, 
     rowMode, 
     onHorizontalScroll,
@@ -65,6 +66,11 @@ export const VideoCarousel: React.FC<VideoCarouselProps> = ({
             onIndexChange(idx);
           }}
           renderItem={renderItem}
+          getItemLayout={(_data, index) => ({
+            length: ITEM_WIDTH, 
+            offset: ITEM_WIDTH * index, 
+            index, 
+          })}
           style={styles.flatList}
           maxToRenderPerBatch={3}
           windowSize={3}
@@ -77,3 +83,5 @@ const styles = StyleSheet.create({
     videoContainer: { width: W, height: H },
     flatList: { width: W, height: H },
 });
+
+export const VideoCarousel = React.memo(VideoCarouselComponent);

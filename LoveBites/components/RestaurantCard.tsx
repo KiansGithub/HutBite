@@ -31,7 +31,7 @@ interface RestaurantCardProps {
   setIsDescriptionExpanded: (expanded: boolean) => void; 
 }
 
-export const RestaurantCard: React.FC<RestaurantCardProps> = ({
+const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   restaurant,
   menuItems,
   isVisible,
@@ -117,3 +117,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
 });
+
+export const RestaurantCard = React.memo(RestaurantCardComponent);
