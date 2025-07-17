@@ -42,7 +42,6 @@ export default function FeedScreen() {
 
      /* one stable object – create it once with useRef */
   const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 5,   // 5 % visible ⇒ in list
     itemVisiblePercentThreshold: 5,        // 5 % for percent fields
   }).current;
 
