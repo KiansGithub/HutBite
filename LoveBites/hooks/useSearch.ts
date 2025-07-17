@@ -63,7 +63,7 @@ export const useSearch = (restaurants: Restaurant[]) => {
  
         // Direct description match
         if (description.includes(query)) {
-          totalScore == 40; 
+          totalScore += 40; 
           if (bestMatchType === 'name' && totalScore < 80) bestMatchType = 'description';
         }
  

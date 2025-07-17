@@ -39,6 +39,7 @@ export default function FeedScreen() {
        visibleHIndex,
        onViewableChange,
        updateHorizontalIndex,
+       resetIndexes,
      } = useViewabilityTracking();
 
      /* one stable object – create it once with useRef */
@@ -48,10 +49,12 @@ export default function FeedScreen() {
 
   React.useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    resetIndexes();
   }, [searchResults]);
 
   React.useEffect(() => {
     setIsDescriptionExpanded(false);
+    setCarouselResetTrigger(prev => prev + 1);
  }, [vIndex]);
 
   React.useEffect(() => {
@@ -82,6 +85,7 @@ export default function FeedScreen() {
         distance={item.distance}
         isDescriptionExpanded={isDescriptionExpanded}
         setIsDescriptionExpanded={setIsDescriptionExpanded}
+        resetTrigger={carouselResetTrigger}
       />
     );
   },

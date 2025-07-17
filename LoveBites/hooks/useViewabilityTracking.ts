@@ -37,7 +37,12 @@ export const useViewabilityTracking = () => {
     [],
   );
 
-  return { vIndex, visibleHIndex, onViewableChange, updateHorizontalIndex };
+  const resetIndexes = useCallback(() => {
+    setVIndex(0);
+    setVisibleHIndex(0);
+  }, []);
+
+  return { vIndex, visibleHIndex, onViewableChange, updateHorizontalIndex, resetIndexes};
 };
 
 /* helper – ViewToken exposes the % on different fields per platform */
