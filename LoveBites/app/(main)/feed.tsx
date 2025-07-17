@@ -40,6 +40,12 @@ export default function FeedScreen() {
        updateHorizontalIndex,
      } = useViewabilityTracking();
 
+     /* one stable object – create it once with useRef */
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 5,   // 5 % visible ⇒ in list
+    itemVisiblePercentThreshold: 5,        // 5 % for percent fields
+  }).current;
+
   React.useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
   }, [searchResults]);
@@ -70,7 +76,7 @@ export default function FeedScreen() {
                  : isPreloaded ? 'warm'
                  : 'off'
                 }
-        isVisible={true}
+        isVisible={isCurrent}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={setOrderLinks}
         distance={item.distance}
@@ -132,16 +138,14 @@ export default function FeedScreen() {
         <FlatList
           ref={listRef}
           data={restaurants}
-          pagingEnabled
           bounces={false}
-          snapToInterval={H}
           snapToAlignment="start"
           decelerationRate="fast"
           showsVerticalScrollIndicator={false}
           keyExtractor={(r) => r.id.toString()}
           renderItem={renderRestaurant}
           onViewableItemsChanged={onViewableChange}
-          viewabilityConfig={{ viewAreaCoveragePercentThreshold: 10 }}
+          viewabilityConfig={viewabilityConfig}
           getItemLayout={getItemLayout}
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
