@@ -70,6 +70,8 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
                 showsHorizontalScrollIndicator={false}
                 style={styles.categoryContainer}
                 contentContainerStyle={styles.categoryContent}
+                onStartShouldSetResponderCapture={() => true}
+                onResponderTerminationRequest={() => false}
               >
                 {COMMON_CUISINES.slice(0, 8).map((cuisine) => (
                   <TouchableOpacity 

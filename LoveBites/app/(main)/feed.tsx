@@ -29,6 +29,9 @@ export default function FeedScreen() {
   const { restaurants: allRestaurants, menuItems, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching } = useSearch(allRestaurants);
 
+  // Track previous search state to detect when search is cleared
+  const prevIsSearching = useRef(isSearching);
+
   // Use search results when searching, otherwise use all restaurants 
   const restaurants = isSearching? searchResults: allRestaurants;
 
@@ -46,6 +49,14 @@ export default function FeedScreen() {
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 5,        // 5 % for percent fields
   }).current;
+
+  React.useEffect(() => {
+    // Detect when search is cleared (was searching, now not searching)
+    if (prevIsSearching.current && !isSearching) {
+      reshuffleRestaurants();
+    }
+    prevIsSearching.current = isSearching;
+  }, [isSearching, reshuffleRestaurants]);
 
   React.useEffect(() => {
     listRef.current?.scrollToOffset({ offset: 0, animated: false });
