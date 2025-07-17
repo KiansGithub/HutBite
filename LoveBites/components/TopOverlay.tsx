@@ -66,12 +66,12 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
             {/*Category buttons - only show when search not expanded */}
             {!searchExpanded && (
               <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryContainer}
-                contentContainerStyle={styles.categoryContent}
-                onStartShouldSetResponderCapture={() => true}
-                onResponderTerminationRequest={() => false}
+              horizontal
+    showsHorizontalScrollIndicator={false}
+    style={styles.categoryContainer}
+    contentContainerStyle={styles.categoryContent}
+    scrollEventThrottle={16}
+    nestedScrollEnabled
               >
                 {COMMON_CUISINES.slice(0, 8).map((cuisine) => (
                   <TouchableOpacity 
@@ -234,5 +234,8 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 11, 
     fontWeight: '500',
+  },
+  androidElevation: {
+    elevation: 10,         // Android hit‑test stacking
   },
 })
