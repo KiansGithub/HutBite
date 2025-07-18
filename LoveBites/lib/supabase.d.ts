@@ -19,6 +19,9 @@ export interface Database {
           longitude: number
           latitude: number 
           cuisines: string[]
+          place_id: string | null
+          google_rating: number | null
+          google_review_count: number | null
         }
         Insert: {
           id?: string
@@ -29,6 +32,9 @@ export interface Database {
           longitude?: number 
           latitude?: number
           cuisines?: string[]
+          place_id: string | null
+          google_rating: number | null
+          google_review_count: number | null
         }
         Update: {
           id?: string
@@ -39,6 +45,9 @@ export interface Database {
           longitude?: number 
           latitude?: number
           cuisines?: string[]
+          place_id: string | null
+          google_rating: number | null
+          google_review_count: number | null
         }
       }
       menu_items: {
