@@ -1,9 +1,13 @@
 import React from 'react';
-import { StyleSheet, Share } from 'react-native';
+import { StyleSheet, Share, Platform } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { FAB_SIZE, FAB_RADIUS, FAB_BG, FAB_BLUR } from '@/ui/tokens';
+
+const iosLink = 'https://apps.apple.com/app/id6747894985';
+const androidLink = 'https://play.google.com/store/apps/details?id=com.livebites.livebites';
+const link = Platform.OS === 'ios' ? iosLink : androidLink;
 
 interface ShareButtonProps {
   restaurantName: string;
@@ -20,8 +24,8 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
     try {
       await Share.share({
         message: menuItemTitle
-          ? `Check out ${menuItemTitle} at ${restaurantName} on LoveBites!`
-          : `Check out ${restaurantName} on LoveBites!`,
+        ? `Check out ${menuItemTitle} at ${restaurantName} on LoveBites!\n${link}`
+        : `Check out ${restaurantName} on LoveBites!\n${link}`,
       });
     } catch (err) {
       console.error('Error sharing', err);

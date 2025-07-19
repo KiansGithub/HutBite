@@ -3,7 +3,6 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
-import { GoogleRating } from './GoogleRating';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -42,10 +41,6 @@ export const MenuItemInfo: React.FC<MenuItemInfoProps> = ({
             <View style={styles.topRow}>
                 <View style={styles.nameContainer}>
                     <Text style={styles.restaurantName}>{restaurant.name}</Text>
-                    <GoogleRating
-                        rating={restaurant.google_rating}
-                        reviewCount={restaurant.google_review_count}
-                    />
                     <Text numberOfLines={1} style={styles.menuItemName}>
                         {menuItem.title}
                     </Text>
