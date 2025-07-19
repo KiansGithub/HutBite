@@ -105,6 +105,37 @@ export interface Database {
           menu_item_id?: string
         }
       }
+      click_events: {
+        Row: {
+          id: string 
+          created_at: string 
+          user_id: string | null 
+          restaurant_id: string | null 
+          menu_item_id: string | null 
+          platform: string | null 
+          url: string | null 
+          timestamp: string 
+        }
+        Insert: {
+          id?: string 
+          created_at?: string 
+          user_id?: string | null 
+          restaurant_id?: string | null 
+          menu_item_id?: string | null 
+          platform?: string | null 
+          url?: string | null 
+          timestamp?: string
+        }
+        Update: {
+          id?: string 
+          created_at?: string | null 
+          restaurant_id?: string | null 
+          menu_item_id?: string | null 
+          platform?: string | null 
+          url?: string | null 
+          timestamp?: string 
+        }
+      }
     }
     Views: {
       [_ in never]: never

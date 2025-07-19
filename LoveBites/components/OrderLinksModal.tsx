@@ -3,17 +3,32 @@ import { StyleSheet, TouchableOpacity, Linking, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ClickTrackingService } from '@/lib/clickTracking';
  
 interface OrderLinksModalProps {
   orderLinks: Record<string, string> | null;
+  restaurantId?: string; 
+  menuItemId?: string; 
   onClose: () => void;
 }
  
 export const OrderLinksModal: React.FC<OrderLinksModalProps> = ({
   orderLinks,
+  restaurantId, 
+  menuItemId, 
   onClose,
 }) => {
   if (!orderLinks) return null;
+
+  const handleLinkPress = (async (platform: string, url: string) => {
+    ClickTrackingService.trackOrderLinkClick({
+      restaurant_id: restaurantId, 
+      menu_item_id: menuItemId, 
+      platform, url
+    });
+
+    Linking.openURL(url);
+  });
  
   return (
     <View style={styles.overlay} pointerEvents="box-none">
@@ -23,7 +38,7 @@ export const OrderLinksModal: React.FC<OrderLinksModalProps> = ({
           <TouchableOpacity
             key={platform}
             style={styles.linkButton}
-            onPress={() => Linking.openURL(url)}
+            onPress={() => handleLinkPress(platform, url)}
           >
             <FontAwesome name="link" size={24} color="#fff" />
             <Text style={styles.linkText}>{platform}</Text>

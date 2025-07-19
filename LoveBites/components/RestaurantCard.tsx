@@ -25,10 +25,11 @@ interface RestaurantCardProps {
   rowMode: string;
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
-  onOrderPress: (orderLinks: Record<string, string> | null) => void;
+  onOrderPress: (orderLinks: Record<string, string> | null, restaurantId: string, menuItemId: string) => void;
   distance?: number; 
   isDescriptionExpanded: boolean; 
   setIsDescriptionExpanded: (expanded: boolean) => void; 
+  resetTrigger: number;
 }
 
 const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
@@ -40,7 +41,8 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   onOrderPress,
   distance, 
   isDescriptionExpanded, 
-  setIsDescriptionExpanded
+  setIsDescriptionExpanded,
+  resetTrigger
 }) => {
   const [hIndex, setHIndex] = useState(0);
   const currentMenuItem = menuItems[hIndex];
@@ -62,6 +64,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
         onHorizontalScroll={onHorizontalScroll}
         currentIndex={hIndex}
         onIndexChange={handleIndexChange}
+        resetTrigger={resetTrigger}
       />
 
       {/* ──────────────── Bottom overlay ──────────────── */}
@@ -78,7 +81,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
           <OrderButton 
             restaurant={restaurant}
             menuItem={currentMenuItem}
-            onOrderPress={onOrderPress}
+            onOrderPress={(orderLinks) => onOrderPress(orderLinks, restaurant.id, currentMenuItem.id)}
           />
         </View>
       </LinearGradient>
