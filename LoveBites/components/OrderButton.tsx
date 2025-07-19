@@ -28,7 +28,7 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
           onPress={handlePress}
         >
             <Text style={styles.orderButtonText}>
-                Order Now    |    £{menuItem.price.toFixed(2)}
+                View Restaurant
             </Text>
         </TouchableOpacity>
     );
