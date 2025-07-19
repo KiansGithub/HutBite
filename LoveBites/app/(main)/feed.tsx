@@ -31,6 +31,8 @@ export default function FeedScreen() {
 
   // Track previous search state to detect when search is cleared
   const prevIsSearching = useRef(isSearching);
+  // Track previous restaurant to only reset carousel when restaurant changes 
+  const prevRestaurantId = useRef<string | null>(null);
 
   // Use search results when searching, otherwise use all restaurants 
   const restaurants = isSearching? searchResults: allRestaurants;
@@ -65,7 +67,6 @@ export default function FeedScreen() {
 
   React.useEffect(() => {
     setIsDescriptionExpanded(false);
-    setCarouselResetTrigger(prev => prev + 1);
  }, [vIndex]);
 
   React.useEffect(() => {

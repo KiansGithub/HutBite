@@ -21,12 +21,14 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   menuItemTitle,
 }) => {
   const handlePress = async () => {
+    const sharedMessage = menuItemTitle
+      ? `Check out ${menuItemTitle} at ${restaurantName} on LoveBites!`
+      : `Check out ${restaurantName} on LoveBites!`;
+  
+    const fullMessage = `${sharedMessage}\n\niOS: ${iosLink}\nAndroid: ${androidLink}`;
+  
     try {
-      await Share.share({
-        message: menuItemTitle
-        ? `Check out ${menuItemTitle} at ${restaurantName} on LoveBites!\n${link}`
-        : `Check out ${restaurantName} on LoveBites!\n${link}`,
-      });
+      await Share.share({ message: fullMessage });
     } catch (err) {
       console.error('Error sharing', err);
     }
