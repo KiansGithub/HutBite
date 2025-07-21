@@ -55,7 +55,7 @@ export const MenuItemInfo: React.FC<MenuItemInfoProps> = ({
                           : truncateDescription(menuItem.description)
                         }
                     </Text>
-                    {menuItem.description.length > 808 && (
+                    {menuItem.description.length > 80 && (
                         <TouchableOpacity 
                           onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
                           style={styles.expandButton}
