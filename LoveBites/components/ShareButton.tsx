@@ -22,7 +22,7 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
 }) => {
   const handlePress = async () => {
     const sharedMessage = menuItemTitle
-      ? `Check out ${menuItemTitle} at ${restaurantName} on LoveBites!`
+      ? `Check out ${menuItemTitle} at ${restaurantName} on LiveBites!`
       : `Check out ${restaurantName} on LoveBites!`;
   
     const fullMessage = `${sharedMessage}\n\niOS: ${iosLink}\nAndroid: ${androidLink}`;
