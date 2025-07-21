@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Animated, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Animated, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
 import { ExpandableSearchBar } from './ExpandableSearchBar';
@@ -73,7 +73,7 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
     scrollEventThrottle={16}
     nestedScrollEnabled
               >
-                {COMMON_CUISINES.slice(0, 8).map((cuisine) => (
+                {COMMON_CUISINES.slice(0, Platform.OS === 'android' ? 4 : 8).map((cuisine) => (
                   <TouchableOpacity 
                       key={cuisine}
                       style={styles.categoryButton}
