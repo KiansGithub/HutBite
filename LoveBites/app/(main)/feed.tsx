@@ -21,7 +21,11 @@ import { TopOverlay } from '@/components/TopOverlay';
 const { height: H } = Dimensions.get('screen');
 
 export default function FeedScreen() {
-  const [orderLinks, setOrderLinks] = useState<Record<string, string> | null>(null);
+  const [modalData, setModalData] = useState<{
+    orderLinks: Record<string, string> | null; 
+    restaurantId: string; 
+    menuItemId: string; 
+  } | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
 
@@ -73,6 +77,14 @@ export default function FeedScreen() {
     // AnalyticsService.logScreenView('Feed', 'MainScreen');
   }, []);
 
+  const handleOrderPress = (
+    orderLinks: Record<string, string> | null, 
+    restaurantId: string, 
+    menuItemId: string
+  ) => {
+    setModalData({ orderLinks, restaurantId, menuItemId });
+  };
+
   const renderRestaurant = useCallback(
     ({ item, index }: { item: any; index: number }) => {
     const menu = menuItems[item.id] || [];
@@ -93,7 +105,7 @@ export default function FeedScreen() {
                 }
         isVisible={isCurrent}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
-        onOrderPress={setOrderLinks}
+        onOrderPress={handleOrderPress}
         distance={item.distance}
         isDescriptionExpanded={isDescriptionExpanded}
         setIsDescriptionExpanded={setIsDescriptionExpanded}
@@ -182,10 +194,14 @@ export default function FeedScreen() {
             </View>
           )}
 
-      <OrderLinksModal
-        orderLinks={orderLinks}
-        onClose={() => setOrderLinks(null)}
-      />
+      {modalData && (
+        <OrderLinksModal 
+          orderLinks={modalData.orderLinks}
+          restaurantId={modalData.restaurantId}
+          menuItemId={modalData.menuItemId}
+          onClose={() => setModalData(null)}
+        />
+      )}
     </View>
   );
 }
