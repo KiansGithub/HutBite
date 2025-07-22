@@ -46,9 +46,13 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   if (!canLike) return null;
 
   const handlePress = async () => {
-    // Fire the haptic before awaiting anything
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    toggleLike(); // optimistic – the hook can undo if server errors
+    try {
+      // Fire haptic before awaiting anything 
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await toggleLike();
+    } catch (error) {
+      console.error('Error in like button press:', error);
+    }
   };
 
   return (
