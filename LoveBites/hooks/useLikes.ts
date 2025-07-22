@@ -1,11 +1,32 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
 import uuid from 'react-native-uuid';
 
-// Cache to prevent duplicate API calls 
-const likeCache = new Map<string, boolean>();
+
+interface CacheEntry {
+    value: boolean; 
+    expiry: number; 
+}
+
+const CACHE_TTL = 5 * 60 * 1000;
+const likeCache = new Map<string, CacheEntry>();
+
 const pendingRequests = new Map<string, Promise<boolean>>();
+
+const purgeCacheEntry = (key: string) => {
+    likeCache.delete(key);
+    pendingRequests.delete(key);
+};
+
+const purgeExpiredCache = () => {
+    const now = Date.now();
+    for (const [key, entry] of likeCache.entries()) {
+        if (now > entry.expiry) {
+            purgeCacheEntry(key);
+        }
+    }
+};
 
 interface UseLikesProps {
     restaurantId: string; 
@@ -18,6 +39,8 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
     const { user } = useAuthStore();
     const mountedRef = useRef(true);
     const abortControllerRef = useRef<AbortController | null>(null);
+    const loadingRef = useRef(false);
+    const queuedToggleRef = useRef<boolean | null>(null);
 
     useEffect(() => {
         mountedRef.current = true; 
@@ -29,8 +52,9 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         };
     }, []);
 
-    // Create cache key 
-    const cacheKey = user?.id ? `${user.id}-${restaurantId}-${menuItemId}` : null;
+    const cacheKey = useMemo(() => {
+        return user?.id ? `${user.id}-${String(restaurantId)}-${String(menuItemId)}` : null;
+    }, [user?.id, restaurantId, menuItemId]);
 
     const checkLikeStatus = useCallback(async (): Promise<boolean> => {
         if (!user?.id || !restaurantId || !menuItemId || !cacheKey) {
@@ -38,8 +62,11 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         }
 
         // Check cache first 
-        if (likeCache.has(cacheKey)) {
-            return likeCache.get(cacheKey)!;
+        purgeExpiredCache();
+ 
+        const cached = likeCache.get(cacheKey);
+        if (cached && Date.now() < cached.expiry) {
+            return cached.value;
         }
 
         // Check if request is already pending 
@@ -70,8 +97,10 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
 
                 const liked = Array.isArray(data) && data.length > 0; 
 
-                // Cache the result 
-                likeCache.set(cacheKey, liked);
+                likeCache.set(cacheKey, {
+                    value: liked,
+                    expiry: Date.now() + CACHE_TTL
+                });
 
                 return liked;
             } catch (err: any) {
@@ -126,26 +155,36 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
     }, [user?.id, restaurantId, menuItemId, checkLikeStatus]);
 
     const toggleLike = useCallback(async () => {
-        if (!user?.id || !restaurantId || !menuItemId || loading || !cacheKey) {
+        if (!user?.id || !restaurantId || !menuItemId || !cacheKey) {
             return;
         }
 
-        if (!mountedRef.current) return; 
+        if (!mountedRef.current) return;
+ 
+        if (loadingRef.current) {
+            queuedToggleRef.current = !isLiked;
+            return;
+        }
+ 
+        loadingRef.current = true;
         
         setLoading(true);
 
         // Optimistic update 
-        const newLikedState = !isLiked; 
+        const prevLiked = isLiked;
+        const newLikedState = !prevLiked;
         setIsLiked(newLikedState);
-        likeCache.set(cacheKey, newLikedState);
+        likeCache.set(cacheKey, {
+            value: newLikedState,
+            expiry: Date.now() + CACHE_TTL
+        });
 
         try {
             const restaurantIdStr = String(restaurantId);
             const menuItemIdStr = String(menuItemId);
 
-            if (isLiked) {
-                // Remove like 
-                const { error } = await supabase 
+            if (prevLiked) {
+                const { error } = await supabase
                   .from('user_likes')
                   .delete()
                   .eq('user_id', user.id)
@@ -160,7 +199,7 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                     const generatedId = uuid.v4();
                     likeId = typeof generatedId === 'string' ? generatedId : String(generatedId);
                 } catch (uuidError) {
-                    likeId = `like_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                    likeId = `like_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
                 }
 
                 const { error } = await supabase 
@@ -179,20 +218,49 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
 
             // Revert optimistic update on error 
             if (mountedRef.current) {
-                setIsLiked(isLiked);
-                likeCache.set(cacheKey, isLiked);
+                setIsLiked(prevLiked);
+                likeCache.set(cacheKey, {
+                    value: prevLiked,
+                    expiry: Date.now() + CACHE_TTL
+                });
             }
         } finally {
+            loadingRef.current = false;
             if (mountedRef.current) {
                 setLoading(false);
             }
+
+            if (queuedToggleRef.current !== null && mountedRef.current) {
+                const queuedState = queuedToggleRef.current;
+                queuedToggleRef.current = null;
+ 
+                if (queuedState !== isLiked) {
+                    setTimeout(() => toggleLike(), 0);
+                }
+            }
         }
     }, [user?.id, restaurantId, menuItemId, loading, isLiked, cacheKey]);
+
+    const forceRefresh = useCallback(async () => {
+        if (!cacheKey) return;
+ 
+        purgeCacheEntry(cacheKey);
+ 
+        try {
+            const liked = await checkLikeStatus();
+            if (mountedRef.current) {
+                setIsLiked(liked);
+            }
+        } catch (err) {
+            console.error('Error in forceRefresh:', err);
+        }
+    }, [cacheKey, checkLikeStatus]);
 
     return {
         isLiked, 
         loading, 
         toggleLike, 
+        forceRefresh,
         canLike: !!user?.id && !!restaurantId && !!menuItemId
     };
 };
