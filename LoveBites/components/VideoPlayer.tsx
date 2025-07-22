@@ -46,11 +46,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         playerRef.current = p; 
         p.loop = true; 
         p.muted = false; 
+        if (mode === 'play') {
         p.bufferOptions = {
-          minBufferForPlayback: 1.0, 
-          preferredForwardBufferDuration: 10, 
-          waitsToMinimizeStalling: false, 
+          minBufferForPlayback: 0.5, 
+          preferredForwardBufferDuration: 2, 
         };
+      }
       }
     );
 

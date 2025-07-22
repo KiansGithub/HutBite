@@ -40,8 +40,12 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     }, [resetTrigger, onIndexChange]);
 
     const renderItem = ({ item: mi, index: itemIndex }: { item: MenuItem; index: number }) => {
+        if (!mi.video_url) {
+            return <View style={styles.videoContainer}/>;
+        }
+
         const isCurrent = rowMode === 'play' && itemIndex === currentIndex; 
-        const isPreloaded = rowMode !== 'off' && Math.abs(itemIndex - currentIndex) === 1; 
+        const isPreloaded = rowMode === 'play' && Math.abs(itemIndex - currentIndex) === 1;
 
         const mode = isCurrent ? 'play' : isPreloaded ? 'warm' : 'off';
 
@@ -51,16 +55,16 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
 
         return (
             <View style={styles.videoContainer}>
-                {mi.video_url && (
+                {isCurrent || isPreloaded ? (
                     <VideoPlayer 
                       uri={mi.video_url}
-                      thumbUri={mi.thumb_url ?? mi.video_url.replace('.mp4', 'jpg')}
+                      thumbUri={mi.thumb_url ?? mi.video_url.replace('.mp4', '.jpg')}
                       itemId={mi.id}
                       mode={mode}
                       width={W}
                       height={H}
                 />
-                )}
+                ) : null}
             </View>
         );
     };

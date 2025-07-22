@@ -178,11 +178,11 @@ export default function FeedScreen() {
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
-          maxToRenderPerBatch={7}
-          windowSize={7}
+          maxToRenderPerBatch={5}
+          windowSize={5}
           initialNumToRender={3}
           updateCellsBatchingPeriod={50}
-          removeClippedSubviews={false}
+          removeClippedSubviews={true}
         />
       )}
 
