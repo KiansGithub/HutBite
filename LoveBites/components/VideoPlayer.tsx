@@ -247,14 +247,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           useExoShutter={true}
           surfaceType="textureView"
         />
-
-        {showThumb && (
-          <Animated.Image
-            source={{ uri: thumbUri }}
-            style={{ position: 'absolute', width, height, opacity }}
-            resizeMode="cover"
-          />
-        )}
       </View>
     </TouchableWithoutFeedback>
   );
