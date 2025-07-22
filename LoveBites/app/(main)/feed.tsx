@@ -107,13 +107,13 @@ export default function FeedScreen() {
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={handleOrderPress}
         distance={item.distance}
-        isDescriptionExpanded={isDescriptionExpanded}
+        isDescriptionExpanded={isCurrent ? isDescriptionExpanded : false}
         setIsDescriptionExpanded={setIsDescriptionExpanded}
         resetTrigger={carouselResetTrigger}
       />
     );
   },
-  [menuItems, vIndex, isDescriptionExpanded]);
+  [menuItems, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress]);
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
@@ -178,10 +178,10 @@ export default function FeedScreen() {
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
-          maxToRenderPerBatch={5}
-          windowSize={5}
-          initialNumToRender={3}
-          updateCellsBatchingPeriod={50}
+          maxToRenderPerBatch={3}
+          windowSize={3}
+          initialNumToRender={1}
+          updateCellsBatchingPeriod={100}
           removeClippedSubviews={true}
         />
       )}
