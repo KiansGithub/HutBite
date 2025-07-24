@@ -9,6 +9,7 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
+import { initializeAppServices } from '../lib/app-init';
 
 // import AnalyticsService from '@/lib/analytics';
 
@@ -50,7 +51,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     initialize();
-    // AnalyticsService.initialize();
+    initializeAppServices();
   }, []);
 
     /* 🔑 make both light & dark themes transparent */
