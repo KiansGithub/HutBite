@@ -19,12 +19,9 @@
       "googleServicesFile": "./GoogleService-Info.plist",
       "supportsTablet": true,
       "usesAppleSignIn": true,
-
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription":
-          "LiveBites needs your location to show restaurants that deliver to you.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription":
-          "LiveBites uses your location in the background to keep delivery areas up to date.",
+        "NSLocationWhenInUseUsageDescription": "LiveBites needs your location to show restaurants that deliver to you.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "LiveBites uses your location in the background to keep delivery areas up to date."
       }
     },
     "android": {
@@ -51,8 +48,20 @@
         }
       ],
       "expo-web-browser",
+      "expo-apple-authentication",
+      "expo-build-properties", 
 
-      "expo-apple-authentication"
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "extraPodfileLines": [
+              "pod 'GoogleUtilities',      :modular_headers => true",
+              "pod 'FirebaseCoreInternal', :modular_headers => true"
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
