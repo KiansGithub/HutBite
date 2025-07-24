@@ -9,7 +9,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { LikeButton } from './LikeButton';
 import { ShareButton } from './ShareButton';
 import { FloatingActionRail } from '@/components/FloatingActionRail';
-// import AnalyticsService from '@/lib/analytics';
 import { VideoCarousel } from './VideoCarousel';
 import { MenuItemInfo } from'./MenuItemInfo';
 import { OrderButton } from './OrderButton';
