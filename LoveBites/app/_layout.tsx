@@ -9,7 +9,9 @@ import 'react-native-url-polyfill/auto';
 import 'react-native-get-random-values';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
-import { initializeAppServices } from '../lib/app-init';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+// import { initializeAppServices } from '../lib/app-init';
 
 // import AnalyticsService from '@/lib/analytics';
 
@@ -51,7 +53,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     initialize();
-    initializeAppServices();
+    // initializeAppServices();
   }, []);
 
     /* 🔑 make both light & dark themes transparent */
@@ -70,9 +72,13 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? TransparentDark : TransparentLight}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
       <Stack screenOptions={{ headerShown: false }}>
         {user ? <Stack.Screen name="(main)" /> : <Stack.Screen name="auth" />}
       </Stack>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
     </ThemeProvider>
   );
 }

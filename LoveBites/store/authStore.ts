@@ -16,6 +16,7 @@ interface AuthState {
     provider: 'google' | 'apple'
   ) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: any | null}>;
   initialize: () => Promise<void>;
 }
  
@@ -118,6 +119,39 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signOut: async () => {
     await supabase.auth.signOut();
     set({ user: null, session: null });
+  },
+
+  deleteAccount: async () => {
+    const { user } = get();
+    if (!user) {
+      return { error: { message: 'No user found '}};
+    }
+
+    try {
+      // Delete user data from database tables 
+      const userId = user.id; 
+
+      // Delete user likes 
+      const { error: likesError } = await supabase 
+          .from('user_likes')
+          .delete()
+          .eq('user_id', userId);
+        
+      if (likesError) {
+        console.error('Error deleting user likes:', likesError);
+      }
+
+      // Delete user account from supabase auth 
+      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+
+      // Clear local state 
+      set({ user: null, session: null });
+
+      return { error: null };
+    } catch (error) {
+      console.error('Erorr deleting account:', error);
+      return { error };
+    }
   },
 
   debugAuthState: () => {

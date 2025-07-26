@@ -49,21 +49,7 @@
       ],
       "expo-web-browser",
       "expo-apple-authentication",
-      "expo-build-properties",
-      "@react-native-firebase/app",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "useFrameworks": "static",
-            "useModularHeaders": true,
-            // Optional – avoids ATT prompt for kids apps:
-            "extraPodfileLines": [
-              "$RNFirebaseAnalyticsWithoutAdIdSupport = true"
-            ]
-          }
-        }
-      ]
+      "expo-build-properties"
     ],
     "experiments": {
       "typedRoutes": true

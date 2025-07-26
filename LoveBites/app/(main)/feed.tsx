@@ -16,7 +16,7 @@ import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
-import AnalyticsService from '@/lib/analytics';
+// import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('screen');
 
@@ -74,7 +74,7 @@ export default function FeedScreen() {
  }, [vIndex]);
 
   React.useEffect(() => {
-    AnalyticsService.logScreenView('Feed', 'MainScreen');
+    // AnalyticsService.logScreenView('Feed', 'MainScreen');
   }, []);
 
   const handleOrderPress = (
