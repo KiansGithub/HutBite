@@ -3,6 +3,7 @@ import { StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
+import { router } from 'expo-router';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -19,7 +20,7 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
     onOrderPress, 
 }) => {
     const handlePress = () => {
-        onOrderPress(restaurant.order_links as Record<string, string> | null);
+        router.push(`/restaurant/${restaurant.id}`);
     };
 
     return (
