@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     top: undefined,
     paddingTop: 120,
-    paddingBottom: 48,
+    paddingBottom: 100,
     paddingHorizontal: 24,
     justifyContent: 'flex-end',
   },

@@ -16,14 +16,11 @@ import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import AnalyticsService from '@/lib/analytics';
 
-const { height: SCREEN_HEIGHT } = Dimensions.get('screen');
+const { height: H } = Dimensions.get('screen');
 
 export default function FeedScreen() {
-  const insets = useSafeAreaInsets();
-  const AVAILABLE_HEIGHT = SCREEN_HEIGHT - insets.bottom;
   const [modalData, setModalData] = useState<{
     orderLinks: Record<string, string> | null; 
     restaurantId: string; 
@@ -95,7 +92,7 @@ export default function FeedScreen() {
     const isPreloaded = Math.abs(index - vIndex) <= 2;
 
     if (!isCurrent && !isPreloaded) {
-      return <View style={{ width: '100%', height: AVAILABLE_HEIGHT }} />;
+      return <View style={{ width: '100%', height: H }} />;
     }
 
     return (
@@ -120,8 +117,8 @@ export default function FeedScreen() {
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
-    length: AVAILABLE_HEIGHT, 
-    offset: AVAILABLE_HEIGHT * index, 
+    length: H, 
+    offset: H * index, 
     index, 
   }),
   []
@@ -178,7 +175,7 @@ export default function FeedScreen() {
           onViewableItemsChanged={onViewableChange}
           viewabilityConfig={viewabilityConfig}
           getItemLayout={getItemLayout}
-          snapToOffsets={restaurants.map((_, index) => index * AVAILABLE_HEIGHT)}
+          snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
           maxToRenderPerBatch={3}
