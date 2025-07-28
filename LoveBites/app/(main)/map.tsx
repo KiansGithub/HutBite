@@ -5,18 +5,78 @@ import { router } from 'expo-router';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { useLocation } from '@/hooks/useLocation';
 import { Text } from 'react-native';
+import { Database } from '@/lib/supabase.d';
+
+type Restaurant = Database['public']['Tables']['restaurants']['Row'];
+type RestaurantWithDistance = Restaurant & { distance?: number };
 
 export default function MapScreen() {
     const { restaurants, loading } = useRestaurantData();
     const { location } = useLocation();
 
+    // Function to offset duplicate coordinates slightly
+    const offsetDuplicateCoordinates = (restaurants: RestaurantWithDistance[]): RestaurantWithDistance[] => {
+        const coordinateMap = new Map<string, number>();
+ 
+        return restaurants.map(restaurant => {
+            const coordKey = `${restaurant.latitude},${restaurant.longitude}`;
+            const count = coordinateMap.get(coordKey) || 0;
+            coordinateMap.set(coordKey, count + 1);
+ 
+            if (count > 0) {
+                // Offset by a small amount (roughly 10 meters)
+                const offset = count * 0.0001;
+                return {
+                    ...restaurant,
+                    latitude: restaurant.latitude + offset,
+                    longitude: restaurant.longitude + offset
+                };
+            }
+ 
+            return restaurant;
+        });
+    };
+ 
     const validRestaurants = useMemo(() => {
-        return restaurants.filter(restaurant =>
-            restaurant.latitude != null && 
-            restaurant.longitude != null &&
-            !isNaN(restaurant.latitude) &&
-            !isNaN(restaurant.longitude)
-        );
+        console.log('Total restaurants from hook:', restaurants.length);
+ 
+        const filtered = restaurants.filter(restaurant => {
+            const hasValidLat = restaurant.latitude != null &&
+                               !isNaN(Number(restaurant.latitude)) &&
+                               isFinite(Number(restaurant.latitude));
+            const hasValidLng = restaurant.longitude != null &&
+                               !isNaN(Number(restaurant.longitude)) &&
+                               isFinite(Number(restaurant.longitude));
+ 
+            const isValid = hasValidLat && hasValidLng;
+ 
+            if (!isValid) {
+                console.log('Invalid restaurant coordinates:', {
+                    name: restaurant.name,
+                    lat: restaurant.latitude,
+                    lng: restaurant.longitude,
+                    hasValidLat,
+                    hasValidLng
+                });
+            } else {
+                console.log('Valid restaurant:', {
+                    name: restaurant.name,
+                    lat: Number(restaurant.latitude),
+                    lng: Number(restaurant.longitude)
+                });
+            }
+ 
+            return isValid;
+        });
+ 
+        console.log('Valid restaurants for map:', filtered.length);
+        console.log('Valid restaurant names:', filtered.map(r => r.name));
+ 
+        // Handle duplicate coordinates
+        const offsetRestaurants = offsetDuplicateCoordinates(filtered);
+        console.log('Restaurants after coordinate offsetting:', offsetRestaurants.length);
+ 
+        return offsetRestaurants;
     }, [restaurants]);
 
     const initialRegion = useMemo(() => {
@@ -48,7 +108,7 @@ export default function MapScreen() {
     }, [location, validRestaurants]);
 
     const handleMarkerPress = (restaurantId: string) => {
-        router.push('/(main)/restaurant/${restaurantId}');
+        router.push(`/(main)/restaurant/${restaurantId}`);
     };
 
     if (loading) {
@@ -61,34 +121,50 @@ export default function MapScreen() {
 
     return (
         <View style={styles.container}>
-            <MapView 
+            <MapView
                 style={styles.map}
                 initialRegion={initialRegion}
                 showsUserLocation={!!location}
                 showsMyLocationButton={!!location}
+                key={`map-${validRestaurants.length}-${Date.now()}`}
             >
-                {validRestaurants.map((restaurant) => (
-                    <Marker 
-                        key={restaurant.id}
-                        coordinate={{
-                            latitude: restaurant.latitude, 
-                            longitude: restaurant.longitude, 
-                        }}
-                        tracksViewChanges={false}
-                    >
-                        <Callout onPress={() => handleMarkerPress(restaurant.id)}>
-                            <View style={styles.callout}>
-                                <Text style={styles.calloutTitle}>{restaurant.name}</Text>
-                                {restaurant.distance && (
-                                    <Text style={styles.calloutDistance}>
-                                        {restaurant.distance.toFixed(1)} mi away 
-                                    </Text>
-                                )}
-                                <Text style={styles.calloutTap}>Tap to view menu</Text>
-                            </View>
-                        </Callout>
-                    </Marker>
-                ))}
+                {validRestaurants.map((restaurant, index) => {
+                    const lat = Number(restaurant.latitude);
+                    const lng = Number(restaurant.longitude);
+ 
+                    console.log(`Rendering marker ${index + 1}:`, {
+                        name: restaurant.name,
+                        lat,
+                        lng,
+                        id: restaurant.id
+                    });
+ 
+                    return (
+                        <Marker
+                            key={restaurant.id}
+                            coordinate={{
+                                latitude: lat,
+                                longitude: lng,
+                            }}
+                            title={restaurant.name}
+                            description={restaurant.distance ? `${restaurant.distance.toFixed(1)} mi away` : 'Restaurant'}
+                            tracksViewChanges={true}
+                            stopPropagation={true}
+                        >
+                            <Callout onPress={() => handleMarkerPress(restaurant.id)}>
+                                <View style={styles.callout}>
+                                    <Text style={styles.calloutTitle}>{restaurant.name}</Text>
+                                    {restaurant.distance && (
+                                        <Text style={styles.calloutDistance}>
+                                            {restaurant.distance.toFixed(1)} mi away
+                                        </Text>
+                                    )}
+                                    <Text style={styles.calloutTap}>Tap to view menu</Text>
+                                </View>
+                            </Callout>
+                        </Marker>
+                    );
+                })}
             </MapView>
         </View>
     );
