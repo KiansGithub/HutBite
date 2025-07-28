@@ -35,7 +35,13 @@ export default function ActivityScreen() {
             <TouchableOpacity
                 style={styles.activityItem}
                 onPress={() => {
-                    router.push(`/restaurant/${item.restaurant_id}?menuItem=${item.menu_item_id}`);
+                    router.push({
+                        pathname: '/restaurant/[id]',
+                        params: {
+                            id: item.restaurant_id, 
+                            menuItem: item.menu_item_id
+                        }
+                    });
                 }}
             >
                 <GlassPanel style={styles.activityCard}>
