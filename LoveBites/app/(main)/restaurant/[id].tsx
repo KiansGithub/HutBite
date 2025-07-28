@@ -26,7 +26,6 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Clipboard from 'expo-clipboard';
 import { supabase } from '@/lib/supabase';
 import { ClickTrackingService } from '@/lib/clickTracking';
-import { StylesOrDefault } from 'react-native-reanimated';
 
 const { width: SCREEN_W } = Dimensions.get('screen');
 
@@ -58,14 +57,17 @@ export default function RestaurantScreen() {
                 const { data, error } = await supabase 
                     .from('restaurants')
                     .select('*')
-                    .eq('id', id)
+                    .eq('id', id.toString())
                     .single();
 
-                if (error) throw error; 
+                if (error) {
+                    console.error('Supabase error:', error);
+                    throw error; 
+                }; 
                 setRestaurant(data);
             } catch (error) {
                 console.error('Error fetching restaurant data:', error);
-                Alert.alert('Error', 'Failed to laod restaurant details');
+                Alert.alert('Error', 'Failed to load restaurant details');
             } finally {
                 setLoading(false);
             }
@@ -132,6 +134,40 @@ export default function RestaurantScreen() {
         Haptics.selectionAsync();
         Linking.openURL(`tel:${restaurant.phone}`);
     }, [restaurant?.phone]);
+
+    if (loading) {
+        return (
+            <LinearGradient 
+                colors={['#FF512F', '#F09819', '#FFB347']}
+                start={{ x: 0, y: 0}}
+                end={{ x: 1, y: 1}}
+                style={styles.container}
+            >
+                <SafeAreaView style={styles.safeArea}>
+                    <View style={[styles.container, styles.center]}>
+                        <ActivityIndicator size="large" color={Colors.light.primary} />
+                    </View>
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
+
+    if (!id || typeof id !== 'string') {
+        return (
+            <LinearGradient 
+                colors={['#FF512F', '#F09819', '#FFB347']}
+                start={{ x: 0, y: 0}}
+                end={{ x: 1, y: 1}}
+                style={styles.container}
+            >
+                <SafeAreaView style={styles.safeArea}>
+                    <View style={[styles.container, styles.center]}>
+                        <Text style={styles.errorText}>Invalid restaurant ID</Text>
+                    </View>
+                </SafeAreaView>
+            </LinearGradient>
+        );
+    }
 
     if (!restaurant) {
         return (

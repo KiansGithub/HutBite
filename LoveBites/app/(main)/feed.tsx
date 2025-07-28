@@ -16,6 +16,7 @@ import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
+import { useFocusEffect } from '@react-navigation/native';
 // import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('screen');
@@ -28,6 +29,7 @@ export default function FeedScreen() {
   } | null>(null);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
+  const [isScreenFocused, setIsScreenFocused] = useState(true);
 
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, menuItems, loading, reshuffleRestaurants } = useRestaurantData();
@@ -50,6 +52,15 @@ export default function FeedScreen() {
        updateHorizontalIndex,
        resetIndexes,
      } = useViewabilityTracking();
+  
+  useFocusEffect(
+    useCallback(() => {
+      setIsScreenFocused(true);
+      return () => {
+        setIsScreenFocused(false);
+      };
+    }, [])
+  );
 
      /* one stable object – create it once with useRef */
   const viewabilityConfig = useRef({
@@ -95,15 +106,18 @@ export default function FeedScreen() {
       return <View style={{ width: '100%', height: H }} />;
     }
 
+    // If screen is not focused, force all videos to 'off' mode
+    const rowMode = !isScreenFocused ? 'off' 
+                   : isCurrent ? 'play' 
+                   : isPreloaded ? 'warm'
+                   : 'off';
+
     return (
       <RestaurantCard
         restaurant={item}
         menuItems={menu}
-        rowMode={isCurrent ? 'play' 
-                 : isPreloaded ? 'warm'
-                 : 'off'
-                }
-        isVisible={isCurrent}
+        rowMode={rowMode}
+        isVisible={isCurrent && isScreenFocused}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
         onOrderPress={handleOrderPress}
         distance={item.distance}
@@ -113,7 +127,7 @@ export default function FeedScreen() {
       />
     );
   },
-  [menuItems, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress]);
+  [menuItems, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused]);
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
