@@ -136,6 +136,110 @@ export interface Database {
           timestamp?: string 
         }
       }
+      user_profiles: {
+        Row: {
+          id: string 
+          user_id: string 
+          handle: string | null 
+          display_name: string | null 
+          avatar_url: string | null 
+          bio: string | null 
+          is_private: boolean 
+          created_at: string 
+          updated_at: string 
+        }
+        Insert: {
+          id?: string 
+          user_id: string 
+          handle?: string | null 
+          display_name?: string | null 
+          avatar_url?: string | null 
+          bio?: string | null 
+          is_private?: boolean 
+          created_at?: string 
+          updated_at?: string 
+        }
+        Update: {
+          id?: string 
+          user_id?: string 
+          handle?: string | null 
+          display_name?: string | null 
+          avatar_url?: string | null 
+          bio?: string | null 
+          is_private?: boolean 
+          created_at?: string 
+          updated_at?: string 
+        }
+      }
+      follows: {
+        Row: {
+          id: string 
+          follower_id: string 
+          followee_id: string 
+          created_at: string 
+        }
+        Insert: {
+          id?: string 
+          follower_id: string 
+          followee_id: string 
+          created_at?: string 
+        }
+        Update: {
+          id?: string 
+          follower_id?: string 
+          followee_id?: string 
+          created_at?: string 
+        }
+      }
+      blocks: {
+        Row: {
+          id: string 
+          blocker_id: string 
+          blocked_id: string 
+          created_at: string 
+        }
+        Insert: {
+          id?: string 
+          blocker_id :string 
+          blocked_id: string 
+          created_at?: string 
+        }
+        Update: {
+          id?: string 
+          blocker_id?: string 
+          blocked_id?: string 
+          created_at?: string 
+        }
+      }
+      reports: {
+        Row: {
+          id: string 
+          reporter_id: string 
+          target_type: 'user' | 'item' | 'like'
+          target_id: string 
+          reason: string 
+          status: 'pending' | 'reviewed' | 'resolved'
+          created_at: string 
+        }
+        Insert: {
+          id?: string 
+          reporter_id: string 
+          target_type: 'user' | 'item' | 'like'
+          target_id: string 
+          reason: string 
+          status?: 'pending' | 'reviewed' | 'resolved'
+          created_at?: string 
+        }
+        Update: {
+          id?: string 
+          reporter_id?: string 
+          target_type?: 'user' | 'item' | 'like'
+          target_id?: string 
+          reason?: string 
+          status?: 'pending' | 'reviewed' | 'resolved'
+          created_at?: string 
+        }
+      }
     }
     Views: {
       [_ in never]: never

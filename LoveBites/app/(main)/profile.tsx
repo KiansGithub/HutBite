@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
     View, 
     Text, 
@@ -17,11 +17,17 @@ import { GlassPanel } from '@/components/GlassPanel';
 import { CTAButton } from '@/components/CTAButton';
 import { ConfirmationDialog } from '@/components/ConfirmationDialog';
 import Colors from '@/constants/Colors';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { useFollow } from '@/hooks/useFollow';
+import { useSafety } from '@/hooks/useSafety';
 
 export default function ProfileScreen() {
     const { user, signOut, deleteAccount } = useAuthStore();
+    const { profile, loading: profileLoading, createProfile, updateProfile } = useUserProfile();
+    const { reportContent, blockUser } = useSafety();
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
+    const [showEditProfile, setShowEditProfile] = useState(false);
 
     const handleSignOut = async () => {
         try {
@@ -60,6 +66,15 @@ export default function ProfileScreen() {
         }
     };
 
+    useEffect(() => {
+        if (user && !profile && !profileLoading) {
+            createProfile({
+                display_name: user.email?.split('@')[0] || 'User',
+                is_private: false, 
+            });
+        }
+    }, [user, profile, profileLoading, createProfile]);
+
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
             year: 'numeric',
@@ -90,13 +105,44 @@ export default function ProfileScreen() {
                 <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                     <GlassPanel style={styles.profilePanel}>
                         <View style={styles.profileHeader}>
-                            <View style={styles.avatarContainer}>
-                                <Ionicons name="person" size={40} color="#fff" />
-                            </View>
+                            <TouchableOpacity 
+                              style={styles.avatarContainer}
+                              onPress={() => setShowEditProfile(true)}
+                            >
+                                {profile?.avatar_url ? (
+                                    <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                                ) : (
+                                    <Ionicons name="person" size={40} color="#fff" />
+                                )}
+                            </TouchableOpacity>
+                            <Text style={styles.displayNameText}>
+                                {profile?.display_name || user?.email?.split('@')[0] || 'User'}
+                            </Text>
+                            {profile?.handle && (
+                                <Text style={styles.handleText}>@{profile.handle}</Text>
+                            )}
+                            {profile?.bio && (
+                                <Text style={styles.bioText}>{profile.bio}</Text>
+                            )}
                             <Text style={styles.emailText}>{user?.email}</Text>
                             <Text style={styles.memberSinceText}>
                                 Member since {user?.created_at ? formatDate(user.created_at): 'Unknown'}
                             </Text>
+
+                            <View style={styles.statsContainer}>
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>0</Text>
+                                    <Text style={styles.statLabel}>Likes</Text>
+                                </View>
+                                <View style={styles.statItem}>
+                                    <Text style={styles.statNumber}>0</Text>
+                                    <Text style={styles.statLabel}>Following</Text>
+                                </View>
+                                <View style={styles.statItme}>
+                                    <Text style={styles.statNumber}>0</Text>
+                                    <Text style={styles.statLabel}>Followers</Text>
+                                </View>
+                            </View>
                         </View>
                     </GlassPanel>
 
@@ -109,6 +155,21 @@ export default function ProfileScreen() {
                             <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.6)" />
                         </TouchableOpacity>
                     </GlassPanel>
+
+                    <TouchableOpacity 
+                      style={styles.actionItem}
+                      onPress={() => updateProfile({ is_private: !profile?.is_private })}
+                    >
+                        <Ionicons name="lock-closed-outline" size={20} color="#fff" />
+                        <Text style={styles.actionText}>
+                            {profile?.is_private ? 'Private Profile' : 'Public Profile'}
+                        </Text>
+                        <Ionicons 
+                          name={profile?.is_private ? "toggle" : "toggle-outline"}
+                          size={20}
+                          color={profile?.is_private ? Colors.light.primary : "rgba(255,255,255,0.6)"}
+                        />
+                    </TouchableOpacity>
 
                     <GlassPanel style={styles.dangerPanel}>
                         <Text style={styles.dangerTitle}>Danger Zone</Text>
@@ -139,7 +200,7 @@ export default function ProfileScreen() {
                 />
             </SafeAreaView>
         </LinearGradient>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -239,5 +300,49 @@ const styles = StyleSheet.create({
     },
     deleteButtonText: {
         color: '#FF3B30',
+    },
+    avatar: {
+        width: 80, 
+        height: 80, 
+        borderRadius: 40,
+    },
+    displayNameText: {
+        fontSize: 20, 
+        fontWeight: '700',
+        color: '#fff',
+        marginBottom: 4, 
+    },
+    handleText: {
+        fontSize: 16, 
+        color: 'rgba(255,255,255,0.8)',
+        marginBottom: 8
+    },
+    bioText: {
+        fontSize: 14, 
+        color: 'rgba(255,255,255,0.8)',
+        textAlign: 'center',
+        marginBottom: 12, 
+        paddingHorizontal: 20, 
+    },
+    statsContainer: {
+        flexDirection: 'row',
+        marginTop: 16, 
+        paddingTop: 16, 
+        borderTopWidth: 1, 
+        borderTopColor: 'rgba(255,255,255,0.2)',
+    },
+    statItem: {
+        flex: 1, 
+        alignItems: 'center',
+    },
+    statNumber: {
+        fontSize: 18, 
+        fontWeight: '700',
+        color: '#fff'
+    },
+    statLabel: {
+        fontSize: 12, 
+        color: 'rgba(255,255,255,0.7)',
+        marginTop: 2, 
     },
 });
