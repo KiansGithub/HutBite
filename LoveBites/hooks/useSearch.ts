@@ -1,6 +1,16 @@
 import { useState, useMemo } from 'react';
 import { Database } from '@/lib/supabase.d';
 import { normalizeCuisine } from '@/utils/cuisine';
+
+interface UserProfile {
+  id: string; 
+  user_id: string; 
+  handle: string | null; 
+  display_name: string | null; 
+  avatar_url: string | null; 
+  bio: string | null; 
+  is_private: boolean; 
+}
  
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
  
