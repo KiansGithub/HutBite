@@ -145,6 +145,9 @@ export default function FeedScreen() {
         {locationLoading && (
           <Text style={styles.locationText}>Getting your location...</Text>
         )}
+        {!locationLoading && (
+          <Text style={styles.locationText}>Loading restaurants...</Text>
+        )}
       </View>
     );
   }

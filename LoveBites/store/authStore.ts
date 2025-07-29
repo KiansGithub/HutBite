@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import * as QueryParams from 'expo-auth-session/build/QueryParams';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
 // import { AnalyticsService } from '@/lib/analytics';
  
@@ -17,7 +17,7 @@ interface AuthState {
   ) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<{ error: any | null}>;
-  initialize: () => Promise<void>;
+  initialize: () => Promise<() => void>;
 }
  
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -77,41 +77,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signInWithProvider: async (provider: 'google' | 'apple') => {
     try {
       // Build a native/HTTPS deep-link redirect URI
-      const redirectUri = makeRedirectUri({ scheme: 'livebites', path: '/auth/callback' });
-      console.log('Redirect URI:', redirectUri);
+      const redirectTo = makeRedirectUri({ scheme: 'livebites', path: 'auth/callback' });
 
       // Initiate OAuth
-      const { data, error: initError } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo: redirectUri },
+        options: { redirectTo },
       });
-      if (initError) {
-        console.error('OAuth init failed:', initError);
-        return { error: initError };
-      }
+      if (error) return { error };
 
-      // Open the browser for user sign-in
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUri);
-      if (result.type !== 'success') {
-        return { error: { message: 'User cancelled or failed to authenticate' } };
-      }
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      if (result.type !== 'success') return { error: { message: 'User cancelled' } };
 
-      // Parse the tokens from the redirect URL
-      const { params } = QueryParams.getQueryParams(result.url);
-      const { error: setErr } = await supabase.auth.setSession({
-        access_token: params.access_token!, 
-        refresh_token: params.refresh_token!,
-      });
-      if (setErr) {
-        console.error('setSession error:', setErr);
-        return { error: setErr };
-      }
+      const { queryParams } = Linking.parse(result.url);
+      const code = (queryParams?.code as string) || '';
+      if (!code) return { error: { message: 'No authorization code returned' } };
 
-      // Success! onAuthStateChange will fire automatically
-      return { error: null };
-    } catch (err) {
-      console.error('Unexpected OAuth error:', err);
-      return { error: { message: 'Authentication failed. Please try again.' } };
+      const { error: exchErr } = await supabase.auth.exchangeCodeForSession(code);
+      return { error: exchErr ?? null };
+    } catch (e) {
+      return { error: { message: 'Authentication failed. Try again.' } };
     }
   },
 
@@ -167,30 +152,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     console.log('🔍 AUTH STORE: Starting initialization...');
     set({ loading: true });
  
+    // 1) Restore persisted session (if any)
     const { data: { session } } = await supabase.auth.getSession();
     console.log('🔍 AUTH STORE: Retrieved session:', session);
-    console.log('🔍 AUTH STORE: Session user:', session?.user);
+    set({ session, user: session?.user ?? null });
  
-    if (session) {
-      console.log('🔍 AUTH STORE: Setting user from session');
-      set({ user: session.user, session });
-    } else {
-      console.log('🔍 AUTH STORE: No session found');
-    }
- 
-    supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔍 AUTH STORE: Auth state changed:', event);
-      console.log('🔍 AUTH STORE: New session:', session);
-      console.log('🔍 AUTH STORE: New user:', session?.user);
-      set({
-        user: session?.user ?? null,
-        session,
-        loading: false
-      });
+    // 2) Subscribe to future auth events (login, logout, token refresh)
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      console.log('🔍 AUTH STORE: Auth state changed:', _event);
+      console.log('🔍 AUTH STORE: New session:', sess);
+      set({ session: sess ?? null, user: sess?.user ?? null, loading: false });
     });
  
     set({ loading: false });
-
     console.log('🔍 AUTH STORE: Initialization complete');
+ 
+    // Return unsubscribe for callers that mount/unmount
+    return () => sub.subscription.unsubscribe();
   },
 }));

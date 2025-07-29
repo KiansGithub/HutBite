@@ -15,7 +15,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
     const [reshuffleTrigger, setReshuffleTrigger] = useState(0);
-    const { location } = useLocation();
+    const { location, loading: locationLoading } = useLocation();
 
     const reshuffleRestaurants = useCallback(() => {
         setReshuffleTrigger(prev => prev + 1);
@@ -23,6 +23,11 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
 
     useEffect(() => {
         const fetchData = async () => {
+            // Don't fetch data until location loading is complete 
+            if (locationLoading) {
+                return; 
+            }
+
             try {
                 const { data: rs } = await supabase 
                   .from('restaurants')
@@ -106,12 +111,12 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
         };
 
         fetchData();
-    }, [location, searchResults, reshuffleTrigger]);
+    }, [location, locationLoading, searchResults, reshuffleTrigger]);
 
     return { 
         restaurants, 
         menuItems, 
-        loading,
+        loading: loading || locationLoading,
         availableCuisines: getUniqueCuisines(restaurants),
         cuisineCounts: getCuisineCounts(restaurants),
         reshuffleRestaurants
