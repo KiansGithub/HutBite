@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
-import { useRestaurantData } from '@/hooks/useRestaurantData';
+import { useRestaurantData, RestaurantWithDistance } from '@/hooks/useRestaurantData';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
@@ -33,7 +33,7 @@ export default function FeedScreen() {
 
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, menuItems, loading, reshuffleRestaurants } = useRestaurantData();
-  const { searchQuery, setSearchQuery, searchResults, isSearching } = useSearch(allRestaurants);
+  const { searchQuery, setSearchQuery, searchResults, isSearching } = useSearch(allRestaurants, []);
 
   // Track previous search state to detect when search is cleared
   const prevIsSearching = useRef(isSearching);
@@ -41,7 +41,7 @@ export default function FeedScreen() {
   const prevRestaurantId = useRef<string | null>(null);
 
   // Use search results when searching, otherwise use all restaurants 
-  const restaurants = isSearching? searchResults: allRestaurants;
+  const restaurants: RestaurantWithDistance[] = isSearching? searchResults: allRestaurants;
 
   // Ref to control scrolling when search results change 
   const listRef = useRef<FlatList<any>>(null);

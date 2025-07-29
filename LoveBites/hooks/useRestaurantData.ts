@@ -8,7 +8,7 @@ import { useLocation } from './useLocation';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
-type RestaurantWithDistance = Restaurant & { distance?: number };
+export type RestaurantWithDistance = Restaurant & { distance?: number };
 
 export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [restaurants, setRestaurants] = useState<RestaurantWithDistance[]>([]);

@@ -7,6 +7,7 @@ import {
     TouchableOpacity, 
     Alert, 
     SafeAreaView, 
+    Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
@@ -138,7 +139,7 @@ export default function ProfileScreen() {
                                     <Text style={styles.statNumber}>0</Text>
                                     <Text style={styles.statLabel}>Following</Text>
                                 </View>
-                                <View style={styles.statItme}>
+                                <View style={styles.statItem}>
                                     <Text style={styles.statNumber}>0</Text>
                                     <Text style={styles.statLabel}>Followers</Text>
                                 </View>
