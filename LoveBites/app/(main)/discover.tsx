@@ -50,13 +50,23 @@ export default function DiscoverScreen() {
             setLoading(true);
             setError(null);
 
-            const { data, error } = await supabase 
+            console.log('🔍 DISCOVER: Fetching users, current user ID:', user?.id);
+ 
+            let query = supabase 
                 .from('user_profiles')
                 .select('*')
-                .neq('user_id', user?.id || '')
                 .order('created_at', { ascending: false })
                 .limit(50);
 
+            // Only filter out current user if we have a valid user ID
+            if (user?.id) {
+                query = query.neq('user_id', user.id);
+            }
+ 
+            const { data, error } = await query;
+ 
+            console.log('🔍 DISCOVER: Query result:', { data: data?.length, error });
+ 
             if (error) throw error; 
 
             setUsers(data || []);
@@ -69,8 +79,11 @@ export default function DiscoverScreen() {
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, [user?.id]);
+        // Only fetch users after we have auth state resolved
+        if (user !== undefined) {
+            fetchUsers();
+        }
+    }, [user]);
 
     const displayedUsers = isSearching ? userResults: users; 
 
