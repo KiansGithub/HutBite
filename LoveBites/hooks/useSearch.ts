@@ -11,8 +11,9 @@ interface SearchResult {
   matchedCuisines?: string[];
 }
  
-export const useSearch = (restaurants: Restaurant[]) => {
+export const useSearch = (restaurants: Restaurant[], users: UserProfile[]) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<'all' | 'restaurants' | 'users'>('all');
  
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -107,8 +108,11 @@ export const useSearch = (restaurants: Restaurant[]) => {
   return {
     searchQuery,
     setSearchQuery,
-    searchResults,
+    searchResult: searchType === 'users' ? [] : searchResults,
+    userResults: searchType === 'restaurants' ? [] : userResults, 
     isSearching: searchQuery.trim().length > 0,
+    searchType, 
+    setSearchType, 
   };
 };
  
