@@ -115,6 +115,46 @@ export const useSearch = (restaurants: Restaurant[], users: UserProfile[]) => {
       .map(result => result.restaurant);
   }, [restaurants, searchQuery]);
  
+  const userResults = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return users; 
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+
+    return users.filter(user => {
+      // Search by handle 
+      if (user.handle && user.handle.toLowerCase().includes(query)) {
+        return true; 
+      }
+
+      // Search by display name 
+      if (user.display_name && user.display_name.toLowerCase().includes(query)) {
+        return true; 
+      }
+
+      // Search by bio 
+      if (user.bio && user.bio.toLowerCase().includes(query)) {
+        return true; 
+      }
+
+      return false; 
+    }).sort((a, b) => {
+      // Prioritize handle matches, then display name matches 
+      const aHandleMatch = a.handle?.toLowerCase().includes(query) ? 1 : 0; 
+      const bHandleMatch = b.handle?.toLowerCase().includes(query) ? 1 : 0; 
+
+      if (aHandleMatch !== bHandleMatch) {
+        return bHandleMatch - aHandleMatch; 
+      }
+
+      const aDisplayMatch = a.display_name?.toLowerCase().includes(query) ? 1 : 0; 
+      const bDisplayMatch = b.display_name?.toLowerCase().includes(query) ? 1 : 0; 
+
+      return bDisplayMatch - aDisplayMatch; 
+    });
+  }, [users, searchQuery]);
+
   return {
     searchQuery,
     setSearchQuery,
