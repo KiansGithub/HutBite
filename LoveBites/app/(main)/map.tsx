@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import { View, StyleSheet, Alert } from 'react-native';
+import MapView, { Marker, Callout} from 'react-native-maps';
 import { router } from 'expo-router';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { useLocation } from '@/hooks/useLocation';
@@ -11,136 +11,195 @@ type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type RestaurantWithDistance = Restaurant & { distance?: number };
 
 export default function MapScreen() {
-  const { restaurants, loading } = useRestaurantData();
-  const { location } = useLocation();
+    const { restaurants, loading } = useRestaurantData();
+    const { location } = useLocation();
 
-  /* ---------- helpers ---------- */
-
-  const offsetDuplicateCoordinates = (list: RestaurantWithDistance[]) => {
-    const seen = new Map<string, number>();
-    return list.map(r => {
-      const key = `${r.latitude},${r.longitude}`;
-      const count = seen.get(key) ?? 0;
-      seen.set(key, count + 1);
-      if (count === 0) return r;
-
-      // offset ~10 m per duplicate
-      const bump = count * 0.0001;
-      return { ...r, latitude: r.latitude + bump, longitude: r.longitude + bump };
-    });
-  };
-
-  /* ---------- data ---------- */
-
-  const validRestaurants = useMemo(() => {
-    const filtered = restaurants.filter(r =>
-      r.latitude != null &&
-      r.longitude != null &&
-      isFinite(+r.latitude) &&
-      isFinite(+r.longitude)
-    );
-    return offsetDuplicateCoordinates(filtered);
-  }, [restaurants]);
-
-  const initialRegion = useMemo(() => {
-    if (location) {
-      return {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      };
-    }
-    if (validRestaurants.length) {
-      const f = validRestaurants[0];
-      return {
-        latitude: +f.latitude!,
-        longitude: +f.longitude!,
-        latitudeDelta: 0.0922,
-        longitudeDelta: 0.0421,
-      };
-    }
-    return {
-      latitude: 37.78825,
-      longitude: -122.4324,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
+    // Function to offset duplicate coordinates slightly
+    const offsetDuplicateCoordinates = (restaurants: RestaurantWithDistance[]): RestaurantWithDistance[] => {
+        const coordinateMap = new Map<string, number>();
+ 
+        return restaurants.map(restaurant => {
+            const coordKey = `${restaurant.latitude},${restaurant.longitude}`;
+            const count = coordinateMap.get(coordKey) || 0;
+            coordinateMap.set(coordKey, count + 1);
+ 
+            if (count > 0) {
+                // Offset by a small amount (roughly 10 meters)
+                const offset = count * 0.0001;
+                return {
+                    ...restaurant,
+                    latitude: restaurant.latitude + offset,
+                    longitude: restaurant.longitude + offset
+                };
+            }
+ 
+            return restaurant;
+        });
     };
-  }, [location, validRestaurants]);
+ 
+    const validRestaurants = useMemo(() => {
+        console.log('Total restaurants from hook:', restaurants.length);
+ 
+        const filtered = restaurants.filter(restaurant => {
+            const hasValidLat = restaurant.latitude != null &&
+                               !isNaN(Number(restaurant.latitude)) &&
+                               isFinite(Number(restaurant.latitude));
+            const hasValidLng = restaurant.longitude != null &&
+                               !isNaN(Number(restaurant.longitude)) &&
+                               isFinite(Number(restaurant.longitude));
+ 
+            const isValid = hasValidLat && hasValidLng;
+ 
+            if (!isValid) {
+                console.log('Invalid restaurant coordinates:', {
+                    name: restaurant.name,
+                    lat: restaurant.latitude,
+                    lng: restaurant.longitude,
+                    hasValidLat,
+                    hasValidLng
+                });
+            } else {
+                console.log('Valid restaurant:', {
+                    name: restaurant.name,
+                    lat: Number(restaurant.latitude),
+                    lng: Number(restaurant.longitude)
+                });
+            }
+ 
+            return isValid;
+        });
+ 
+        console.log('Valid restaurants for map:', filtered.length);
+        console.log('Valid restaurant names:', filtered.map(r => r.name));
+ 
+        // Handle duplicate coordinates
+        const offsetRestaurants = offsetDuplicateCoordinates(filtered);
+        console.log('Restaurants after coordinate offsetting:', offsetRestaurants.length);
+ 
+        return offsetRestaurants;
+    }, [restaurants]);
 
-  const navigateToRestaurant = (id: string) =>
-    router.push(`/(main)/restaurant/${id}`);
+    const initialRegion = useMemo(() => {
+        if (location) {
+            return {
+                latitude: location.latitude, 
+                longitude: location.longitude, 
+                latitudeDelta: 0.0922, 
+                longitudeDelta: 0.0421, 
+            };
+        }
 
-  if (loading || !restaurants.length) {
+        if (validRestaurants.length > 0) {
+            const firstRestaurant = validRestaurants[0];
+            return {
+                latitude: firstRestaurant.latitude, 
+                longitude: firstRestaurant.longitude, 
+                latitudeDelta: 0.0922, 
+                longitudeDelta: 0.042, 
+            };
+        }
+
+        return {
+            latitude: 37.78825,
+            longitude: -122.4324,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+        }; 
+    }, [location, validRestaurants]);
+
+    const handleMarkerPress = (restaurantId: string) => {
+        router.push(`/(main)/restaurant/${restaurantId}`);
+    };
+
+    if (loading || restaurants.length === 0) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Text>Loading map...</Text>
+            </View>
+        );
+    }
+
     return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading map...</Text>
-      </View>
-    );
-  }
-
-  /* ---------- render ---------- */
-
-  return (
-    <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        initialRegion={initialRegion}
-        showsUserLocation={!!location}
-        showsMyLocationButton={!!location}
-      >
-        {validRestaurants.map(r => {
-          const lat = +r.latitude!;
-          const lng = +r.longitude!;
-
-          return (
-            <Marker
-              key={r.id}
-              coordinate={{ latitude: lat, longitude: lng }}
-              calloutAnchor={{ x: 0.5, y: 0 }}      // bubble sits just above the pin
-              onCalloutPress={() => navigateToRestaurant(r.id)} // ← works on both OSes
-              tracksViewChanges={false}
-              accessibilityLabel={`${r.name}, ${r.distance?.toFixed(1) ?? ''} miles`}
+        <View style={styles.container}>
+            <MapView
+                style={styles.map}
+                initialRegion={initialRegion}
+                showsUserLocation={!!location}
+                showsMyLocationButton={!!location}
+                key={`map-${validRestaurants.length}-${Date.now()}`}
             >
-              <Callout tooltip>
-                <View style={styles.bubble}>
-                  <Text style={styles.name}>{r.name}</Text>
-                  {r.distance && (
-                    <Text style={styles.distance}>
-                      {r.distance.toFixed(1)} mi away
-                    </Text>
-                  )}
-                  <Text style={styles.hint}>Tap to view menu</Text>
-                </View>
-              </Callout>
-            </Marker>
-          );
-        })}
-      </MapView>
-    </View>
-  );
+                {validRestaurants.map((restaurant, index) => {
+                    const lat = Number(restaurant.latitude);
+                    const lng = Number(restaurant.longitude);
+ 
+                    console.log(`Rendering marker ${index + 1}:`, {
+                        name: restaurant.name,
+                        lat,
+                        lng,
+                        id: restaurant.id
+                    });
+ 
+                    return (
+                        <Marker
+                            key={restaurant.id}
+                            coordinate={{
+                                latitude: lat,
+                                longitude: lng,
+                            }}
+                            title={restaurant.name}
+                            description={restaurant.distance ? `${restaurant.distance.toFixed(1)} mi away` : 'Restaurant'}
+                            tracksViewChanges={true}
+                            stopPropagation={true}
+                        >
+                            <Callout onPress={() => handleMarkerPress(restaurant.id)}>
+                                <View style={styles.callout}>
+                                    <Text style={styles.calloutTitle}>{restaurant.name}</Text>
+                                    {restaurant.distance && (
+                                        <Text style={styles.calloutDistance}>
+                                            {restaurant.distance.toFixed(1)} mi away
+                                        </Text>
+                                    )}
+                                    <Text style={styles.calloutTap}>Tap to view menu</Text>
+                                </View>
+                            </Callout>
+                        </Marker>
+                    );
+                })}
+            </MapView>
+        </View>
+    );
 }
 
-/* ---------- styles ---------- */
-
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  map: { flex: 1 },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000',
-  },
-  bubble: {
-    minWidth: 200,
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    elevation: 2,                           // subtle shadow (Android)
-  },
-  name: { fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  distance: { fontSize: 14, color: '#666', marginBottom: 4 },
-  hint: { fontSize: 12, color: '#FF7A00', fontStyle: 'italic' },
+    container: {
+        flex: 1, 
+    },
+    map: {
+        flex: 1, 
+    },
+    loadingContainer: {
+        flex: 1, 
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#000',
+    },
+    callout: {
+        minWidth: 200, 
+        padding: 10, 
+    },
+    calloutTitle: {
+        fontSize: 16, 
+        fontWeight: 'bold',
+        marginBottom: 4, 
+    },
+    calloutDistance: {
+        fontSize: 14, 
+        color: '#666',
+        marginBottom: 4, 
+    },
+    calloutTap: {
+        fontSize: 12, 
+        color: '#FF7A00', 
+        fontStyle: 'italic',
+    },
 });
