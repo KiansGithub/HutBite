@@ -158,10 +158,12 @@ export const useActivityFeed = () => {
           newRow?.follower_id === user.id ||
           oldRow?.follower_id === user.id
         ) {
+          // Longer delay for unfollow to ensure DB consistency
+          const delay = payload.eventType === 'DELETE' ? 500 : 200;
           // Small delay to ensure DB consistency
           setTimeout(() => {
             fetchActivities(0, true);
-          }, 200);
+          }, delay);
         }
       }
     )
