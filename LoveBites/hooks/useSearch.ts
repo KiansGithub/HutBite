@@ -158,7 +158,7 @@ export const useSearch = (restaurants: Restaurant[], users: UserProfile[]) => {
   return {
     searchQuery,
     setSearchQuery,
-    searchResult: searchType === 'users' ? [] : searchResults,
+    searchResults: searchType === 'users' ? [] : searchResults,
     userResults: searchType === 'restaurants' ? [] : userResults, 
     isSearching: searchQuery.trim().length > 0,
     searchType, 
