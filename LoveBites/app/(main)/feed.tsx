@@ -17,9 +17,11 @@ import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('screen');
+const TAB_BAR_HEIGHT = 80; 
 
 export default function FeedScreen() {
   const [modalData, setModalData] = useState<{
@@ -27,10 +29,12 @@ export default function FeedScreen() {
     restaurantId: string; 
     menuItemId: string; 
   } | null>(null);
+  
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
   const [isScreenFocused, setIsScreenFocused] = useState(true);
-
+  const insets = useSafeAreaInsets();
+  const bottomOffset = TAB_BAR_HEIGHT + insets.bottom;
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, menuItems, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching, setSearchType } = useSearch(allRestaurants, []);

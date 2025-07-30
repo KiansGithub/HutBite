@@ -7,8 +7,8 @@ import {
     TouchableOpacity, 
     Image, 
     RefreshControl, 
-    SafeAreaView
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; // ← here
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';

@@ -1,7 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function MainLayout() {
+    const insets = useSafeAreaInsets();
+    const extraBottom= Platform.OS === 'android' ? insets.bottom : 0;
     return (
         <Tabs
             screenOptions={{
@@ -11,8 +15,8 @@ export default function MainLayout() {
                     borderTopWidth: 0,
                     elevation: 0,
                     shadowOpacity: 0,
-                    height: 80,
-                    paddingBottom: 20,
+                    height: 80 + extraBottom, 
+                    paddingBottom: 20 + extraBottom,
                     paddingTop: 10,
                 },
                 tabBarActiveTintColor: '#FF7A00',
@@ -24,20 +28,33 @@ export default function MainLayout() {
             }}
         >
             <Tabs.Screen
-                name="feed"
-                options={{
-                    title: 'Feed',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="home" size={size} color={color} />
-                    ),
-                }}
+        name="discover"
+        options={{
+          title: 'Discover',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons
+              name={Platform.OS === 'ios' ? 'compass-outline' : 'compass'}
+              size={size}
+              color={color}
             />
+          ),
+        }}
+      />
             <Tabs.Screen
                 name="activity"
                 options={{
                     title: 'Activity',
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="heart" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="feed"
+                options={{
+                    title: 'Feed',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="home" size={size} color={color} />
                     ),
                 }}
             />

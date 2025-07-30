@@ -11,6 +11,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useAuthStore } from '@/store/authStore';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 // import { initializeAppServices } from '../lib/app-init';
 
 // import AnalyticsService from '@/lib/analytics';
@@ -73,11 +74,13 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? TransparentDark : TransparentLight}>
       <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <BottomSheetModalProvider>
       <Stack screenOptions={{ headerShown: false }}>
         {user ? <Stack.Screen name="(main)" /> : <Stack.Screen name="auth" />}
       </Stack>
       </BottomSheetModalProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
     </ThemeProvider>
   );

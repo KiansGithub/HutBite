@@ -34,7 +34,7 @@
       "googleServicesFile": "./google-services.json", 
       "config": {
         "googleMaps": {
-          "apiKey": "YOUR_ANDROID_GOOGLE_MAPS_API_KEY_HERE"
+          "apiKey": "AIzaSyAaDz-Bz_RdwpmrRt5n8ywbnXv46sbTOwM"
         }
       }
     },

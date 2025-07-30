@@ -6,9 +6,9 @@ import {
     ScrollView, 
     TextInput, 
     TouchableOpacity, 
-    SafeAreaView, 
     ActivityIndicator, 
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +35,7 @@ export default function DiscoverScreen() {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const insets = useSafeAreaInsets();
 
     const {
         searchQuery, 
@@ -94,16 +95,9 @@ export default function DiscoverScreen() {
             end={{ x: 1, y: 1}}
             style={styles.container}
         >
-            <SafeAreaView style={styles.safeArea}>
+            <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
                 <View style={styles.header}>
-                    <TouchableOpacity 
-                        style={styles.backButton}
-                        onPress={() => router.back()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
-                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>Discover People</Text>
-                    <View style={styles.headerSpacer} />
                 </View>
 
                 <View style={styles.searchContainer}>

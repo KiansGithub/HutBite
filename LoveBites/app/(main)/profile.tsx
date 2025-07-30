@@ -6,13 +6,12 @@ import {
     ScrollView, 
     TouchableOpacity, 
     Alert, 
-    SafeAreaView, 
     Image
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/authStore';
 import { GlassPanel } from '@/components/GlassPanel';
 import { CTAButton } from '@/components/CTAButton';
@@ -29,6 +28,7 @@ export default function ProfileScreen() {
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
+    const insets = useSafeAreaInsets();
 
     const handleSignOut = async () => {
         try {
@@ -91,16 +91,9 @@ export default function ProfileScreen() {
           end={{ x: 1, y: 1 }}
           style={styles.container}
         >
-            <SafeAreaView style={styles.safeArea}>
+            <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
                 <View style={styles.header}>
-                    <TouchableOpacity 
-                      style={styles.backButton}
-                      onPress={() => router.back()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#fff" />
-                    </TouchableOpacity>
                     <Text style={styles.headerTitle}>Profile</Text>
-                    <View style={styles.headerSpacer} />
                 </View>
 
                 <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>

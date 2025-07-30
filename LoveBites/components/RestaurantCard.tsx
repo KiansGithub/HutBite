@@ -29,6 +29,7 @@ interface RestaurantCardProps {
   isDescriptionExpanded: boolean; 
   setIsDescriptionExpanded: (expanded: boolean) => void; 
   resetTrigger: number;
+  bottomOffset: number; 
 }
 
 const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
@@ -41,7 +42,8 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   distance, 
   isDescriptionExpanded, 
   setIsDescriptionExpanded,
-  resetTrigger
+  resetTrigger,
+  bottomOffset = 0
 }) => {
   const [hIndex, setHIndex] = useState(0);
   const currentMenuItem = menuItems[hIndex];
@@ -70,7 +72,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
       <LinearGradient
         pointerEvents="box-none"
         colors={['transparent', 'rgba(0,0,0,0.7)']}
-        style={styles.bottomGradient}
+        style={[styles.bottomGradient, { bottom: bottomOffset }]}
       >
         <View style={styles.menuItemInfo}>
           <MenuItemInfo 
