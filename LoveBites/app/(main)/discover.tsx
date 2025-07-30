@@ -97,7 +97,7 @@ export default function DiscoverScreen() {
         >
             <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
                 <View style={styles.header}>
-                    <Text style={styles.headerTitle}>Discover People</Text>
+                    <Text style={styles.headerTitle}>Add Friends</Text>
                 </View>
 
                 <View style={styles.searchContainer}>
