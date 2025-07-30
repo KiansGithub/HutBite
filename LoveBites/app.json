@@ -44,26 +44,33 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
-      [
-        "expo-video",
-        {
-          "supportsBackgroundPlayback": true,
-          "supportsPictureInPicture": true
-        }
-      ],
-      "expo-web-browser",
-      "expo-apple-authentication",
-      "expo-build-properties", 
-      [
-        "@react-native-firebase/app",
-        {
-          "config": {
-            "googleServicesFile": "./GoogleService-Info.plist" 
-          }
-        }
-      ]
-    ],
+  "expo-router",
+  [
+    "expo-video",
+    {
+      "supportsBackgroundPlayback": true,
+      "supportsPictureInPicture": true
+    }
+  ],
+  "expo-web-browser",
+  "expo-apple-authentication",
+  [
+    "expo-build-properties",
+    {
+      "ios": {
+        "useModularHeaders": true
+      }
+    }
+  ],
+  [
+    "@react-native-firebase/app",
+    {
+      "config": {
+        "googleServicesFile": "./GoogleService-Info.plist"
+      }
+    }
+  ]
+],
     "experiments": {
       "typedRoutes": true
     },
