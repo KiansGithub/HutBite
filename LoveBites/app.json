@@ -53,23 +53,23 @@
     }
   ],
   "expo-web-browser",
-  "expo-apple-authentication"
-  // [
-  //   "expo-build-properties",
-  //   {
-  //     "ios": {
-  //       "useModularHeaders": true
-  //     }
-  //   }
-  // ],
-  // [
-  //   "@react-native-firebase/app",
-  //   {
-  //     "config": {
-  //       "googleServicesFile": "./GoogleService-Info.plist"
-  //     }
-  //   }
-  // ]
+  "expo-apple-authentication",
+  [
+    "expo-build-properties",
+    {
+      "ios": {
+        "useModularHeaders": true
+      }
+    }
+  ],
+  [
+    "@react-native-firebase/app",
+    {
+      "config": {
+        "googleServicesFile": "./GoogleService-Info.plist"
+      }
+    }
+  ]
 ],
     "experiments": {
       "typedRoutes": true
