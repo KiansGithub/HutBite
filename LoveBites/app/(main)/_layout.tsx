@@ -10,6 +10,7 @@ export default function MainLayout() {
         <Tabs
             screenOptions={{
                 headerShown: false,
+                tabBarShowLabel: false,
                 tabBarStyle: {
                     backgroundColor: 'rgba(0, 0, 0, 0.9)',
                     borderTopWidth: 0,
