@@ -54,7 +54,15 @@
       ],
       "expo-web-browser",
       "expo-apple-authentication",
-      "expo-build-properties"
+      "expo-build-properties", 
+      [
+        "@react-native-firebase/app",
+        {
+          "config": {
+            "googleServicesFile": "./GoogleService-Info.plist" 
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
