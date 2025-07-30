@@ -29,6 +29,15 @@ export default function MainLayout() {
             }}
         >
             <Tabs.Screen
+                name="feed"
+                options={{
+                    title: 'Feed',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="home" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
         name="discover"
         options={{
           title: 'Discover',
@@ -47,15 +56,6 @@ export default function MainLayout() {
                     title: 'Activity',
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="heart" size={size} color={color} />
-                    ),
-                }}
-            />
-            <Tabs.Screen
-                name="feed"
-                options={{
-                    title: 'Feed',
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="home" size={size} color={color} />
                     ),
                 }}
             />
