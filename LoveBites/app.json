@@ -58,7 +58,10 @@
     "expo-build-properties",
     {
       "ios": {
-        "useModularHeaders": true
+        "useModularHeaders": true,
+        "config": {
+          "RNFirebaseAnalyticsWithoutAdIdSupport": "true"
+        }
       }
     }
   ],
