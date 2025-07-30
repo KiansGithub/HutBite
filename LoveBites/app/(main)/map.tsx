@@ -111,7 +111,7 @@ export default function MapScreen() {
         router.push(`/(main)/restaurant/${restaurantId}`);
     };
 
-    if (loading) {
+    if (loading || restaurants.length === 0) {
         return (
             <View style={styles.loadingContainer}>
                 <Text>Loading map...</Text>

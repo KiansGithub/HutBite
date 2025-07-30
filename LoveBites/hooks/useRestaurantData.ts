@@ -14,6 +14,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [restaurants, setRestaurants] = useState<RestaurantWithDistance[]>([]);
     const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
     const [loading, setLoading] = useState(true);
+    const [dataLoaded, setDataLoaded] = useState(false);
     const [reshuffleTrigger, setReshuffleTrigger] = useState(0);
     const { location, loading: locationLoading } = useLocation();
 
@@ -102,6 +103,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                 setRestaurants(sortedRestaurants);
 
                 setMenuItems(grouped);
+                setDataLoaded(true);
             } catch (err) {
                 console.error(err);
                 Alert.alert('Error', 'Failed to load restaurants');
@@ -116,7 +118,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
     return { 
         restaurants, 
         menuItems, 
-        loading: loading || locationLoading,
+        loading: loading || locationLoading || !dataLoaded,
         availableCuisines: getUniqueCuisines(restaurants),
         cuisineCounts: getCuisineCounts(restaurants),
         reshuffleRestaurants
