@@ -72,7 +72,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
       <LinearGradient
         pointerEvents="box-none"
         colors={['transparent', 'rgba(0,0,0,0.7)']}
-        style={[styles.bottomGradient, { paddingBottom: 100 + bottomOffset }]}
+        style={[styles.bottomGradient, { paddingBottom: bottomOffset }]}
       >
         <View style={styles.menuItemInfo}>
           <MenuItemInfo 
