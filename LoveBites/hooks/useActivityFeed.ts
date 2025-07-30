@@ -141,7 +141,36 @@ export const useActivityFeed = () => {
  
   useEffect(() => {
     fetchActivities();
-  }, [fetchActivities]);
+  // Subscribe to follow changes to refresh activity feed
+  if (!user?.id) return;
+ 
+  const followChannel = supabase
+    .channel(`activity-follows:${user.id}`)
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'follows' },
+      payload => {
+        const newRow = payload.new as any;
+        const oldRow = payload.old as any;
+
+        // If current user follows/unfollows someone, refresh the feed
+        if (
+          newRow?.follower_id === user.id ||
+          oldRow?.follower_id === user.id
+        ) {
+          // Small delay to ensure DB consistency
+          setTimeout(() => {
+            fetchActivities(0, true);
+          }, 200);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    followChannel.unsubscribe();
+  };
+}, [fetchActivities, user?.id]);
  
   return {
     activities,
