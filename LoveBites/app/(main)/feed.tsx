@@ -132,10 +132,11 @@ export default function FeedScreen() {
         isDescriptionExpanded={isCurrent ? isDescriptionExpanded : false}
         setIsDescriptionExpanded={setIsDescriptionExpanded}
         resetTrigger={carouselResetTrigger}
+        bottomOffset={bottomOffset}
       />
     );
   },
-  [menuItems, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused]);
+  [menuItems, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused, bottomOffset]);
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
