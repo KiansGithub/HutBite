@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import uuid from 'react-native-uuid';
 
 interface UseFollowProps {
-    targetUserId: string; 
+    targetUserId?: string; 
 }
 
 export const useFollow = ({ targetUserId }: UseFollowProps) => {
@@ -35,19 +35,20 @@ export const useFollow = ({ targetUserId }: UseFollowProps) => {
         if (!targetUserId) return; 
 
         try {
-            const [followersResult, followingResult] = await Promise.all([
+            const [{ count: followers }, { count: following }] = await Promise.all([
                 supabase
                   .from('follows')
-                  .select('id', { count: 'exact'})
+                  .select('*', { count: 'exact'})   
                   .eq('followee_id', targetUserId),
-                supabase 
+              
+                supabase
                   .from('follows')
-                  .select('id', { count: 'exact'})
-                  .eq('follower_id', targetUserId), 
-            ]);
-
-            setFollowersCount(followersResult.count || 0);
-            setFollowingCount(followingResult.count || 0);
+                  .select('*', { count: 'exact' })   
+                  .eq('follower_id', targetUserId),
+              ]);
+              
+              setFollowersCount(followers ?? 0);
+              setFollowingCount(following ?? 0);
         } catch (err) {
             console.error('Error fetching follow counts:', err);
         }

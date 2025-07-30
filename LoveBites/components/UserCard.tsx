@@ -74,12 +74,13 @@ export const UserCard: React.FC<UserCardProps> = ({ profile, onPress }) => {
 
 const styles = StyleSheet.create({
     container: {
-        marginBottom: 12,
+        marginBottom: 8,
+        borderRadius: 44
     },
     content: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16, 
+        padding: 0, 
     },
     leftSection: {
         flex: 1, 
@@ -87,8 +88,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     avatarContainer: {
-        width: 50, 
-        height: 50, 
+        width: 40, 
+        height: 40, 
         borderRadius: 25, 
         backgroundColor: 'rgba(255,255,255,0.2)',
         alignItems: 'center',
@@ -96,8 +97,8 @@ const styles = StyleSheet.create({
         marginRight: 12, 
     },
     avatar: {
-        width: 50, 
-        height: 50, 
+        width: 40, 
+        height: 40, 
         borderRadius: 25, 
     },
     userInfo: {

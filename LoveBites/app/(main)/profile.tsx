@@ -30,6 +30,10 @@ export default function ProfileScreen() {
     const [showEditProfile, setShowEditProfile] = useState(false);
     const insets = useSafeAreaInsets();
 
+    const { followersCount, followingCount } = useFollow({
+        targetUserId: user?.id,
+    });
+
     const handleSignOut = async () => {
         try {
             await signOut();
@@ -129,11 +133,11 @@ export default function ProfileScreen() {
                                     <Text style={styles.statLabel}>Likes</Text>
                                 </View>
                                 <View style={styles.statItem}>
-                                    <Text style={styles.statNumber}>0</Text>
+                                    <Text style={styles.statNumber}>{followingCount}</Text>
                                     <Text style={styles.statLabel}>Following</Text>
                                 </View>
                                 <View style={styles.statItem}>
-                                    <Text style={styles.statNumber}>0</Text>
+                                    <Text style={styles.statNumber}>{followersCount}</Text>
                                     <Text style={styles.statLabel}>Followers</Text>
                                 </View>
                             </View>
