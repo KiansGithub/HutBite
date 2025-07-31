@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { makeRedirectUri } from 'expo-auth-session';
+import * as QueryParams from 'expo-auth-session/build/QueryParams';
 // import { AnalyticsService } from '@/lib/analytics';
  
 interface AuthState {
@@ -19,6 +20,8 @@ interface AuthState {
   deleteAccount: () => Promise<{ error: any | null}>;
   initialize: () => Promise<() => void>;
 }
+
+WebBrowser.maybeCompleteAuthSession();
  
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
@@ -74,30 +77,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return { error };
   },
 
-  signInWithProvider: async (provider: 'google' | 'apple') => {
-    try {
-      // Build a native/HTTPS deep-link redirect URI
-      const redirectTo = makeRedirectUri({ scheme: 'livebites', path: 'auth/callback' });
+  signInWithProvider: async (provider) => {
+    // 1. Deep-link that brings the user back to the app.
+    const redirectTo = makeRedirectUri({ scheme: 'livebites' });
 
-      // Initiate OAuth
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider,
-        options: { redirectTo },
-      });
-      if (error) return { error };
+    // 2. Ask Supabase for the provider URL (skip auto-redirect so we handle tokens ourselves)
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo, skipBrowserRedirect: true },
+    });
+    if (error) return { error };
 
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      if (result.type !== 'success') return { error: { message: 'User cancelled' } };
+    // 3. Open SFSafariViewController / Chrome Custom Tab
+    const res = await WebBrowser.openAuthSessionAsync(data?.url ?? '', redirectTo);
+    if (res.type !== 'success') return { error: { message: 'User cancelled' } };
 
-      const { queryParams } = Linking.parse(result.url);
-      const code = (queryParams?.code as string) || '';
-      if (!code) return { error: { message: 'No authorization code returned' } };
+    // 4. Grab tokens that Supabase put after the # fragment
+    const { params } = QueryParams.getQueryParams(res.url);
+    const { access_token, refresh_token } = params as Record<string, string>;
+    if (!access_token || !refresh_token) return { error: { message: 'No tokens returned' } };
 
-      const { error: exchErr } = await supabase.auth.exchangeCodeForSession(code);
-      return { error: exchErr ?? null };
-    } catch (e) {
-      return { error: { message: 'Authentication failed. Try again.' } };
-    }
+    // 5. Persist the session locally (supabase-js handles storage)
+    const { error: setErr } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
+    return { error: setErr ?? null };
   },
 
  

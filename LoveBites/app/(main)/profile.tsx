@@ -154,7 +154,7 @@ export default function ProfileScreen() {
                         </TouchableOpacity>
                     </GlassPanel>
 
-                    <TouchableOpacity 
+                    {/* <TouchableOpacity 
                       style={styles.actionItem}
                       onPress={() => updateProfile({ is_private: !profile?.is_private })}
                     >
@@ -167,7 +167,7 @@ export default function ProfileScreen() {
                           size={20}
                           color={profile?.is_private ? Colors.light.primary : "rgba(255,255,255,0.6)"}
                         />
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     <GlassPanel style={styles.dangerPanel}>
                         <Text style={styles.dangerTitle}>Danger Zone</Text>

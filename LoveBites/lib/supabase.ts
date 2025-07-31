@@ -18,3 +18,5 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
         detectSessionInUrl: false, 
     },
 });
+
+// Keep refresh only when app is active (battery friendly)
