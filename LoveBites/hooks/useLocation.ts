@@ -1,62 +1,71 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import * as Location from 'expo-location';
-import { Alert } from 'react-native';
 
-interface UserLocation {
-    latitude: number; 
-    longitude: number; 
+export interface UserLocation {
+  latitude: number;
+  longitude: number;
 }
 
 export const useLocation = () => {
-    const [location, setLocation] = useState<UserLocation | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+  const [location, setLocation] = useState<UserLocation | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const getLocation = async () => {
-            try {
-                const { status } = await Location.requestForegroundPermissionsAsync();
+  useEffect(() => {
+    let isMounted = true;
+    const timerId = setTimeout(() => {
+      if (isMounted) {
+        setError('Location timeout');
+        setLoading(false);
+      }
+    }, 10_000);
 
-                if (status !== 'granted') {
-                    setError('Location permission denied');
-                    Alert.alert(
-                        'Location Required',
-                        'We need location access to show nearby restaurants. You can still browse all restaurants.',
-                        [{ text: 'OK' }]
-                    );
-                    setLoading(false);
-                    return;
-                }
+    (async () => {
+      try {
+        // 1. Permission
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== Location.PermissionStatus.GRANTED) {
+          throw new Error('Location permission denied');
+        }
 
-                // Create a timeout promise that rejects
-                const timeoutPromise = new Promise<Location.LocationObject>((_, reject) =>
-                    setTimeout(() => reject(new Error('Location timeout')), 10000)
-                );
- 
-                // Race the location request with timeout
-                const currentLocation = await Promise.race([
-                    Location.getCurrentPositionAsync({
-                        accuracy: Location.Accuracy.Balanced,
-                    }) as Promise<Location.LocationObject>,
-                    timeoutPromise
-                ]);
- 
-                // Now TypeScript knows currentLocation is LocationObject
-                setLocation({
-                    latitude: currentLocation.coords.latitude,
-                    longitude: currentLocation.coords.longitude,
-                });
-            } catch (err) {
-                console.error('Error getting location:', err);
-                setError('Failed to get location');
-                // Don't block app if location fails
-            } finally {
-                setLoading(false);
-            }
-        };
+        // 2. Services enabled? (Android)
+        const enabled = await Location.hasServicesEnabledAsync();
+        if (!enabled) {
+          throw new Error('Location services disabled');
+        }
 
-        getLocation();
-    }, []);
+        // 3. Instant fallback
+        const lastKnown = await Location.getLastKnownPositionAsync({});
+        if (lastKnown && isMounted) {
+          setLocation({
+            latitude: lastKnown.coords.latitude,
+            longitude: lastKnown.coords.longitude,
+          });
+        }
 
-    return { location, loading, error };
-}
+        // 4. Fresh, accurate fix
+        const current = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        if (isMounted) {
+          setLocation({
+            latitude: current.coords.latitude,
+            longitude: current.coords.longitude,
+          });
+        }
+      } catch (err: any) {
+        if (isMounted) setError(err.message ?? 'Failed to get location');
+      } finally {
+        if (isMounted) setLoading(false);
+        clearTimeout(timerId);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timerId);
+    };
+  }, []);
+
+  return { location, loading, error };
+};
