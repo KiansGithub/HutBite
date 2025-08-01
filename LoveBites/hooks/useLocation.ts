@@ -28,17 +28,28 @@ export const useLocation = () => {
                     return;
                 }
 
-                const currentLocation = await Location.getCurrentPositionAsync({
-                    accuracy: Location.Accuracy.Balanced, 
-                });
-
+                // Create a timeout promise that rejects
+                const timeoutPromise = new Promise<Location.LocationObject>((_, reject) =>
+                    setTimeout(() => reject(new Error('Location timeout')), 10000)
+                );
+ 
+                // Race the location request with timeout
+                const currentLocation = await Promise.race([
+                    Location.getCurrentPositionAsync({
+                        accuracy: Location.Accuracy.Balanced,
+                    }) as Promise<Location.LocationObject>,
+                    timeoutPromise
+                ]);
+ 
+                // Now TypeScript knows currentLocation is LocationObject
                 setLocation({
-                    latitude: currentLocation.coords.latitude, 
-                    longitude: currentLocation.coords.longitude, 
+                    latitude: currentLocation.coords.latitude,
+                    longitude: currentLocation.coords.longitude,
                 });
             } catch (err) {
                 console.error('Error getting location:', err);
                 setError('Failed to get location');
+                // Don't block app if location fails
             } finally {
                 setLoading(false);
             }
