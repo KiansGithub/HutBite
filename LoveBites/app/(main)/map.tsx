@@ -112,7 +112,7 @@ export default function MapScreen() {
         router.push(`/(main)/restaurant/${restaurantId}`);
     };
 
-    if (loading || restaurants.length === 0 || !mapReady) {
+    if (loading || restaurants.length === 0) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#FF7A00" />
