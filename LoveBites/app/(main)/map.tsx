@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, StyleSheet, Alert, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, StyleSheet, Alert, Platform, ActivityIndicator } from 'react-native';
 import MapView, { Marker, Callout} from 'react-native-maps';
 import { router } from 'expo-router';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
@@ -13,6 +13,7 @@ type RestaurantWithDistance = Restaurant & { distance?: number };
 export default function MapScreen() {
     const { restaurants, loading } = useRestaurantData();
     const { location } = useLocation();
+    const [mapReady, setMapReady] = useState(false);
 
     // Function to offset duplicate coordinates slightly
     const offsetDuplicateCoordinates = (restaurants: RestaurantWithDistance[]): RestaurantWithDistance[] => {
@@ -111,21 +112,35 @@ export default function MapScreen() {
         router.push(`/(main)/restaurant/${restaurantId}`);
     };
 
-    if (loading || restaurants.length === 0) {
+    if (loading || restaurants.length === 0 || !mapReady) {
         return (
             <View style={styles.loadingContainer}>
-                <Text>Loading map...</Text>
+                <ActivityIndicator size="large" color="#FF7A00" />
+                <Text style={styles.loadingText}>Loading map...</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
+            {!mapReady && (
+                <View style={styles.mapLoadingOverlay}>
+                <ActivityIndicator size="large" color="#FF7A00" />
+                <Text style={styles.loadingText}>Preparing map...</Text>
+            </View>
+            )}
             <MapView
                 style={styles.map}
                 initialRegion={initialRegion}
                 showsUserLocation={!!location}
                 showsMyLocationButton={!!location}
+                onMapReady={() => {
+                    console.log('Map is ready');
+                    setMapReady(true);
+                }}
+                loadingEnabled={true}
+                loadingIndicatorColor="#FF7A00"
+                loadingBackgroundColor="#f5f5f5"
                 key={`map-${validRestaurants.length}-${Date.now()}`}
             >
                 {validRestaurants.map((restaurant, index) => {
@@ -187,7 +202,24 @@ const styles = StyleSheet.create({
         flex: 1, 
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#000',
+        backgroundColor: '#f5f5f5',
+    },
+    loadingText: {
+        marginTop: 16,
+        fontSize: 16,
+        color: '#666',
+        fontWeight: '500',
+    },
+    mapLoadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: '#f5f5f5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
     },
     calloutContainer: {
         // Android-specific container styling
