@@ -244,8 +244,7 @@ const styles = StyleSheet.create({
     calloutAndroid: {
         // Android-specific callout styling
         width: 200,
-        height: 70,
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
     },
     calloutTitle: {
         fontSize: 16, 
