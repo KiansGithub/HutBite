@@ -18,7 +18,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AnalyticsService from '@/lib/analytics';
+// import AnalyticsService from '@/lib/analytics';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = 80; 
@@ -89,7 +89,7 @@ export default function FeedScreen() {
  }, [vIndex]);
 
   React.useEffect(() => {
-    AnalyticsService.logScreenView('Feed', 'MainScreen');
+    // AnalyticsService.logScreenView('Feed', 'MainScreen');
   }, []);
 
   React.useEffect(() => {

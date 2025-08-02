@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Platform } from 'react-native';
 import MapView, { Marker, Callout} from 'react-native-maps';
 import { router } from 'expo-router';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
@@ -151,15 +151,21 @@ export default function MapScreen() {
                             tracksViewChanges={true}
                             stopPropagation={true}
                         >
-                            <Callout onPress={() => handleMarkerPress(restaurant.id)}>
-                                <View style={styles.callout}>
-                                    <Text style={styles.calloutTitle}>{restaurant.name}</Text>
+                            <Callout 
+                                onPress={() => handleMarkerPress(restaurant.id)}
+                                style={Platform.OS === 'android' ? styles.calloutContainer : undefined}
+                            >
+                                <View style={[
+                                    styles.callout,
+                                    Platform.OS === 'android' && styles.calloutAndroid
+                                ]}>
+                                    <Text style={styles.calloutTitle} numberOfLines={2}>{restaurant.name}</Text>
                                     {restaurant.distance && (
-                                        <Text style={styles.calloutDistance}>
+                                        <Text style={styles.calloutDistance} numberOfLines={1}>
                                             {restaurant.distance.toFixed(1)} mi away
                                         </Text>
                                     )}
-                                    <Text style={styles.calloutTap}>Tap to view menu</Text>
+                                    <Text style={styles.calloutTap} numberOfLines={1}>Tap to view menu</Text>
                                 </View>
                             </Callout>
                         </Marker>
@@ -183,23 +189,49 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#000',
     },
+    calloutContainer: {
+        // Android-specific container styling
+        width: 220,
+        height: 90,
+    },
     callout: {
         minWidth: 200, 
+        maxWidth: 220,
         padding: 10, 
+        backgroundColor: 'white',
+        borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    calloutAndroid: {
+        // Android-specific callout styling
+        width: 200,
+        height: 70,
+        justifyContent: 'space-between',
     },
     calloutTitle: {
         fontSize: 16, 
         fontWeight: 'bold',
         marginBottom: 4, 
+        color: '#000',
+        flexShrink: 1,
     },
     calloutDistance: {
         fontSize: 14, 
         color: '#666',
         marginBottom: 4, 
+        flexShrink: 1,
     },
     calloutTap: {
         fontSize: 12, 
         color: '#FF7A00', 
         fontStyle: 'italic',
+        flexShrink: 1,
     },
 });
