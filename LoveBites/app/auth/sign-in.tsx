@@ -11,25 +11,29 @@ import {
   Text
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 
 import { useAuthStore } from "@/store/authStore";
 import Colors from "@/constants/Colors";
 import { GradientText } from "@/components/GradientText";
 import { GlassPanel } from "@/components/GlassPanel";
 import { GoogleSignInButton, AppleSignInButton } from "@/components/OAuthButtons";
-import AnalyticsService from "@/lib/analytics";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+// import AnalyticsService from "@/lib/analytics";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const { next } = useLocalSearchParams<{ next?: string }>();
+
+  const insets = useSafeAreaInsets();
 
   const { signIn, signUp, signInWithProvider } = useAuthStore();
 
   React.useEffect(() => {
-    AnalyticsService.logScreenView('SignIn', 'AuthScreen');
+    // AnalyticsService.logScreenView('SignIn', 'AuthScreen');
   }, []);
 
   const handleAuth = async () => {
@@ -45,7 +49,7 @@ export default function SignInScreen() {
     if (error) {
       Alert.alert("Error", error.message);
     } else {
-      router.replace("/(main)/feed");
+      router.replace(next || '/(main)/feed');
     }
 
     setLoading(false);
@@ -57,7 +61,7 @@ export default function SignInScreen() {
     if (error) {
       Alert.alert('Error', error.message);
     } else {
-      router.replace('/(main)/feed');
+      router.replace(next || '/(main)/feed');
     }
     setLoading(false);
   };
@@ -78,6 +82,7 @@ export default function SignInScreen() {
         colors={["rgba(255,255,255,0.15)", "transparent"]}
         style={styles.bokehTwo}
       />
+       <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
 
       <KeyboardAvoidingView
         style={styles.kav}
@@ -98,6 +103,18 @@ export default function SignInScreen() {
               onPress={() => handleOAuth('apple')}
               loading={loading}
             />
+
+        <TouchableOpacity
+            style={[styles.guestBtn, loading && styles.btnDisabled]}
+            onPress={() => router.replace('/(main)/feed')}
+            disabled={loading}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel="Continue as guest"
+            accessibilityHint="Skips sign-in and takes you to the feed"
+        >
+            <Text style={styles.guestBtnText}>Continue as guest</Text>
+        </TouchableOpacity>
 
             <Text style={styles.dividerText}>OR CONTINUE WITH EMAIL</Text>
 
@@ -165,12 +182,14 @@ export default function SignInScreen() {
           </GlassPanel>
         </View>
       </KeyboardAvoidingView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  safeArea: { flex: 1 },
   kav: { flex: 1 },
   wrapper: {
     flex: 1,
@@ -295,5 +314,39 @@ const styles = StyleSheet.create({
     right: -50,
     opacity: 0.25,
     transform: [{ rotate: "-20deg" }],
+  },
+  guestLink: {
+    alignSelf: 'center',
+    paddingVertical: 0,       // keeps a decent tap target without looking like a button
+    paddingHorizontal: 12,
+    marginTop: 0,
+    marginBottom: 12,
+  },
+  guestLinkText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: 'rgba(255,255,255,0.85)',
+    textDecorationLine: 'underline', // optional: comment out if you don't want the link look
+  },
+  guestBtn: {
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.75)",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 999,
+    paddingVertical: 14,         // ≥44px target with line height/text
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 8,
+    marginBottom: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  guestBtnText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
   },
 });

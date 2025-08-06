@@ -12,7 +12,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
+import { RequireAuth } from '@/components/RequireAuth';
 import { supabase } from '@/lib/supabase';
 import { useSearch } from '@/hooks/useSearch';
 import { useAuthStore } from '@/store/authStore';
@@ -80,15 +80,13 @@ export default function DiscoverScreen() {
     };
 
     useEffect(() => {
-        // Only fetch users after we have auth state resolved
-        if (user !== undefined) {
-            fetchUsers();
-        }
-    }, [user]);
+        fetchUsers();
+    }, []);
 
     const displayedUsers = isSearching ? userResults: users; 
 
     return (
+        <RequireAuth>
         <LinearGradient 
             colors={['#FF512F', '#F09819', '#FFB347']}
             start={{ x: 0, y: 0}}
@@ -170,6 +168,7 @@ export default function DiscoverScreen() {
                 </ScrollView>
             </SafeAreaView>
         </LinearGradient>
+        </RequireAuth>
     );
 }
 

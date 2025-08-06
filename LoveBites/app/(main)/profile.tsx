@@ -20,6 +20,7 @@ import Colors from '@/constants/Colors';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useFollow } from '@/hooks/useFollow';
 import { useSafety } from '@/hooks/useSafety';
+import { RequireAuth } from '@/components/RequireAuth';
 
 export default function ProfileScreen() {
     const { user, signOut, deleteAccount } = useAuthStore();
@@ -89,6 +90,7 @@ export default function ProfileScreen() {
     };
 
     return (
+        <RequireAuth>
         <LinearGradient 
           colors={['#FF512F', '#F09819', '#FFB347']}
           start={{ x: 0, y: 0}}
@@ -198,6 +200,7 @@ export default function ProfileScreen() {
                 />
             </SafeAreaView>
         </LinearGradient>
+        </RequireAuth>
     );
 }
 

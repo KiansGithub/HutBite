@@ -77,7 +77,8 @@ function RootLayoutNav() {
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <BottomSheetModalProvider>
       <Stack screenOptions={{ headerShown: false }}>
-        {user ? <Stack.Screen name="(main)" /> : <Stack.Screen name="auth" />}
+        <Stack.Screen name="(main)" />
+        <Stack.Screen name="auth" />
       </Stack>
       </BottomSheetModalProvider>
       </SafeAreaProvider>

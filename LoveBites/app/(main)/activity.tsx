@@ -14,6 +14,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { GlassPanel } from '@/components/GlassPanel';
+import { RequireAuth } from '@/components/RequireAuth';
 import Colors from '@/constants/Colors';
 
 export default function ActivityScreen() {
@@ -75,6 +76,7 @@ export default function ActivityScreen() {
     }
 
         return (
+            <RequireAuth>
             <LinearGradient 
               colors={['#FF512F', '#F09819', '#FFB347']}
               start={{ x: 0, y: 0}}
@@ -113,6 +115,7 @@ export default function ActivityScreen() {
                     />
                 </SafeAreaView>
             </LinearGradient>
+            </RequireAuth>
         );
     }
 

@@ -5,7 +5,8 @@ import {
   Dimensions,
   ActivityIndicator,
   View,
-  Image
+  Image,
+  TouchableOpacity,
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
@@ -18,7 +19,10 @@ import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AnalyticsService from '@/lib/analytics';
+// import AnalyticsService from '@/lib/analytics';
+import { useAuthStore } from '@/store/authStore';
+import { useAuthGate } from '@/hooks/useAuthGate';
+import SignInNudge from '@/components/SignInNudge';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = 80; 
@@ -89,7 +93,7 @@ export default function FeedScreen() {
  }, [vIndex]);
 
   React.useEffect(() => {
-    AnalyticsService.logScreenView('Feed', 'MainScreen');
+    // AnalyticsService.logScreenView('Feed', 'MainScreen');
   }, []);
 
   React.useEffect(() => {
@@ -228,6 +232,8 @@ export default function FeedScreen() {
           onClose={() => setModalData(null)}
         />
       )}
+
+<SignInNudge topOverlayHeight={88} persistDismissKey="hideSignInNudge_v1" />
     </View>
   );
 }
@@ -270,5 +276,37 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 14, 
     textAlign: 'center'
+  },
+  signInNudge: {
+    position: 'absolute',
+    bottom: 120,
+    left: 20,
+    right: 20,
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  nudgeTitle: {
+    color: '#fff',
+    fontWeight: '600',
+    marginBottom: 12,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  nudgeButton: {
+    alignSelf: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
+  },
+  nudgeButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
 });
