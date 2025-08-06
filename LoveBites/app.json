@@ -49,12 +49,25 @@
   [
     "expo-video",
     {
-      "supportsBackgroundPlayback": true,
+      "supportsBackgroundPlayback": false,
       "supportsPictureInPicture": true
     }
   ],
   "expo-web-browser",
-  "expo-apple-authentication"
+  "expo-apple-authentication",
+  [
+    "expo-build-properties",
+    {
+      "ios": {
+        "useFrameworks": "static",
+        "useModularHeaders": true,
+        "config": {
+          "RNFirebaseAnalyticsWithoutAdIdSupport": "true"
+        }
+      }
+    }
+  ],
+  "@react-native-firebase/app"
 ],
     "experiments": {
       "typedRoutes": true
