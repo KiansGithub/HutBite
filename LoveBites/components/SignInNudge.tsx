@@ -29,7 +29,7 @@ const SignInNudge: React.FC<Props> = ({
   topOverlayHeight = 88,
   persistDismissKey,
   containerStyle,
-  title = 'Sign in to follow friends and save picks',
+  title = 'Sign in to follow friends and view their favourite foodie spots',
 }) => {
   const { user } = useAuthStore();
   const { ensureAuthed } = useAuthGate();
