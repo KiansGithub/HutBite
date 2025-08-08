@@ -5,14 +5,14 @@
     "owner": "kiandev",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/apple_store_logo.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "livebites",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FF9900"
+      "backgroundColor": "#F5A235"
     },
     "ios": {
       "bundleIdentifier": "com.livebites.livebites",
@@ -21,7 +21,8 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "LiveBites needs your location to show restaurants that deliver to you.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "LiveBites uses your location in the background to keep delivery areas up to date."
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "LiveBites uses your location in the background to keep delivery areas up to date.", 
+        "UIBackgroundModes": []
       }
     },
     "android": {
@@ -29,7 +30,7 @@
       "newArchEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#F5A235"
       },
       "edgeToEdgeEnabled": true,
       "googleServicesFile": "./google-services.json", 
