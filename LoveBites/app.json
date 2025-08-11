@@ -21,8 +21,7 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "LiveBites needs your location to show restaurants that deliver to you.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "LiveBites uses your location in the background to keep delivery areas up to date.", 
-        "UIBackgroundModes": []
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "LiveBites uses your location in the background to keep delivery areas up to date."
       }
     },
     "android": {
@@ -51,7 +50,7 @@
     "expo-video",
     {
       "supportsBackgroundPlayback": false,
-      "supportsPictureInPicture": true
+      "supportsPictureInPicture": false
     }
   ],
   "expo-web-browser",
