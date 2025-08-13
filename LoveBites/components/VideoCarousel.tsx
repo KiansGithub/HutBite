@@ -44,10 +44,21 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
             return <View style={styles.videoContainer}/>;
         }
 
-        const isCurrent = rowMode === 'play' && itemIndex === currentIndex; 
-        const isPreloaded = rowMode === 'play' && Math.abs(itemIndex - currentIndex) === 1;
+        let mode: 'play' | 'warm' | 'off' = 'off';
 
-        const mode = isCurrent ? 'play' : isPreloaded ? 'warm' : 'off';
+        if (rowMode === 'play') {
+            const isCurrent = itemIndex === currentIndex;
+            const isPreloaded = Math.abs(itemIndex - currentIndex) === 1;
+            if (isCurrent) {
+                mode = 'play';
+            } else if (isPreloaded) {
+                mode = 'warm';
+            }
+        } else if (rowMode === 'warm') {
+            if (itemIndex === 0) {
+                mode = 'warm';
+            }
+        }
 
         if (mode === 'off') {
             return <View style={styles.videoContainer} />;
@@ -55,7 +66,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
 
         return (
             <View style={styles.videoContainer}>
-                {isCurrent || isPreloaded ? (
+                {mode === 'play' || mode === 'warm' ? (
                     <VideoPlayer 
                       uri={mi.video_url}
                       thumbUri={mi.thumb_url ?? mi.video_url.replace('.mp4', '.jpg')}

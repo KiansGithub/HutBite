@@ -19,7 +19,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import AnalyticsService from '@/lib/analytics';
+// import AnalyticsService from '@/lib/analytics';
 import { useAuthStore } from '@/store/authStore';
 import { useAuthGate } from '@/hooks/useAuthGate';
 import SignInNudge from '@/components/SignInNudge';
@@ -93,7 +93,7 @@ export default function FeedScreen() {
  }, [vIndex]);
 
   React.useEffect(() => {
-    AnalyticsService.logScreenView('Feed', 'MainScreen');
+    // AnalyticsService.logScreenView('Feed', 'MainScreen');
   }, []);
 
   React.useEffect(() => {
@@ -118,11 +118,8 @@ export default function FeedScreen() {
       return <View style={{ width: '100%', height: H }} />;
     }
 
-    // If screen is not focused, force all videos to 'off' mode
-    const rowMode = !isScreenFocused ? 'off' 
-                   : isCurrent ? 'play' 
-                   : isPreloaded ? 'warm'
-                   : 'off';
+    const rowMode = index === vIndex ? 'play' : index === vIndex + 1 ? 'warm' : 'off';
+
 
     return (
       <RestaurantCard
