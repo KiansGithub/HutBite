@@ -118,7 +118,13 @@ export default function FeedScreen() {
       return <View style={{ width: '100%', height: H }} />;
     }
 
-    const rowMode = index === vIndex ? 'play' : index === vIndex + 1 ? 'warm' : 'off';
+    const rowMode = !isScreenFocused
+  ? 'off'
+  : index === vIndex
+    ? 'play'
+    : index === vIndex + 1
+      ? 'warm'
+      : 'off';
 
 
     return (
