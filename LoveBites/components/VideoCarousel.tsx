@@ -20,6 +20,7 @@ interface VideoCarouselProps {
     currentIndex: number; 
     onIndexChange: (index: number) => void; 
     resetTrigger: number;
+    isScreenFocused: boolean;
 }
 
 const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
@@ -29,6 +30,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     currentIndex, 
     onIndexChange, 
     resetTrigger,
+    isScreenFocused,
 }) => {
     const flatListRef = useRef<FlatList>(null);
 
@@ -49,9 +51,9 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
         if (rowMode === 'play') {
             const isCurrent = itemIndex === currentIndex;
             const isPreloaded = Math.abs(itemIndex - currentIndex) === 1;
-            if (isCurrent) {
+            if (isCurrent && isScreenFocused) {
                 mode = 'play';
-            } else if (isPreloaded) {
+            } else if (isCurrent || isPreloaded) {
                 mode = 'warm';
             }
         } else if (rowMode === 'warm') {
