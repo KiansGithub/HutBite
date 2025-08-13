@@ -21,7 +21,6 @@ interface VideoPlayerProps {
   mode: 'play' | 'warm';
   width: number;
   height: number;
-  isScreenFocused: boolean;
 }
 
 const LOADING_TIMEOUT_MS = 12_000;
@@ -40,7 +39,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   mode,
   width,
   height,
-  isScreenFocused,
 }) => {
   /*──────────────────────────────
     State & refs
@@ -95,29 +93,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const p = playerRef.current;
     if (!p) return;
     if (mode === 'play') {
-      p.play(); 
+      p.play();
       setIsPlaying(true);
     } else {
       p.pause();
       setIsPlaying(false);
     }
   }, [mode]);
-
-  /* handle screen focus changes separately */
-  useEffect(() => {
-    const p = playerRef.current;
-    if (!p) return;
- 
-    if (mode === 'play') {
-      if (isScreenFocused) {
-        p.play();
-        setIsPlaying(true);
-      } else {
-        p.pause();
-        setIsPlaying(false);
-      }
-    }
-  }, [isScreenFocused, mode]);
 
   /* reset UI when we create a fresh player (after retry) */
   useEffect(() => {

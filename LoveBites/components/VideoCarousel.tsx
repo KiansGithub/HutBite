@@ -20,7 +20,6 @@ interface VideoCarouselProps {
     currentIndex: number; 
     onIndexChange: (index: number) => void; 
     resetTrigger: number;
-    isScreenFocused: boolean;
 }
 
 const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
@@ -30,7 +29,6 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     currentIndex, 
     onIndexChange, 
     resetTrigger,
-    isScreenFocused,
 }) => {
     const flatListRef = useRef<FlatList>(null);
 
@@ -76,7 +74,6 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
                       mode={mode}
                       width={W}
                       height={H}
-                      isScreenFocused={isScreenFocused}
                 />
                 ) : null}
             </View>

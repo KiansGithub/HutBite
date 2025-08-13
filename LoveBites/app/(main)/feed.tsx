@@ -134,7 +134,6 @@ export default function FeedScreen() {
         setIsDescriptionExpanded={setIsDescriptionExpanded}
         resetTrigger={carouselResetTrigger}
         bottomOffset={bottomOffset}
-        isScreenFocused={isScreenFocused}
       />
     );
   },
