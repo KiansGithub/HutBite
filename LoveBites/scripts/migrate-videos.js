@@ -7,7 +7,7 @@ import { spawn } from 'child_process';
 import ffmpegPath from 'ffmpeg-static';
 
 const SUPABASE_URL = 'https://tanexoecudctdtlmuqhr.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;          //   ← don't inline keys
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhbmV4b2VjdWRjdGR0bG11cWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAzMzc2NTEsImV4cCI6MjA2NTkxMzY1MX0.t1GE9cjHsXwTDzDRWImLFY22CXctC9ikbQb39OyD75Y';          //   ← don't inline keys
 const BUCKET       = 'videos';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {

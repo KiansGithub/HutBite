@@ -17,7 +17,7 @@
     "ios": {
       "bundleIdentifier": "com.livebites.livebites",
       "googleServicesFile": "./GoogleService-Info.plist",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "LiveBites needs your location to show restaurants that deliver to you.",
