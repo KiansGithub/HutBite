@@ -94,14 +94,30 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     const p = playerRef.current;
     if (!p) return;
-    if (mode === 'play' && isScreenFocused) {
+    if (mode === 'play') {
       p.play(); 
       setIsPlaying(true);
     } else {
       p.pause();
       setIsPlaying(false);
     }
-  }, [mode, isScreenFocused]);
+  }, [mode]);
+
+  /* handle screen focus changes separately */
+  useEffect(() => {
+    const p = playerRef.current;
+    if (!p) return;
+ 
+    if (mode === 'play') {
+      if (isScreenFocused) {
+        p.play();
+        setIsPlaying(true);
+      } else {
+        p.pause();
+        setIsPlaying(false);
+      }
+    }
+  }, [isScreenFocused, mode]);
 
   /* reset UI when we create a fresh player (after retry) */
   useEffect(() => {

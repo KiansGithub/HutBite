@@ -51,9 +51,9 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
         if (rowMode === 'play') {
             const isCurrent = itemIndex === currentIndex;
             const isPreloaded = Math.abs(itemIndex - currentIndex) === 1;
-            if (isCurrent && isScreenFocused) {
+            if (isCurrent) {
                 mode = 'play';
-            } else if (isPreloaded || isCurrent) {
+            } else if (isPreloaded) {
                 mode = 'warm';
             }
         } else if (rowMode === 'warm') {
