@@ -30,7 +30,6 @@ interface RestaurantCardProps {
   setIsDescriptionExpanded: (expanded: boolean) => void; 
   resetTrigger: number;
   bottomOffset: number; 
-  isScreenFocused: boolean;
 }
 
 const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
