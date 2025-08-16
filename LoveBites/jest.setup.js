@@ -30,13 +30,30 @@ jest.mock('expo-video', () => ({
     clearVideoCacheAsync: jest.fn(),
   }));
 
-jest.mock('react-native-safe-area-context', () => {
+  jest.mock('react-native-safe-area-context', () => {
   const inset = { top: 0, right: 0, bottom: 0, left: 0 };
+    return {
+      SafeAreaProvider: jest.fn().mockImplementation(({ children }) => children),
+      SafeAreaConsumer: jest.fn().mockImplementation(({ children }) => children(inset)),
+      SafeAreaView: jest.fn().mockImplementation(({ children }) => children),
+      useSafeAreaInsets: jest.fn().mockImplementation(() => inset),
+      useSafeAreaFrame: jest.fn().mockImplementation(() => ({ x: 0, y: 0, width: 390, height: 844 })),
+      initialWindowMetrics: { insets: inset, frame: { x: 0, y: 0, width: 390, height: 844 } },
+    };
+  });
+
+jest.mock('react-native-maps', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+
+  const MockMapView = (props) => <View {...props}>{props.children}</View>;
+  const MockMarker = (props) => <View {...props}>{props.children}</View>;
+  const MockCallout = (props) => <View {...props}>{props.children}</View>;
+
   return {
-    SafeAreaProvider: jest.fn().mockImplementation(({ children }) => children),
-    SafeAreaConsumer: jest.fn().mockImplementation(({ children }) => children(inset)),
-    useSafeAreaInsets: jest.fn().mockImplementation(() => inset),
-    useSafeAreaFrame: jest.fn().mockImplementation(() => ({ x: 0, y: 0, width: 390, height: 844 })),
+    __esModule: true,
+    default: MockMapView,
+    Marker: MockMarker,
+    Callout: MockCallout,
   };
 });
-

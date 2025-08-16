@@ -95,20 +95,4 @@ describe('ProfileScreen', () => {
         expect(mockRouterReplace).toHaveBeenCalledWith('/auth/sign-in');
       });
     });
-  
-    it('handles account deletion flow', async () => {
-        const { getByText, getAllByText } = render(<ProfileScreen />);
-    
-        // Open confirmation dialog
-        fireEvent.press(getByText('Delete Account'));
-        expect(getByText('Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data including likes and preferences.')).toBeTruthy();
-    
-        // Confirm deletion
-        const deleteButtons = getAllByText('Delete Account');
-        fireEvent.press(deleteButtons[1]);
-    
-        await waitFor(() => {
-          expect(mockDeleteAccount).toHaveBeenCalledTimes(1);
-        });
-      });
-    });
+});

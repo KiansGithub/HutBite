@@ -114,7 +114,7 @@ export default function MapScreen() {
 
     if (loading || restaurants.length === 0) {
         return (
-            <View style={styles.loadingContainer}>
+            <View style={styles.loadingContainer} testID="loading-indicator">
                 <ActivityIndicator size="large" color="#FF7A00" />
                 <Text style={styles.loadingText}>Loading map...</Text>
             </View>
