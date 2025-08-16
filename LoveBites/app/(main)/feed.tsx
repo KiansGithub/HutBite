@@ -20,8 +20,6 @@ import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AnalyticsService from '@/lib/analytics';
-import { useAuthStore } from '@/store/authStore';
-import { useAuthGate } from '@/hooks/useAuthGate';
 import SignInNudge from '@/components/SignInNudge';
 
 const { height: H } = Dimensions.get('screen');

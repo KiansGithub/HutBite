@@ -29,50 +29,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   loading: true,
  
   signIn: async (email: string, password: string) => {
-    console.log('🔍 SIGN IN: Starting sign in with email:', email);
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
-
-    console.log('🔍 SIGN IN: Response data:', data);
-    console.log('🔍 SIGN IN: Response error:', error);
-    console.log('🔍 SIGN IN: User from response:', data?.user);
-    console.log('🔍 SIGN IN: Session from response:', data?.session);
  
     if (data.user && data.session) {
-      console.log('🔍 SIGN IN: Setting user and session in store');
       set({ user: data.user, session: data.session });
-      console.log('🔍 SIGN IN: Store updated successfully');
       // await AnalyticsService.logLogin('email');
       // await AnalyticsService.setUserId(data.user.id);
     } else {
-      console.log('🔍 SIGN IN: No user or session in response');
     }
  
     return { error };
   },
  
   signUp: async (email: string, password: string) => {
-    console.log('🔍 SIGN UP: Starting sign up with email:', email);
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
-
-    console.log('🔍 SIGN UP: Response data:', data);
-      console.log('🔍 SIGN UP: Response error:', error);
-      console.log('🔍 SIGN UP: User from response:', data?.user);
-      console.log('🔍 SIGN UP: Session from response:', data?.session);
  
     if (data.user && data.session) {
-      console.log('🔍 SIGN UP: Setting user and session in store');
       set({ user: data.user, session: data.session });
-      console.log('🔍 SIGN UP: Store updated successfully');
       // await AnalyticsService.logSignUp('email');
       // await AnalyticsService.setUserId(data.user.id);
     } else {
-      console.log('🔍 SIGN UP: No user or session in response');
     }
     return { error };
   },
@@ -139,38 +121,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       return { error: null };
     } catch (error) {
-      console.error('Erorr deleting account:', error);
       return { error };
     }
   },
 
   debugAuthState: () => {
     const state = get();
-    console.log('🔍 AUTH STORE STATE:');
-    console.log('  User:', state.user);
-    console.log('  Session:', state.session);
-    console.log('  Loading:', state.loading);
     return state;
   },
  
   initialize: async () => {
-    console.log('🔍 AUTH STORE: Starting initialization...');
     set({ loading: true });
  
     // 1) Restore persisted session (if any)
     const { data: { session } } = await supabase.auth.getSession();
-    console.log('🔍 AUTH STORE: Retrieved session:', session);
     set({ session, user: session?.user ?? null });
  
     // 2) Subscribe to future auth events (login, logout, token refresh)
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
-      console.log('🔍 AUTH STORE: Auth state changed:', _event);
-      console.log('🔍 AUTH STORE: New session:', sess);
       set({ session: sess ?? null, user: sess?.user ?? null, loading: false });
     });
  
     set({ loading: false });
-    console.log('🔍 AUTH STORE: Initialization complete');
  
     // Return unsubscribe for callers that mount/unmount
     return () => sub.subscription.unsubscribe();
