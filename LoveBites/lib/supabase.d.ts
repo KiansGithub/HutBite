@@ -240,6 +240,50 @@ export interface Database {
           created_at?: string 
         }
       }
+      ugc_videos: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          user_id: string
+          restaurant_id: string | null
+          menu_item_id: string | null
+          suggested_restaurant_name: string | null
+          video_url: string
+          thumb_url: string | null
+          title: string
+          description: string | null
+          status: "pending" | "approved" | "rejected"
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id: string
+          restaurant_id?: string | null
+          menu_item_id?: string | null
+          suggested_restaurant_name?: string | null
+          video_url: string
+          thumb_url?: string | null
+          title: string
+          description?: string | null
+          status?: "pending" | "approved" | "rejected"
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+          restaurant_id?: string | null
+          menu_item_id?: string | null
+          suggested_restaurant_name?: string | null
+          video_url?: string
+          thumb_url?: string | null
+          title?: string
+          description?: string | null
+          status?: "pending" | "approved" | "rejected"
+        }
+      }
     }
     Views: {
       [_ in never]: never

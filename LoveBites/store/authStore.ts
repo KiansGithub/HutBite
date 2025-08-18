@@ -94,35 +94,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   deleteAccount: async () => {
-    const { user } = get();
-    if (!user) {
-      return { error: { message: 'No user found '}};
-    }
-
-    try {
-      // Delete user data from database tables 
-      const userId = user.id; 
-
-      // Delete user likes 
-      const { error: likesError } = await supabase 
-          .from('user_likes')
-          .delete()
-          .eq('user_id', userId);
-        
-      if (likesError) {
-        console.error('Error deleting user likes:', likesError);
-      }
-
-      // Delete user account from supabase auth 
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
-
-      // Clear local state 
-      set({ user: null, session: null });
-
-      return { error: null };
-    } catch (error) {
-      return { error };
-    }
+    // IMPORTANT: This function's logic needs to be moved to a Supabase Edge Function.
+    // Calling admin functions from the client-side is a major security risk.
+    console.warn('deleteAccount must be implemented via a secure Edge Function.');
+    // Example: const { error } = await supabase.functions.invoke('delete-user');
+    // For now, this function will do nothing to prevent security issues.
+    return { error: { message: 'This feature is not securely implemented yet.' } };
   },
 
   debugAuthState: () => {

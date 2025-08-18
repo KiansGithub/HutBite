@@ -135,7 +135,7 @@ export default function MapScreen() {
                             }}
                             title={restaurant.name}
                             description={restaurant.distance ? `${restaurant.distance.toFixed(1)} mi away` : 'Restaurant'}
-                            tracksViewChanges={true}
+                            tracksViewChanges={false}
                             stopPropagation={true}
                         >
                             <Callout 
