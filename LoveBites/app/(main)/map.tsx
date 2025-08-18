@@ -39,7 +39,6 @@ export default function MapScreen() {
     };
  
     const validRestaurants = useMemo(() => {
-        console.log('Total restaurants from hook:', restaurants.length);
  
         const filtered = restaurants.filter(restaurant => {
             const hasValidLat = restaurant.latitude != null &&
@@ -50,32 +49,11 @@ export default function MapScreen() {
                                isFinite(Number(restaurant.longitude));
  
             const isValid = hasValidLat && hasValidLng;
- 
-            if (!isValid) {
-                console.log('Invalid restaurant coordinates:', {
-                    name: restaurant.name,
-                    lat: restaurant.latitude,
-                    lng: restaurant.longitude,
-                    hasValidLat,
-                    hasValidLng
-                });
-            } else {
-                console.log('Valid restaurant:', {
-                    name: restaurant.name,
-                    lat: Number(restaurant.latitude),
-                    lng: Number(restaurant.longitude)
-                });
-            }
- 
             return isValid;
         });
  
-        console.log('Valid restaurants for map:', filtered.length);
-        console.log('Valid restaurant names:', filtered.map(r => r.name));
- 
         // Handle duplicate coordinates
         const offsetRestaurants = offsetDuplicateCoordinates(filtered);
-        console.log('Restaurants after coordinate offsetting:', offsetRestaurants.length);
  
         return offsetRestaurants;
     }, [restaurants]);
@@ -104,6 +82,7 @@ export default function MapScreen() {
             latitude: 37.78825,
             longitude: -122.4324,
             latitudeDelta: 0.0922,
+            
             longitudeDelta: 0.0421,
         }; 
     }, [location, validRestaurants]);
@@ -141,18 +120,11 @@ export default function MapScreen() {
                 loadingEnabled={true}
                 loadingIndicatorColor="#FF7A00"
                 loadingBackgroundColor="#f5f5f5"
-                key={`map-${validRestaurants.length}-${Date.now()}`}
+                key={`map-${validRestaurants.length}`}
             >
                 {validRestaurants.map((restaurant, index) => {
                     const lat = Number(restaurant.latitude);
                     const lng = Number(restaurant.longitude);
- 
-                    console.log(`Rendering marker ${index + 1}:`, {
-                        name: restaurant.name,
-                        lat,
-                        lng,
-                        id: restaurant.id
-                    });
  
                     return (
                         <Marker
