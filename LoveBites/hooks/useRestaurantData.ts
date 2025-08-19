@@ -75,7 +75,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                     };
 
                     if (!combinedFeedContent[menuItem.restaurant_id]) {
-                        combinedFeedContent[menuItem.restaurat_id] = [];
+                        combinedFeedContent[menuItem.restaurant_id] = [];
                     }
                     combinedFeedContent[menuItem.restaurant_id].push(feedItem);
                 });
