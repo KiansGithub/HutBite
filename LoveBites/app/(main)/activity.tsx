@@ -157,15 +157,17 @@ export default function ActivityScreen() {
                 <SafeAreaView style={styles.safeArea}>
                     <View style={styles.header}>
                         {!isSearchMode ? (
+                            <>
                             <View style={styles.headerRow}>
                                 <Text style={styles.headerTitle}>Activity</Text>
-                                <TouchableOpacity
-                                    style={styles.searchButton}
-                                    onPress={() => setIsSearchMode(true)}
-                                >
-                                    <Ionicons name="search" size={24} color="#fff" />
-                                </TouchableOpacity>
                             </View>
+                            <TouchableOpacity
+                                style={styles.searchButton}
+                                onPress={() => setIsSearchMode(true)}
+                            >
+                                <Ionicons name="search" size={24} color="#fff" />
+                            </TouchableOpacity>
+                        </>
                         ) : (
                             <View style={styles.searchHeader}>
                                 <TouchableOpacity
@@ -277,6 +279,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20, 
         paddingVertical: 16, 
         alignItems: 'center',
+        width: '100%',
     },
     headerTitle: {
         fontSize: 20, 
@@ -356,17 +359,16 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     searchContainer: {
-        paddingHorizontal: 20, 
+        flex: 1,
         paddingBottom: 12, 
     },
     searchPanel: {
-        padding: 12, 
+        padding: 4, 
         borderRadius: 12, 
     },
     searchInputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        minHeight: 44, 
     },
     searchIcon: {
         marginRight: 8, 
@@ -395,6 +397,9 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     searchButton: {
+        position: 'absolute',
+        right: 40,
+        top: 7,
         padding: 8,
         borderRadius: 20,
         backgroundColor: 'rgba(255,255,255,0.2)',
