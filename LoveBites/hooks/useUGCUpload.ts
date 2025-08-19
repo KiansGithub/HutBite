@@ -36,9 +36,11 @@ export const useUGCUpload = () => {
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
                 mediaTypes: ImagePicker.MediaTypeOptions.Videos,
-                allowsEditing: true, 
+                allowsEditing: false, 
                 quality: 0.8, 
                 videoMaxDuration: 60,
+                selectionLimit: 1, 
+                allowsMultipleSelection: false, 
             });
 
             if (!result.canceled && result.assets[0]) {

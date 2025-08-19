@@ -30,6 +30,7 @@ export default function UploadScreen() {
   const [suggestedRestaurantName, setSuggestedRestaurantName] = useState<string>('');
   const [title, setTitle] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
 
   const { user } = useAuthStore();
   const { uploading, uploadProgress, pickVideo, uploadUGCVideo } = useUGCUpload();
@@ -38,6 +39,10 @@ export default function UploadScreen() {
     const video = await pickVideo();
     if (video) {
       setSelectedVideo(video);
+      // Generate thumbnail for better preview
+      const { generateThumbnail } = useUGCUpload();
+      const thumbnail = await generateThumbnail(video.uri);
+      setVideoThumbnail(thumbnail);
     }
   };
 
@@ -89,6 +94,7 @@ export default function UploadScreen() {
     if (result.success) {
       // Reset form
       setSelectedVideo(null);
+      setVideoThumbnail(null);
       setRestaurantId('');
       setRestaurantName('');
       setMenuItemId('');
@@ -123,9 +129,22 @@ export default function UploadScreen() {
         >
           {selectedVideo ? (
             <View style={styles.selectedVideoContainer}>
-              <Image source={{ uri: selectedVideo.uri }} style={styles.videoThumbnail} />
+              {videoThumbnail ? (
+                <Image source={{ uri: videoThumbnail }} style={styles.videoThumbnail} />
+              ) : (
+                <View style={[styles.videoThumbnail, { justifyContent: 'center', alignItems: 'center' }]}>
+                  <ActivityIndicator size="large" color={Colors.light.primary} />
+                  <Text style={{ marginTop: 8, color: '#666' }}>Generating preview...</Text>
+                </View>
+              )}
               <View style={styles.videoOverlay}>
-                <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.8)" />
+              <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
+              </View>
+              <View style={styles.videoInfo}>
+                <Text style={styles.videoInfoText}>
+                  Video selected • {Math.round((selectedVideo.duration || 0) / 1000)}s
+                  {selectedVideo.fileSize && ` • ${(selectedVideo.fileSize / (1024 * 1024)).toFixed(1)}MB`}
+                </Text>
               </View>
               <TouchableOpacity
                 style={styles.changeVideoButton}
@@ -229,6 +248,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+  },
+  videoInfo: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 12,
+  },
+  videoInfoText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
   },
   header: {
     flexDirection: 'row',
