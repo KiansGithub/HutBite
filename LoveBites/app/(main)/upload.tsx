@@ -39,10 +39,19 @@ export default function UploadScreen() {
     const video = await pickVideo();
     if (video) {
       setSelectedVideo(video);
+      setVideoThumbnail(null); // Reset thumbnail state
       // Generate thumbnail for better preview
       const { generateThumbnail } = useUGCUpload();
-      const thumbnail = await generateThumbnail(video.uri);
-      setVideoThumbnail(thumbnail);
+      generateThumbnail(video.uri)
+        .then(thumbnail => {
+          if (thumbnail) {
+            setVideoThumbnail(thumbnail);
+          }
+        })
+        .catch(error => {
+          console.warn('Thumbnail generation failed:', error);
+          // Continue without thumbnail - not critical
+        });
     }
   };
 
@@ -132,9 +141,11 @@ export default function UploadScreen() {
               {videoThumbnail ? (
                 <Image source={{ uri: videoThumbnail }} style={styles.videoThumbnail} />
               ) : (
-                <View style={[styles.videoThumbnail, { justifyContent: 'center', alignItems: 'center' }]}>
-                  <ActivityIndicator size="large" color={Colors.light.primary} />
-                  <Text style={{ marginTop: 8, color: '#666' }}>Generating preview...</Text>
+                <View style={[styles.videoThumbnail, styles.videoPlaceholderThumb]}>
+                  <Ionicons name="videocam" size={48} color="#666" />
+                  <Text style={styles.thumbnailGeneratingText}>
+                    {videoThumbnail === null ? 'Generating preview...' : 'Preview unavailable'}
+                  </Text>
                 </View>
               )}
               <View style={styles.videoOverlay}>
@@ -409,5 +420,16 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 4,
     lineHeight: 20,
+  },
+  videoPlaceholderThumb: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+  },
+  thumbnailGeneratingText: {
+    marginTop: 8,
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
