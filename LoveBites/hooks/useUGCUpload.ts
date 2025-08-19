@@ -188,6 +188,7 @@ export const useUGCUpload = () => {
         uploading,
         uploadProgress, 
         pickVideo, 
+        generateThumbnail,
         uploadUGCVideo, 
     };
 };
