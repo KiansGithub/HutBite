@@ -144,7 +144,7 @@ export default function UploadScreen() {
                 <View style={[styles.videoThumbnail, styles.videoPlaceholderThumb]}>
                   <Ionicons name="videocam" size={48} color="#666" />
                   <Text style={styles.thumbnailGeneratingText}>
-                    {videoThumbnail === null ? 'Generating preview...' : 'Preview unavailable'}
+                    {videoThumbnail === null ? 'Video selected' : 'Video selected'}
                   </Text>
                 </View>
               )}
