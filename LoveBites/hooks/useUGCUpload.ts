@@ -35,7 +35,7 @@ export const useUGCUpload = () => {
 
         try {
             const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Videos, 
+                mediaTypes: ImagePicker.MediaTypeOptions.Videos,
                 allowsEditing: true, 
                 quality: 0.8, 
                 videoMaxDuration: 60,
@@ -69,9 +69,21 @@ export const useUGCUpload = () => {
         try {
             const response = await fetch(uri);
             const blob = await response.blob();
-            const arrayBuffer = await blob.arrayBuffer();
-
-            const { data, error } = await supabase.storage 
+            // Convert blob to ArrayBuffer for React Native
+            const fileReader = new FileReader();
+            const arrayBuffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+                fileReader.onload = () => {
+                    if (fileReader.result instanceof ArrayBuffer) {
+                        resolve(fileReader.result);
+                    } else {
+                        reject(new Error('Failed to convert blob to ArrayBuffer'));
+                    }
+                };
+                fileReader.onerror = () => reject(fileReader.error);
+                fileReader.readAsArrayBuffer(blob);
+            });
+ 
+            const { data, error } = await supabase.storage
               .from('ugc-videos')
               .upload(fileName, arrayBuffer, {
                 contentType, 

@@ -95,7 +95,9 @@ export const MenuItemSelector: React.FC<MenuItemSelectorProps> = ({
                     {item.description}
                   </Text>
                 )}
-                <Text style={styles.menuItemPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.menuItemPrice}>
+                  {item.price ? `$${item.price.toFixed(2)}` : ''}
+                </Text>
               </TouchableOpacity>
             )}
             ListEmptyComponent={

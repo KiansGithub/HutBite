@@ -221,7 +221,8 @@ const styles = StyleSheet.create({
     restaurantName: {
         fontSize: 16, 
         fontWeight: '600',
-        marginBottom: 4
+        marginBottom: 4, 
+        color: '#333',
     },
     restaurantAddress: {
         fontSize: 14, 
