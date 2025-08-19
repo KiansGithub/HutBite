@@ -3,72 +3,36 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
+import { FeedContentItem } from '@/types/feedContent';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
 
 interface MenuItemInfoProps {
     restaurant: Restaurant; 
-    menuItem: MenuItem; 
+    feedItem: FeedContentItem;
 }
 
 export const MenuItemInfo: React.FC<MenuItemInfoProps> = ({
     restaurant, 
-    menuItem, 
+    feedItem, 
 }) => {
-    const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-
-    const truncateDescription = (text: string, maxLength: number = 80) => {
-        if (text.length <= maxLength) return text; 
-
-        const truncated = text.substring(0, maxLength);
-        const lastSentenceEnd = Math.max(
-            truncated.lastIndexOf('.'),
-            truncated.lastIndexOf('!'),
-            truncated.lastIndexOf('?')
-        );
-
-        if (lastSentenceEnd > 0) {
-            return truncated.substring(0, lastSentenceEnd + 1);
-        }
-
-        const lastSpace = truncated.lastIndexOf('.');
-        return lastSpace > 0 ? truncated.substring(0, lastSpace) + '...' : truncated + '...';
-    };
+    const isUGC = feedItem.type === 'ugc_video';
 
     return (
         <View style={styles.container}>
-            <View style={styles.topRow}>
-                <View style={styles.nameContainer}>
-                    <Text style={styles.restaurantName}>{restaurant.name}</Text>
-                    <Text numberOfLines={1} style={styles.menuItemName}>
-                        {menuItem.title}
-                    </Text>
-                </View>
-            </View>
-
-            {menuItem.description && (
-                <View style={styles.descriptionSection}>
-                    <Text style={styles.menuItemDescription}>
-                        {isDescriptionExpanded
-                          ? menuItem.description 
-                          : truncateDescription(menuItem.description)
-                        }
-                    </Text>
-                    {menuItem.description.length > 80 && (
-                        <TouchableOpacity 
-                          onPress={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                          style={styles.expandButton}
-                        >
-                            <Text style={styles.expandButtonText}>
-                                {isDescriptionExpanded ? 'View less': 'View more'}
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                </View>
-            )}
+          <Text style={styles.title}>{feedItem.title}</Text>
+          {feedItem.description && (
+            <Text style={styles.description}>{feedItem.description}</Text>
+          )}
+          {feedItem.price && !isUGC && (
+            <Text style={styles.price}>${feedItem.price.toFixed(2)}</Text>
+          )}
+          {isUGC && (
+            <Text style={styles.ugcLabel}>Community Video</Text>
+          )}
         </View>
-    );
+      );
 };
 
 const styles = StyleSheet.create({

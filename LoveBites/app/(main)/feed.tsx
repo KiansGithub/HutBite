@@ -11,6 +11,7 @@ import {
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { useRestaurantData, RestaurantWithDistance } from '@/hooks/useRestaurantData';
+import { FeedContentItem } from '@/types/feedContent';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
 import { OrderLinksModal } from '@/components/OrderLinksModal';
@@ -38,7 +39,7 @@ export default function FeedScreen() {
   const insets = useSafeAreaInsets();
   const bottomOffset = TAB_BAR_HEIGHT + insets.bottom;
   const { location, loading: locationLoading } = useLocation();
-  const { restaurants: allRestaurants, menuItems, loading, reshuffleRestaurants } = useRestaurantData();
+  const { restaurants: allRestaurants, feedContent, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching, setSearchType } = useSearch(allRestaurants, []);
 
   // Track previous search state to detect when search is cleared
@@ -108,7 +109,7 @@ export default function FeedScreen() {
 
   const renderRestaurant = useCallback(
     ({ item, index }: { item: any; index: number }) => {
-    const menu = menuItems[item.id] || [];
+    const feedItems = feedContent[item.id] || [];
     const isCurrent = index === vIndex; 
     const isPreloaded = Math.abs(index - vIndex) <= 2;
 
@@ -128,7 +129,7 @@ export default function FeedScreen() {
     return (
       <RestaurantCard
         restaurant={item}
-        menuItems={menu}
+        feedItems={feedItems}
         rowMode={rowMode}
         isVisible={isCurrent && isScreenFocused}
         onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
@@ -141,7 +142,7 @@ export default function FeedScreen() {
       />
     );
   },
-  [menuItems, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused, bottomOffset]);
+  [feedContent, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused, bottomOffset]);
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
@@ -173,7 +174,7 @@ export default function FeedScreen() {
         restaurantName={restaurants[vIndex]?.name || ''}
         distance={restaurants[vIndex]?.distance}
         currentIndex={visibleHIndex}
-        totalItems={menuItems[restaurants[vIndex]?.id]?.length ?? 0}
+        totalItems={feedContent[restaurants[vIndex]?.id]?.length ?? 0}
         searchQuery={searchQuery}
         onSearchQueryChange={setSearchQuery}
         onCategoryPress={(category) => setSearchQuery(category)}

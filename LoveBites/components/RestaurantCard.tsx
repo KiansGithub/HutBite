@@ -12,6 +12,7 @@ import { FloatingActionRail } from '@/components/FloatingActionRail';
 import { VideoCarousel } from './VideoCarousel';
 import { MenuItemInfo } from'./MenuItemInfo';
 import { OrderButton } from './OrderButton';
+import { FeedContentItem } from '@/types/feedContent';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -20,7 +21,7 @@ const { height: H, width: W } = Dimensions.get('screen');
 
 interface RestaurantCardProps {
   restaurant: Restaurant;
-  menuItems: MenuItem[];
+  feedItems: FeedContentItem[];
   rowMode: string;
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;

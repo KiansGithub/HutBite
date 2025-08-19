@@ -5,14 +5,16 @@ import { Database } from '@/lib/supabase.d';
 import { calculateDistance, shuffleArray } from '@/utils/distance';
 import { getUniqueCuisines, getCuisineCounts } from '@/utils/cuisine';
 import { useLocation } from './useLocation';
+import { FeedContentItem, RestaurantFeedData } from '@/types/feedContent';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
+type UGCVideo = Database['public']['Tables']['ugc_videos']['Row'] & { id: string };
 export type RestaurantWithDistance = Restaurant & { distance?: number };
 
 export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [restaurants, setRestaurants] = useState<RestaurantWithDistance[]>([]);
-    const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
+    const [feedContent, setFeedContent] = useState<RestaurantFeedData>({});
     const [loading, setLoading] = useState(true);
     const [dataLoaded, setDataLoaded] = useState(false);
     const [reshuffleTrigger, setReshuffleTrigger] = useState(0);
@@ -102,7 +104,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
 
                 setRestaurants(sortedRestaurants);
 
-                setMenuItems(grouped);
+                setFeedContent(combinedFeedContent);
                 setDataLoaded(true);
             } catch (err) {
                 console.error(err);
