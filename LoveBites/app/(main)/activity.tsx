@@ -40,6 +40,7 @@ export default function ActivityScreen() {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [usersLoading, setUserLoading] = useState(false);
     const [usersError, setUsersError] = useState<string | null>(null);
+    const [isSearchMode, setIsSearchMode] = useState(false);
 
     const {
         searchQuery, 
@@ -155,46 +156,67 @@ export default function ActivityScreen() {
             >
                 <SafeAreaView style={styles.safeArea}>
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Activity</Text>
-                        
-                        {/* Search Bar */}
-                        <View style={styles.searchContainer}>
-                            <GlassPanel style={styles.searchPanel}>
-                                <View style={styles.searchInputContainer}>
-                                    <Ionicons 
-                                        name="search" 
-                                        size={20} 
-                                        color="rgba(255,255,255,0.7)" 
-                                        style={styles.searchIcon}
-                                    />
-                                    <TextInput
-                                        style={styles.searchInput}
-                                        placeholder="find your friends..."
-                                        placeholderTextColor="rgba(255,255,255,0.5)"
-                                        value={searchQuery}
-                                        onChangeText={setSearchQuery}
-                                        autoCapitalize="none"
-                                        autoCorrect={false}
-                                    />
-                                    {searchQuery.length > 0 && (
-                                        <TouchableOpacity 
-                                            onPress={() => setSearchQuery('')}
-                                            style={styles.clearButton}
-                                        >
-                                            <Ionicons 
-                                                name="close-circle" 
-                                                size={20} 
-                                                color="rgba(255,255,255,0.7)" 
+                        {!isSearchMode ? (
+                            <View style={styles.headerRow}>
+                                <Text style={styles.headerTitle}>Activity</Text>
+                                <TouchableOpacity
+                                    style={styles.searchButton}
+                                    onPress={() => setIsSearchMode(true)}
+                                >
+                                    <Ionicons name="search" size={24} color="#fff" />
+                                </TouchableOpacity>
+                            </View>
+                        ) : (
+                            <View style={styles.searchHeader}>
+                                <TouchableOpacity
+                                    style={styles.backButton}
+                                    onPress={() => {
+                                        setIsSearchMode(false);
+                                        setSearchQuery('');
+                                    }}
+                                >
+                                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                                </TouchableOpacity>
+                                <View style={styles.searchContainer}>
+                                    <GlassPanel style={styles.searchPanel}>
+                                        <View style={styles.searchInputContainer}>
+                                            <Ionicons
+                                                name="search"
+                                                size={20}
+                                                color="rgba(255,255,255,0.7)"
+                                                style={styles.searchIcon}
                                             />
-                                        </TouchableOpacity>
-                                    )}
+                                            <TextInput
+                                                style={styles.searchInput}
+                                                placeholder="find your friends..."
+                                                placeholderTextColor="rgba(255,255,255,0.5)"
+                                                value={searchQuery}
+                                                onChangeText={setSearchQuery}
+                                                autoCapitalize="none"
+                                                autoCorrect={false}
+                                                autoFocus={true}
+                                            />
+                                            {searchQuery.length > 0 && (
+                                                <TouchableOpacity
+                                                    onPress={() => setSearchQuery('')}
+                                                    style={styles.clearButton}
+                                                >
+                                                    <Ionicons
+                                                        name="close-circle"
+                                                        size={20}
+                                                        color="rgba(255,255,255,0.7)"
+                                                    />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                    </GlassPanel>
                                 </View>
-                            </GlassPanel>
-                        </View>
+                            </View>
+                        )}
                     </View>
-
-                    {/* Show user search results when searching, otherwise show activity feed */}
-                    {isSearching ? (
+ 
+                    {/* Show user search results when in search mode, otherwise show activity feed */}
+                    {isSearchMode ? (
                         <FlatList 
                             data={userResults}
                             renderItem={renderUserItem}
@@ -371,5 +393,23 @@ const styles = StyleSheet.create({
     searchResultText: {
         fontSize: 16, 
         color: '#fff',
+    },
+    searchButton: {
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+    },
+    searchHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    backButton: {
+        padding: 8,
+        marginRight: 12,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
 });
