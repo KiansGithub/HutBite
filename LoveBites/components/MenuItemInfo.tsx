@@ -39,6 +39,34 @@ const styles = StyleSheet.create({
     container: {
         marginBottom: 14, 
     },
+    title: {
+        fontSize: 22, 
+        fontWeight: '700',
+        color: '#fff',
+        marginBottom: 8,
+    },
+    description: {
+        fontSize: 14, 
+        color: 'rgba(255,255,255,0.85)',
+        lineHeight: 18, 
+        marginBottom: 8,
+    },
+    price: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: Colors.light.primary,
+        marginBottom: 4,
+    },
+    ugcLabel: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: 'rgba(255,255,255,0.75)',
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        alignSelf: 'flex-start',
+    },
     topRow: {
         flexDirection: 'row',
         alignItems: 'flex-start',
