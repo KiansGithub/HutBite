@@ -82,6 +82,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
 
                 // Add UGC videos to feed content 
                 ugcVideos?.forEach(ugcVideo => {
+                    console.log('Processing UGC video:', ugcVideo.id, 'for restaurant:', ugcVideo.restaurant_id);
                     const feedItem: FeedContentItem = {
                         id: ugcVideo.id, 
                         type: 'ugc_video',
@@ -158,6 +159,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                 setRestaurants(sortedRestaurants);
 
                 setFeedContent(combinedFeedContent);
+                console.log('Final feed content:', combinedFeedContent);
                 setDataLoaded(true);
             } catch (err) {
                 console.error(err);
