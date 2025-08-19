@@ -113,8 +113,14 @@ export const RestaurantSelector: React.FC<RestaurantSelectorProps> = ({
                               style={styles.restaurantItem}
                               onPress={() => handleRestaurantSelect(item)}
                             >
+                                <Text style={styles.restaurantName}>{item.name}</Text>
                             </TouchableOpacity>
                           )}
+                          ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                              <Text style={styles.emptyText}>No restaurants found</Text>
+                            </View>
+                          }
                         />
                         </>
                     )}
@@ -220,5 +226,13 @@ const styles = StyleSheet.create({
     restaurantAddress: {
         fontSize: 14, 
         color: '#666'
+    },
+    emptyContainer: {
+        padding: 32,
+        alignItems: 'center',
+    },
+    emptyText: {
+        color: '#999',
+        fontSize: 16,
     },
 });
