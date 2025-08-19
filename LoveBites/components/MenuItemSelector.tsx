@@ -17,6 +17,7 @@ interface MenuItemSelectorProps {
     selectedMenuItemName?: string; 
     onMenuItemSelect: (menuItemId: string, menuItemName: string) => void; 
     disabled?: boolean; 
+    hasCustomRestaurant?: boolean; 
 }
 
 export const MenuItemSelector: React.FC<MenuItemSelectorProps> = ({
@@ -25,6 +26,7 @@ export const MenuItemSelector: React.FC<MenuItemSelectorProps> = ({
     selectedMenuItemName, 
     onMenuItemSelect, 
     disabled = false, 
+    hasCustomRestaurant = false, 
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const { menuItems } = useRestaurantData();
@@ -36,13 +38,27 @@ export const MenuItemSelector: React.FC<MenuItemSelectorProps> = ({
         setModalVisible(false);
     };
 
-    if (disabled || !restaurantId) {
+    if (disabled || (!restaurantId && !hasCustomRestaurant)) {
         return (
             <View style={styles.container}>
                 <Text style={styles.label}>Menu Item (optional)</Text>
                 <View style={[styles.selector, styles.disabled]}>
                     <Text style={styles.disabledText}>
-                        {!restaurantId ? 'Select a restaurant first': 'No menu items available'}
+                    {!restaurantId && !hasCustomRestaurant ? 'Select a restaurant first': 'No menu items available'}
+                    </Text>
+                </View>
+            </View>
+        );
+    }
+
+    // If we have a custom restaurant but no restaurantId, show appropriate message
+    if (hasCustomRestaurant && !restaurantId) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.label}>Menu Item (optional)</Text>
+                <View style={[styles.selector, styles.disabled]}>
+                    <Text style={styles.disabledText}>
+                        Menu items not available for new restaurants
                     </Text>
                 </View>
             </View>
