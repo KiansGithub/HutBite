@@ -65,7 +65,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                         id: menuItem.id, 
                         type: 'menu_item',
                         restaurant_id: menuItem.restaurant_id, 
-                        title: menuItem.name, 
+                        title: menuItem.title, 
                         description: menuItem.description, 
                         video_url: menuItem.video_url, 
                         thumb_url: menuItem.thumb_url, 
