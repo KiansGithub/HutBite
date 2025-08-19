@@ -38,19 +38,6 @@ export default function MainLayout() {
                 }}
             />
             <Tabs.Screen
-        name="discover"
-        options={{
-          title: 'Discover',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons
-              name={Platform.OS === 'ios' ? 'compass-outline' : 'compass'}
-              size={size}
-              color={color}
-            />
-          ),
-        }}
-      />
-            <Tabs.Screen
                 name="activity"
                 options={{
                     title: 'Activity',

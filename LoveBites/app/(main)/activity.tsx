@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, 
     Text, 
@@ -7,18 +7,76 @@ import {
     TouchableOpacity, 
     Image, 
     RefreshControl, 
+    TextInput, 
+    ActivityIndicator, 
+    ScrollView 
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'; // ← here
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
+import { useSearch } from '@/hooks/useSearch';
+import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/authStore';
 import { GlassPanel } from '@/components/GlassPanel';
+import { UserCard } from '@/components/UserCard';
 import { RequireAuth } from '@/components/RequireAuth';
 import Colors from '@/constants/Colors';
 
+interface UserProfile {
+    id: string; 
+    user_id: string; 
+    handle: string | null; 
+    display_name: string | null; 
+    avatar_url: string | null; 
+    bio: string | null; 
+    is_private: boolean; 
+}
+
 export default function ActivityScreen() {
+    const { user } = useAuthStore();
     const { activities, loading, refreshing, hasMore, refresh, loadMore } = useActivityFeed();
+    const [users, setUsers] = useState<UserProfile[]>([]);
+    const [usersLoading, setUserLoading] = useState(false);
+    const [usersError, setUsersError] = useState<string | null>(null);
+
+    const {
+        searchQuery, 
+        setSearchQuery, 
+        userResults, 
+        isSearching, 
+        searchType, 
+        setSearchType
+    } = useSearch([], users);
+
+    // Load users for search functionality
+    useEffect(() => {
+        const loadUsers = async () => {
+            if (!user) return;
+            
+            setUserLoading(true);
+            setUsersError(null);
+            
+            try {
+                const { data, error } = await supabase
+                    .from('user_profiles')
+                    .select('*')
+                    .neq('user_id', user.id)
+                    .limit(100);
+                
+                if (error) throw error;
+                setUsers(data || []);
+            } catch (error) {
+                console.error('Error loading users:', error);
+                setUsersError('Failed to load users');
+            } finally {
+                setUserLoading(false);
+            }
+        };
+
+        loadUsers();
+    }, [user]);
 
     const formatTimeAgo = (dateString: string) => {
         const now = new Date();
@@ -75,6 +133,18 @@ export default function ActivityScreen() {
         );
     }
 
+    const renderUserItem = ({ item }: { item: UserProfile }) => {
+        return (
+            <UserCard 
+                profile={item}
+                onPress={() => {
+                    // Navigate to user profile if needed
+                    console.log('Navigate to user:', item.handle);
+                }}
+            />
+        );
+    };
+
         return (
             <RequireAuth>
             <LinearGradient 
@@ -86,33 +156,88 @@ export default function ActivityScreen() {
                 <SafeAreaView style={styles.safeArea}>
                     <View style={styles.header}>
                         <Text style={styles.headerTitle}>Activity</Text>
+                        
+                        {/* Search Bar */}
+                        <View style={styles.searchContainer}>
+                            <GlassPanel style={styles.searchPanel}>
+                                <View style={styles.searchInputContainer}>
+                                    <Ionicons 
+                                        name="search" 
+                                        size={20} 
+                                        color="rgba(255,255,255,0.7)" 
+                                        style={styles.searchIcon}
+                                    />
+                                    <TextInput
+                                        style={styles.searchInput}
+                                        placeholder="find your friends..."
+                                        placeholderTextColor="rgba(255,255,255,0.5)"
+                                        value={searchQuery}
+                                        onChangeText={setSearchQuery}
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                    />
+                                    {searchQuery.length > 0 && (
+                                        <TouchableOpacity 
+                                            onPress={() => setSearchQuery('')}
+                                            style={styles.clearButton}
+                                        >
+                                            <Ionicons 
+                                                name="close-circle" 
+                                                size={20} 
+                                                color="rgba(255,255,255,0.7)" 
+                                            />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
+                            </GlassPanel>
+                        </View>
                     </View>
 
-                    <FlatList 
-                      data={activities}
-                      renderItem={renderActivityItem}
-                      keyExtractor={(item) => item.id}
-                      contentContainerStyle={styles.listContainer}
-                      refreshControl={
-                        <RefreshControl 
-                          refreshing={refreshing}
-                          onRefresh={refresh}
-                          tintColor="#fff"
+                    {/* Show user search results when searching, otherwise show activity feed */}
+                    {isSearching ? (
+                        <FlatList 
+                            data={userResults}
+                            renderItem={renderUserItem}
+                            keyExtractor={(item) => item.id}
+                            contentContainerStyle={styles.listContainer}
+                            showsVerticalScrollIndicator={false}
+                            ListEmptyComponent={
+                                <View style={styles.emptyContainer}>
+                                    <Ionicons name="people-outline" size={48} color="rgba(255,255,255,0.5)" />
+                                    <Text style={styles.emptyTitle}>No Users Found</Text>
+                                    <Text style={styles.emptySubtitle}>
+                                        Try searching with a different name or handle
+                                    </Text>
+                                </View>
+                            }
                         />
-                      }
-                      onEndReached={loadMore}
-                      onEndReachedThreshold={0.5}
-                      showsVerticalScrollIndicator={false}
-                      ListEmptyComponent={
-                        <View style={styles.emptyContainer}>
-                            <Ionicons name="heart-outline" size={48} color="rgba(255,255,255,0.5)" />
-                            <Text style={styles.emptyTitle}>No Activity Yet</Text>
-                            <Text style={styles.emptySubtitle}>
-                                Follow friends to see their likes here
-                            </Text>
-                        </View>
-                      }
-                    />
+                    ) : (
+                        <FlatList 
+                          data={activities}
+                          renderItem={renderActivityItem}
+                          keyExtractor={(item) => item.id}
+                          contentContainerStyle={styles.listContainer}
+                          refreshControl={
+                            <RefreshControl 
+                              refreshing={refreshing}
+                              onRefresh={refresh}
+                              tintColor="#fff"
+                            />
+                          }
+                          onEndReached={loadMore}
+                          onEndReachedThreshold={0.5}
+                          showsVerticalScrollIndicator={false}
+                          ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="heart-outline" size={48} color="rgba(255,255,255,0.5)" />
+                                <Text style={styles.emptyTitle}>No Activity Yet</Text>
+                                <Text style={styles.emptySubtitle}>
+                                    Follow friends to see their likes here
+                                </Text>
+                            </View>
+                          }
+                        />
+                    )}
                 </SafeAreaView>
             </LinearGradient>
             </RequireAuth>
@@ -207,5 +332,44 @@ const styles = StyleSheet.create({
         fontSize: 14, 
         color: 'rgba(255,255,255,0.7)',
         textAlign: 'center',
+    },
+    searchContainer: {
+        paddingHorizontal: 20, 
+        paddingBottom: 12, 
+    },
+    searchPanel: {
+        padding: 12, 
+        borderRadius: 12, 
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        minHeight: 44, 
+    },
+    searchIcon: {
+        marginRight: 8, 
+    },
+    searchInput: {
+        flex: 1, 
+        fontSize: 16, 
+        color: '#fff',
+        paddingVertical: 8, 
+    },
+    clearButton: {
+        marginLeft: 8,
+        padding: 4, 
+    },
+    searchResultsContainer: {
+        paddingHorizontal: 20, 
+        paddingVertical: 12, 
+    },
+    searchResultItem: {
+        padding: 12, 
+        borderBottomWidth: 1, 
+        borderBottomColor: 'rgba(255,255,255,0.2)',
+    },
+    searchResultText: {
+        fontSize: 16, 
+        color: '#fff',
     },
 });

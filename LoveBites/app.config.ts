@@ -10,6 +10,7 @@ const config: ExpoConfig = {
   icon: "./assets/images/icon.png",
   scheme: "livebites",
   userInterfaceStyle: "automatic",
+  newArchEnabled: true,
   splash: {
     image: "./assets/images/logo.png",
     resizeMode: "contain",
@@ -20,7 +21,6 @@ const config: ExpoConfig = {
     googleServicesFile: "./GoogleService-Info.plist",
     supportsTablet: false,
     usesAppleSignIn: true,
-    newArchEnabled: false,
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
         "LiveBites needs your location to show restaurants that deliver to you.",
@@ -66,8 +66,8 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         ios: {
-          // useFrameworks: "static",
-          // useModularHeaders: true,
+          useFrameworks: "static",
+          useModularHeaders: true,
           config: {
             RNFirebaseAnalyticsWithoutAdIdSupport: "true"
           }
@@ -81,7 +81,7 @@ const config: ExpoConfig = {
   },
   extra: {
     SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
     router: {},
     eas: {
       projectId: "166d213b-c90c-4e09-b0a0-d21a5f4078b3"
