@@ -4,19 +4,19 @@ import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { router } from 'expo-router';
+import { FeedContentItem } from '@/types/feedContent';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
-type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
 
 interface OrderButtonProps {
     restaurant: Restaurant, 
-    menuItem: MenuItem, 
+    feedItem: FeedContentItem, 
     onOrderPress: (orderLinks: Record<string, string> | null) => void; 
 }
 
 export const OrderButton: React.FC<OrderButtonProps> = ({
     restaurant, 
-    menuItem, 
+    feedItem, 
     onOrderPress, 
 }) => {
     const handlePress = () => {

@@ -35,7 +35,7 @@ interface RestaurantCardProps {
 
 const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   restaurant,
-  menuItems,
+  feedItems,
   isVisible,
   rowMode,
   onHorizontalScroll,
@@ -47,21 +47,21 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   bottomOffset = 0
 }) => {
   const [hIndex, setHIndex] = useState(0);
-  const currentMenuItem = menuItems[hIndex];
+  const currentFeedItem = feedItems[hIndex];
 
   const handleIndexChange = (index: number) => {
     setHIndex(index);
     onHorizontalScroll(index);
   };
 
-  if (!currentMenuItem) {
+  if (!currentFeedItem) {
     return <View style={styles.container} />;
   }  
 
   return (
     <View style={styles.container}>
       <VideoCarousel 
-        menuItems={menuItems}
+        feedItems={feedItems}
         rowMode={rowMode}
         onHorizontalScroll={onHorizontalScroll}
         currentIndex={hIndex}
@@ -78,20 +78,20 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
         <View style={styles.menuItemInfo}>
           <MenuItemInfo 
             restaurant={restaurant}
-            menuItem={currentMenuItem}
+            feedItem={currentFeedItem}
           />
           <OrderButton 
             restaurant={restaurant}
-            menuItem={currentMenuItem}
-            onOrderPress={(orderLinks) => onOrderPress(orderLinks, restaurant.id, currentMenuItem.id)}
+            feedItem={currentFeedItem}
+            onOrderPress={(orderLinks) => onOrderPress(orderLinks, restaurant.id, currentFeedItem.id)}
           />
         </View>
       </LinearGradient>
       <FloatingActionRail>
-  <LikeButton restaurantId={restaurant.id} menuItemId={currentMenuItem.id} />
+      <LikeButton restaurantId={restaurant.id} menuItemId={currentFeedItem.id} />
   <ShareButton
     restaurantName={restaurant.name}
-    menuItemTitle={currentMenuItem.title}
+    menuItemTitle={currentFeedItem.title}
   />
 </FloatingActionRail>
     </View>
