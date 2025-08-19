@@ -6,15 +6,13 @@ import {
     Dimensions, 
 } from 'react-native';
 import { VideoPlayer } from './VideoPlayer';
-import { Database } from '@/lib/supabase.d';
-
-type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
+import { FeedContentItem } from '@/types/feedContent';
 
 const { width: W, height: H } = Dimensions.get('screen');
 const ITEM_WIDTH = W; 
 
 interface VideoCarouselProps {
-    menuItems: MenuItem[];
+    feedItems: FeedContentItem[];
     rowMode: string; 
     onHorizontalScroll: (index: number) => void; 
     currentIndex: number; 
@@ -23,7 +21,7 @@ interface VideoCarouselProps {
 }
 
 const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
-    menuItems, 
+    feedItems, 
     rowMode, 
     onHorizontalScroll,
     currentIndex, 
@@ -39,8 +37,8 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
         }
     }, [resetTrigger, onIndexChange]);
 
-    const renderItem = ({ item: mi, index: itemIndex }: { item: MenuItem; index: number }) => {
-        if (!mi.video_url) {
+    const renderItem = ({ item: feedItem, index: itemIndex }: { item: FeedContentItem; index: number }) => {
+        if (!feedItem.video_url) {
             return <View style={styles.videoContainer}/>;
         }
 
@@ -68,9 +66,9 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
             <View style={styles.videoContainer}>
                 {mode === 'play' || mode === 'warm' ? (
                     <VideoPlayer 
-                      uri={mi.video_url}
-                      thumbUri={mi.thumb_url ?? mi.video_url.replace('.mp4', '.jpg')}
-                      itemId={mi.id}
+                    uri={feedItem.video_url}
+                    thumbUri={feedItem.thumb_url ?? feedItem.video_url.replace('.mp4', '.jpg')}
+                    itemId={feedItem.id}
                       mode={mode}
                       width={W}
                       height={H}
@@ -83,11 +81,11 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     return (
         <FlatList 
           ref={flatListRef}
-          data={menuItems}
+          data={feedItems}
           horizontal
           pagingEnabled 
           bounces={false}
-          keyExtractor={(mi) => mi.id.toString()}
+          keyExtractor={(feedItem) => feedItem.id.toString()}
           onMomentumScrollEnd={(e) => {
             const idx = Math.round(e.nativeEvent.contentOffset.x / W);
             onIndexChange(idx);
