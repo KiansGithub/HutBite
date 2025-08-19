@@ -189,6 +189,7 @@ export default function UploadScreen() {
             selectedMenuItemName={menuItemName}
             onMenuItemSelect={handleMenuItemSelect}
             disabled={!restaurantId}
+            hasCustomRestaurant={!!suggestedRestaurantName}
           />
 
           <View style={styles.inputGroup}>

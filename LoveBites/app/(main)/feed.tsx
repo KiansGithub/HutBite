@@ -20,7 +20,7 @@ import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// import AnalyticsService from '@/lib/analytics';
+import AnalyticsService from '@/lib/analytics';
 import SignInNudge from '@/components/SignInNudge';
 
 const { height: H } = Dimensions.get('screen');
@@ -92,7 +92,7 @@ export default function FeedScreen() {
  }, [vIndex]);
 
   React.useEffect(() => {
-    // AnalyticsService.logScreenView('Feed', 'MainScreen');
+    AnalyticsService.logScreenView('Feed', 'MainScreen');
   }, []);
 
   React.useEffect(() => {
