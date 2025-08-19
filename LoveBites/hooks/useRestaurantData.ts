@@ -19,6 +19,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
     const [dataLoaded, setDataLoaded] = useState(false);
     const [reshuffleTrigger, setReshuffleTrigger] = useState(0);
     const { location, loading: locationLoading } = useLocation();
+    const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>({});
 
     const reshuffleRestaurants = useCallback(() => {
         setReshuffleTrigger(prev => prev + 1);
@@ -49,6 +50,9 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                 ms?.forEach(mi => {
                     (grouped[mi.restaurant_id] ??= []).push(mi as MenuItem);
                 });
+
+                // Set menu items grouped by restaurant
+                setMenuItems(grouped);
 
                 let sortedRestaurants = rs ?? [];
 
@@ -169,6 +173,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
     return { 
         restaurants, 
         menuItems, 
+        feedContent, 
         loading: loading || locationLoading || !dataLoaded,
         availableCuisines: getUniqueCuisines(restaurants),
         cuisineCounts: getCuisineCounts(restaurants),
