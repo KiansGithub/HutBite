@@ -25,7 +25,11 @@ const config: ExpoConfig = {
       NSLocationWhenInUseUsageDescription:
         "LiveBites needs your location to show restaurants that deliver to you.",
       NSLocationAlwaysAndWhenInUseUsageDescription:
-        "LiveBites uses your location in the background to keep delivery areas up to date."
+        "LiveBites uses your location in the background to keep delivery areas up to date.",
+      NSPhotoLibraryUsageDescription:
+        "LiveBites needs access to your photos to let you choose images.",
+      NSPhotoLibraryAddUsageDescription:
+        "LiveBites needs permission to save images to your photo library."
     },
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
