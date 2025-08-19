@@ -47,6 +47,15 @@ export default function MainLayout() {
                 }}
             />
             <Tabs.Screen
+                name="upload"
+                options={{
+                    title: 'Upload',
+                    tabBarIcon: ({ color, size }) => (
+                        <Ionicons name="add-circle" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
                 name="map"
                 options={{
                     title: 'Map',
