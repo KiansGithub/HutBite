@@ -10,7 +10,6 @@ const config: ExpoConfig = {
   icon: "./assets/images/icon.png",
   scheme: "livebites",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   splash: {
     image: "./assets/images/logo.png",
     resizeMode: "contain",
@@ -21,6 +20,7 @@ const config: ExpoConfig = {
     googleServicesFile: "./GoogleService-Info.plist",
     supportsTablet: false,
     usesAppleSignIn: true,
+    newArchEnabled: false,
     infoPlist: {
       NSLocationWhenInUseUsageDescription:
         "LiveBites needs your location to show restaurants that deliver to you.",
@@ -66,8 +66,8 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         ios: {
-          useFrameworks: "static",
-          useModularHeaders: true,
+          // useFrameworks: "static",
+          // useModularHeaders: true,
           config: {
             RNFirebaseAnalyticsWithoutAdIdSupport: "true"
           }
