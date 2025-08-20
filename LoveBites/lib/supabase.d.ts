@@ -88,21 +88,24 @@ export interface Database {
           created_at: string 
           user_id: string 
           restaurant_id: string 
-          menu_item_id: string
+          content_type: 'menu_item' | 'ugc_video';
+          content_id: string;
         }
         Insert: {
           id?: string 
           created_at?: string 
           user_id: string 
           restaurant_id: string 
-          menu_item_id: string
+          content_type: 'menu_item' | 'ugc_video';
+          content_id: string;
         }
         Update: {
           id?: string 
           created_at?: string 
           user_id?: string 
           restaurant_id?: string 
-          menu_item_id?: string
+          content_type?: 'menu_item' | 'ugc_video';
+          content_id?: string;
         }
       }
       click_events: {

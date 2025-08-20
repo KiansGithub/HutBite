@@ -13,19 +13,22 @@ import { useLikes } from '@/hooks/useLikes';
 import { FAB_SIZE, FAB_RADIUS, FAB_BG, FAB_BLUR } from '@/ui/tokens';
 
 interface LikeButtonProps {
+  contentType: 'menu_item' | 'ugc_video';
+  contentId: string;
   restaurantId: string;
-  menuItemId: string;
 }
 
 const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
 
 export const LikeButton: React.FC<LikeButtonProps> = ({
   restaurantId,
-  menuItemId,
+  contentType,
+  contentId,
 }) => {
   const { isLiked, loading, toggleLike, canLike } = useLikes({
     restaurantId,
-    menuItemId,
+    contentType,
+    contentId,
   });
 
   const scale = useSharedValue(1);
