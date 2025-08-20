@@ -29,11 +29,12 @@ const purgeExpiredCache = () => {
 };
 
 interface UseLikesProps {
-    restaurantId: string; 
-    menuItemId: string; 
+    contentType: 'menu_item' | 'ugc_video';
+    contentId: string;
+    restaurantId: string;
 }
 
-export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
+export const useLikes = ({ contentType, contentId, restaurantId }: UseLikesProps) => {
     const [isLiked, setIsLiked] = useState(false);
     const [loading, setLoading] = useState(false);
     const { user } = useAuthStore();
@@ -53,11 +54,11 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
     }, []);
 
     const cacheKey = useMemo(() => {
-        return user?.id ? `${user.id}-${String(restaurantId)}-${String(menuItemId)}` : null;
-    }, [user?.id, restaurantId, menuItemId]);
+        return user?.id ? `${user.id}-${contentType}-${String(contentId)}` : null;
+    }, [user?.id, contentType, contentId]);
 
     const checkLikeStatus = useCallback(async (): Promise<boolean> => {
-        if (!user?.id || !restaurantId || !menuItemId || !cacheKey) {
+        if (!user?.id || !contentId || !cacheKey) {
             return false;
         }
 
@@ -86,7 +87,8 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                     .select('id')
                     .eq('user_id', user.id)
                     .eq('restaurant_id', String(restaurantId))
-                    .eq('menu_item_id', String(menuItemId))
+                    .eq('content_type', contentType)
+                    .eq('content_id', String(contentId))
                     .limit(1)
                     .abortSignal(abortController.signal);
                 
@@ -122,11 +124,11 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         pendingRequests.set(cacheKey, requestPromise);
 
         return requestPromise; 
-    }, [user?.id, restaurantId, menuItemId, cacheKey]);
+    }, [user?.id, restaurantId, contentId, cacheKey]);
 
     // Load initial like status 
     useEffect(() => {
-        if (!user?.id || !restaurantId || !menuItemId) {
+        if (!user?.id || !restaurantId || !contentId) {
             setIsLiked(false);
             return;
         }
@@ -152,10 +154,10 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         return () => {
             isCancelled = true; 
         };
-    }, [user?.id, restaurantId, menuItemId, checkLikeStatus]);
+    }, [user?.id, contentType, contentId, checkLikeStatus]);
 
     const toggleLike = useCallback(async () => {
-        if (!user?.id || !restaurantId || !menuItemId || !cacheKey) {
+        if (!user?.id || !contentId || !cacheKey) {
             return;
         }
 
@@ -180,8 +182,8 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         });
 
         try {
+            const contentIdStr = String(contentId);
             const restaurantIdStr = String(restaurantId);
-            const menuItemIdStr = String(menuItemId);
 
             if (prevLiked) {
                 const { error } = await supabase
@@ -189,7 +191,8 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                   .delete()
                   .eq('user_id', user.id)
                   .eq('restaurant_id', restaurantIdStr)
-                  .eq('menu_item_id', menuItemIdStr);
+                  .eq('content_type', contentType)
+                  .eq('content_id', contentIdStr);
 
                   if (error) throw error; 
             } else {
@@ -208,7 +211,8 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                         id: likeId, 
                         user_id: user.id, 
                         restaurant_id: restaurantIdStr, 
-                        menu_item_id: menuItemIdStr, 
+                        content_type: contentType,
+                        content_id: contentIdStr,
                     });
 
                 if (error) throw error; 
@@ -239,7 +243,7 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
                 }
             }
         }
-    }, [user?.id, restaurantId, menuItemId, loading, isLiked, cacheKey]);
+    }, [user?.id, restaurantId, contentId, loading, isLiked, cacheKey]);
 
     const forceRefresh = useCallback(async () => {
         if (!cacheKey) return;
@@ -261,6 +265,6 @@ export const useLikes = ({ restaurantId, menuItemId }: UseLikesProps) => {
         loading, 
         toggleLike, 
         forceRefresh,
-        canLike: !!user?.id && !!restaurantId && !!menuItemId
+        canLike: !!user?.id && !!restaurantId && !!contentId
     };
 };
