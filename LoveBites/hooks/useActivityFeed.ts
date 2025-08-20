@@ -119,6 +119,7 @@ export const useActivityFeed = () => {
             .from('ugc_videos')
             .select('title, thumb_url')
             .eq('id', item.content_id)
+            .eq('status', 'approved')
             .single();
           contentData = ugcVideo;
         }

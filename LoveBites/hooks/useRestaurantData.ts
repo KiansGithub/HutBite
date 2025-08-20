@@ -45,6 +45,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                 const { data: ugcVideos } = await supabase 
                   .from('ugc_videos')
                   .select('*')
+                  .eq('status', 'approved')
                 
                 const grouped: Record<string, MenuItem[]> = {};
                 ms?.forEach(mi => {
