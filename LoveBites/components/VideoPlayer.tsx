@@ -210,7 +210,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   useEffect(() => {
     return () => {
       try {
+        loadingTimerRef.current && clearTimeout(loadingTimerRef.current);
         playerRef.current?.pause();
+        playerRef.current = null;
       } catch {
         /* native player already disposed → ignore */
       }
@@ -223,7 +225,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const handleTap = async () => {
     const p = playerRef.current;
     if (!p) return;
-
+ 
     /* retry path */
     if (hasError) {
       if (retryCount >= MAX_RETRY_ATTEMPTS) {
@@ -241,8 +243,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       return;
     }
 
-    /* normal play / pause toggle */
-    try {
+     /* normal play / pause toggle */
+     try {
+      if (!playerRef.current) return; // Add safety check
       if (isPlaying) {
         p.pause();
         setIsPlaying(false);
