@@ -7,6 +7,7 @@ import {
   View,
   Image,
   TouchableOpacity,
+  Platform,
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
@@ -24,7 +25,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SignInNudge from '@/components/SignInNudge';
 
 const { height: H } = Dimensions.get('screen');
-const TAB_BAR_HEIGHT = 45; 
+const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80; 
 
 export default function FeedScreen() {
   const [modalData, setModalData] = useState<{

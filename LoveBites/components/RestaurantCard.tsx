@@ -3,6 +3,7 @@ import {
   StyleSheet,
   View,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { Database } from '@/lib/supabase.d';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -10,7 +11,7 @@ import { LikeButton } from './LikeButton';
 import { ShareButton } from './ShareButton';
 import { FloatingActionRail } from '@/components/FloatingActionRail';
 import { VideoCarousel } from './VideoCarousel';
-import { MenuItemInfo } from'./MenuItemInfo';
+import { MenuItemInfo } from './MenuItemInfo';
 import { OrderButton } from './OrderButton';
 import { FeedContentItem } from '@/types/feedContent';
 import { useLikes } from '@/hooks/useLikes';
@@ -132,9 +133,12 @@ const styles = StyleSheet.create({
     top: undefined,
     paddingTop: 120,
     paddingBottom: 100,
-    paddingLeft: 8, // Shift content left
-    paddingRight: 36,
+    paddingHorizontal: 24,
     justifyContent: 'flex-end',
+    ...(Platform.OS === 'android' && {
+      paddingLeft: 8, // Shift content left
+      paddingRight: 36,
+    }),
   },
 
   /* translucent card holding info + CTA */

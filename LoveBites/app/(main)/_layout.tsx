@@ -16,7 +16,7 @@ export default function MainLayout() {
                     borderTopWidth: 0,
                     elevation: 0,
                     shadowOpacity: 0,
-                    height: 80 + extraBottom, 
+                    height: 90, 
                     paddingBottom: 20 + extraBottom,
                     paddingTop: 10,
                 },
