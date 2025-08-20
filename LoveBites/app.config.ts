@@ -66,19 +66,19 @@ const config: ExpoConfig = {
     ],
     "expo-web-browser",
     "expo-apple-authentication",
-    // [
-    //   "expo-build-properties",
-    //   {
-    //     ios: {
-    //       useFrameworks: "static",
-    //       useModularHeaders: true,
-    //       config: {
-    //         RNFirebaseAnalyticsWithoutAdIdSupport: "true"
-    //       }
-    //     }
-    //   }
-    // ],
-    // "@react-native-firebase/app"
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          useFrameworks: "static",
+          useModularHeaders: true,
+          config: {
+            RNFirebaseAnalyticsWithoutAdIdSupport: "true"
+          }
+        }
+      }
+    ],
+    "@react-native-firebase/app"
   ],
   experiments: {
     typedRoutes: true
