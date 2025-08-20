@@ -88,7 +88,9 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
         </View>
       </LinearGradient>
       <FloatingActionRail>
-      <LikeButton restaurantId={restaurant.id} menuItemId={currentFeedItem.id} />
+      <LikeButton contentType={currentFeedItem.type}
+          contentId={currentFeedItem.id}
+          restaurantId={restaurant.id} />
   <ShareButton
     restaurantName={restaurant.name}
     menuItemTitle={currentFeedItem.title}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
- 
+
 interface ActivityItem {
   id: string;
   user_id: string;
@@ -11,61 +11,62 @@ interface ActivityItem {
     avatar_url: string | null;
   };
   restaurant_id: string;
-  menu_item_id: string;
+  content_type: 'menu_item' | 'ugc_video';
+  content_id: string;
   restaurant: {
     name: string;
   };
-  menu_item: {
+  content: {
     title: string;
     thumb_url: string | null;
   };
   created_at: string;
 }
- 
+
 export const useActivityFeed = () => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const { user } = useAuthStore();
- 
+
   const fetchActivities = useCallback(async (offset = 0, isRefresh = false) => {
     if (!user?.id) return;
- 
+
     if (isRefresh) {
       setRefreshing(true);
     } else {
       setLoading(true);
     }
- 
+
     try {
       // First, get the list of users we follow
       const { data: followedUsers, error: followError } = await supabase
         .from('follows')
         .select('followee_id')
         .eq('follower_id', user.id);
- 
+
       if (followError) throw followError;
- 
+
       // If we don't follow anyone, return empty results
       if (!followedUsers || followedUsers.length === 0) {
         setActivities([]);
         setHasMore(false);
         return;
       }
- 
+
       const followedUserIds = followedUsers.map(f => f.followee_id);
- 
+
       // Get the list of blocked users
       const { data: blockedUsers, error: blockError } = await supabase
         .from('blocks')
         .select('blocked_id')
         .eq('blocker_id', user.id);
- 
+
       if (blockError) throw blockError;
- 
+
       const blockedUserIds = blockedUsers?.map(b => b.blocked_id) || [];
- 
+
       // Now get the activity feed
       let query = supabase
         .from('user_likes')
@@ -73,7 +74,8 @@ export const useActivityFeed = () => {
           id,
           user_id,
           restaurant_id,
-          menu_item_id,
+          content_type,
+          content_id,
           created_at,
           user_profiles!inner(
             display_name,
@@ -83,43 +85,68 @@ export const useActivityFeed = () => {
           ),
           restaurants!inner(
             name
-          ),
-          menu_items!inner(
-            title,
-            thumb_url
           )
         `)
         .in('user_id', followedUserIds)
         .not('user_profiles.is_private', 'eq', true)
         .order('created_at', { ascending: false })
         .range(offset, offset + 19);
- 
+
       // Filter out blocked users if any
       if (blockedUserIds.length > 0) {
         query = query.not('user_id', 'in', `(${blockedUserIds.join(',')})`);
       }
- 
+
       const { data, error } = await query;
- 
+
       if (error) throw error;
- 
-      const formattedData: ActivityItem[] = data.map((item: any) => ({
-        id: item.id,
-        user_id: item.user_id,
-        user_profile: item.user_profiles,
-        restaurant_id: item.restaurant_id,
-        menu_item_id: item.menu_item_id,
-        restaurant: item.restaurants,
-        menu_item: item.menu_items,
-        created_at: item.created_at,
-      }));
- 
+
+      // Fetch content details separately based on content_type
+      const formattedData: ActivityItem[] = [];
+
+      for (const item of data) {
+        let contentData = null;
+
+        if (item.content_type === 'menu_item') {
+          const { data: menuItem } = await supabase
+            .from('menu_items')
+            .select('title, thumb_url')
+            .eq('id', item.content_id)
+            .single();
+          contentData = menuItem;
+        } else if (item.content_type === 'ugc_video') {
+          const { data: ugcVideo } = await supabase
+            .from('ugc_videos')
+            .select('title, thumb_url')
+            .eq('id', item.content_id)
+            .single();
+          contentData = ugcVideo;
+        }
+
+        if (contentData) {
+          formattedData.push({
+            id: item.id,
+            user_id: item.user_id,
+            user_profile: Array.isArray(item.user_profiles) ? item.user_profiles[0] : item.user_profiles,
+            restaurant_id: item.restaurant_id,
+            content_type: item.content_type,
+            content_id: item.content_id,
+            restaurant: Array.isArray(item.restaurants) ? item.restaurants[0] : item.restaurants,
+            content: {
+              title: contentData.title,
+              thumb_url: contentData.thumb_url,
+            },
+            created_at: item.created_at,
+          });
+        }
+      }
+
       if (isRefresh || offset === 0) {
         setActivities(formattedData);
       } else {
         setActivities(prev => [...prev, ...formattedData]);
       }
- 
+
       setHasMore(formattedData.length === 20);
     } catch (err) {
       console.error('Error fetching activity feed:', err);
@@ -128,22 +155,22 @@ export const useActivityFeed = () => {
       setRefreshing(false);
     }
   }, [user?.id]);
- 
+
   const refresh = useCallback(() => {
     fetchActivities(0, true);
   }, [fetchActivities]);
- 
+
   const loadMore = useCallback(() => {
     if (!loading && hasMore) {
       fetchActivities(activities.length);
     }
   }, [loading, hasMore, activities.length, fetchActivities]);
- 
+
   useEffect(() => {
     fetchActivities();
   // Subscribe to follow changes to refresh activity feed
   if (!user?.id) return;
- 
+
   const followChannel = supabase
     .channel(`activity-follows:${user.id}`)
     .on(
@@ -173,7 +200,7 @@ export const useActivityFeed = () => {
     followChannel.unsubscribe();
   };
 }, [fetchActivities, user?.id]);
- 
+
   return {
     activities,
     loading,

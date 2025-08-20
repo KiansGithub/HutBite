@@ -99,7 +99,8 @@ export default function ActivityScreen() {
                         pathname: '/restaurant/[id]',
                         params: {
                             id: item.restaurant_id, 
-                            menuItem: item.menu_item_id
+                            menuItem: item.content.type === 'menu_item' ? item.content.id : undefined,
+                            ugcVideo: item.content.type === 'ugc_video' ? item.content.id : undefined,
                         }
                     });
                 }}
@@ -119,14 +120,14 @@ export default function ActivityScreen() {
                                     {item.user_profile.display_name || item.user_profile.handle || 'Someone'} 
                                 </Text>
                                 {' liked '}
-                                <Text style={styles.itemName}>{item.menu_item.title}</Text>
+                                <Text style={styles.itemName}>{item.content.title}</Text>
                                 {' at '}
                                 <Text style={styles.restaurantName}>{item.restaurant.name}</Text>
                             </Text>
                             <Text style={styles.timeAgo}>{formatTimeAgo(item.created_at)}</Text>
                         </View>
-                        {item.menu_item.thumb_url && (
-                            <Image source={{ uri: item.menu_item.thumb_url }} style={styles.thumbnail} />
+                        {item.content.thumb_url && (
+                            <Image source={{ uri: item.content.thumb_url }} style={styles.thumbnail} />
                         )}
                     </View>
                 </GlassPanel>

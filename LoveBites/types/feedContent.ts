@@ -14,7 +14,6 @@ export type FeedContentItem = {
     price?: number; 
     created_at: string; 
     user_id?: string; 
-    menu_item_id?: string; 
     suggested_restaurant_name?: string | null; 
 };
 

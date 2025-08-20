@@ -71,7 +71,6 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                         thumb_url: menuItem.thumb_url, 
                         price: menuItem.price, 
                         created_at: menuItem.created_at, 
-                        menu_item_id: menuItem.id, 
                     };
 
                     if (!combinedFeedContent[menuItem.restaurant_id]) {
