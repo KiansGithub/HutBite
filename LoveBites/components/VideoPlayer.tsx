@@ -77,19 +77,29 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
     heartScale.value = withSpring(1, { damping: 8, stiffness: 120 });
     heartScale.value = withDelay(400, withTiming(0, { duration: 200 }));
   };
-  
-  // single tap = your existing play/pause
-  const singleTap = Gesture.Tap()
-    .maxDuration(250)
-    .onEnd(() => runOnJS(handleTap)());
 
   // double tap = like/unlike
   const doubleTap = Gesture.Tap()
     .numberOfTaps(2)
     .maxDelay(250)
     .onEnd(() => {
+      if (hasError) {
+        // use double-tap to trigger retry if in error state
+        if (retryCount >= MAX_RETRY_ATTEMPTS) {
+          onVideoFailed?.(itemId);
+          return;
+        }
+        (async () => {
+          try { await clearVideoCacheAsync(); } catch {}
+          setRetryCount(prev => prev + 1);
+          setVideoKey(prev => prev + 1);
+          setHasError(false);
+          setIsLoading(true);
+        })();
+        return;
+      }
       runOnJS(showHeart)();
-      runOnJS(onDoubleTapLike)(); // prop
+      runOnJS(onDoubleTapLike)();
     });
 
   /*──────────────────────────────
@@ -220,46 +230,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }, []);
 
   /*──────────────────────────────
-    Tap behaviour (play/pause or retry)
-  ──────────────────────────────*/
-  const handleTap = async () => {
-    const p = playerRef.current;
-    if (!p) return;
- 
-    /* retry path */
-    if (hasError) {
-      if (retryCount >= MAX_RETRY_ATTEMPTS) {
-        onVideoFailed?.(itemId);
-        return;
-      }
-      console.log('[Video Retry]', { itemId, attempt: retryCount + 1 });
-      try {
-        await clearVideoCacheAsync();
-      } catch (e) {
-        console.warn('failed to clear cache', e);
-      }
-      setRetryCount(prev => prev + 1);
-      setVideoKey(prev => prev + 1);
-      return;
-    }
-
-     /* normal play / pause toggle */
-     try {
-      if (!playerRef.current) return; // Add safety check
-      if (isPlaying) {
-        p.pause();
-        setIsPlaying(false);
-      } else if (status === 'readyToPlay') {
-        p.play();
-        setIsPlaying(true);
-      }
-    } catch (err) {
-      console.log('[Video toggle play error]', err);
-      setHasError(true);
-    }
-  };
-
-  /*──────────────────────────────
     Render
   ──────────────────────────────*/
   if (hasError && retryCount >= MAX_RETRY_ATTEMPTS) {
@@ -268,7 +238,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   if (hasError) {
     return (
-      <GestureDetector gesture={Gesture.Exclusive(doubleTap, singleTap)}>
+      <GestureDetector gesture={Gesture.Exclusive(doubleTap)}>
         <View style={[styles.errorContainer, { width, height }]}>
           <Text style={styles.errorText}>Video unavailable</Text>
           <Text style={styles.retryText}>
@@ -280,7 +250,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   }
 
   return (
-    <GestureDetector gesture={Gesture.Exclusive(doubleTap, singleTap)}>
+    <GestureDetector gesture={Gesture.Exclusive(doubleTap)}>
       <View style={{ width, height }}>
         <VideoView
           key={videoKey}

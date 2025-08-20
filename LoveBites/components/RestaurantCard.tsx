@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -16,6 +16,7 @@ import { OrderButton } from './OrderButton';
 import { FeedContentItem } from '@/types/feedContent';
 import { useLikes } from '@/hooks/useLikes';
 import { GoogleRating } from './GoogleRating';
+import { RowMode } from '@/types/video';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -25,7 +26,7 @@ const { height: H, width: W } = Dimensions.get('screen');
 interface RestaurantCardProps {
   restaurant: Restaurant;
   feedItems: FeedContentItem[];
-  rowMode: string;
+  rowMode: RowMode;
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
   onOrderPress: (orderLinks: Record<string, string> | null, restaurantId: string, menuItemId: string) => void;
@@ -50,8 +51,32 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   bottomOffset = 0
 }) => {
   const [hIndex, setHIndex] = useState(0);
-  const currentFeedItem = feedItems[hIndex];
+  const [failedIds, setFailedIds] = useState<Set<string>>(new Set());
 
+  // 🔒 Single source of truth for what the carousel renders
+  const filteredFeedItems = useMemo(
+    () => feedItems.filter(i => !failedIds.has(i.id)),
+    [feedItems, failedIds]
+  );
+
+  // Clamp hIndex if list shrinks
+  useEffect(() => {
+    if (filteredFeedItems.length === 0) return;
+    if (hIndex >= filteredFeedItems.length) {
+      setHIndex(filteredFeedItems.length - 1);
+    }
+  }, [filteredFeedItems.length, hIndex]);
+
+  const handleVideoFailed = useCallback((itemId: string) => {
+    setFailedIds(prev => new Set(prev).add(itemId));
+  }, []);
+
+  const handleIndexChange = useCallback((index: number) => {
+    setHIndex(index);
+    onHorizontalScroll(index);
+  }, [onHorizontalScroll]);
+
+  const currentFeedItem = feedItems[hIndex];
   if (!currentFeedItem) {
     return <View style={styles.container} />;
   }  
@@ -62,17 +87,11 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
     contentId: currentFeedItem.id,
   });
 
-  const handleIndexChange = (index: number) => {
-    setHIndex(index);
-    onHorizontalScroll(index);
-  };
-
   return (
     <View style={styles.container}>
       <VideoCarousel 
         feedItems={feedItems}
         rowMode={rowMode}
-        onHorizontalScroll={onHorizontalScroll}
         currentIndex={hIndex}
         onIndexChange={handleIndexChange}
         resetTrigger={resetTrigger}
@@ -80,6 +99,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
           if (!canLike) return;
           toggleLike();
         }}
+        onVideoFailed={handleVideoFailed}
       />
       
 
@@ -133,12 +153,9 @@ const styles = StyleSheet.create({
     top: undefined,
     paddingTop: 120,
     paddingBottom: 100,
-    paddingHorizontal: 24,
+    paddingLeft: 8, // Shift content left
+    paddingRight: 24, // Keep some padding from the right edge
     justifyContent: 'flex-end',
-    ...(Platform.OS === 'android' && {
-      paddingLeft: 8, // Shift content left
-      paddingRight: 36,
-    }),
   },
 
   /* translucent card holding info + CTA */

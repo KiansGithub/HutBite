@@ -1,128 +1,119 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { 
-    StyleSheet, 
-    FlatList, 
-    View, 
-    Dimensions, 
-} from 'react-native';
+// VideoCarousel.tsx
+import React, { useRef, useEffect, useCallback } from 'react';
+import { StyleSheet, FlatList, View, Dimensions, NativeScrollEvent, NativeSyntheticEvent } from 'react-native';
 import { VideoPlayer } from './VideoPlayer';
 import { FeedContentItem } from '@/types/feedContent';
 
 const { width: W, height: H } = Dimensions.get('screen');
-const ITEM_WIDTH = W; 
+const ITEM_WIDTH = W;
 
 interface VideoCarouselProps {
-    feedItems: FeedContentItem[];
-    rowMode: string; 
-    onHorizontalScroll: (index: number) => void; 
-    currentIndex: number; 
-    onIndexChange: (index: number) => void; 
-    resetTrigger: number;
-    onDoubleTapLike: () => void;
+  feedItems: FeedContentItem[];                 // already filtered by parent
+  rowMode: 'play' | 'warm' | 'off';
+  currentIndex: number;                         // parent-owned index
+  onIndexChange: (index: number) => void;
+  resetTrigger: number;
+  onDoubleTapLike: () => void;
+  onVideoFailed?: (itemId: string) => void;     // bubble up failures
 }
 
 const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
-    feedItems, 
-    rowMode, 
-    onHorizontalScroll,
-    currentIndex, 
-    onIndexChange, 
-    resetTrigger,
-    onDoubleTapLike,
+  feedItems,
+  rowMode,
+  currentIndex,
+  onIndexChange,
+  resetTrigger,
+  onDoubleTapLike,
+  onVideoFailed,
 }) => {
-    const flatListRef = useRef<FlatList>(null);
-    const [failedVideoIds, setFailedVideoIds] = useState<Set<string>>(new Set());
+  const flatListRef = useRef<FlatList<FeedContentItem>>(null);
 
-    // Filter out failed videos
-    const filteredFeedItems = useMemo(() => {
-        return feedItems.filter(item => !failedVideoIds.has(item.id));
-    }, [feedItems, failedVideoIds]);
+  // Reset to first item on restaurant change
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+      onIndexChange(0);
+    }
+  }, [resetTrigger, onIndexChange]);
 
-    const handleVideoFailed = (itemId: string) => {
-        setFailedVideoIds(prev => new Set(prev).add(itemId));
-    };
+  // If parent index is out of bounds (e.g., list shrank), snap to last valid
+  useEffect(() => {
+    if (feedItems.length === 0) return;
+    if (currentIndex >= feedItems.length) {
+      onIndexChange(feedItems.length - 1);
+      flatListRef.current?.scrollToOffset({ offset: ITEM_WIDTH * (feedItems.length - 1), animated: false });
+    }
+  }, [feedItems.length, currentIndex, onIndexChange]);
 
-    useEffect(() => {
-        if (resetTrigger > 0) {
-            flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
-            onIndexChange(0);
-            // Reset failed videos when carousel resets (new restaurant)
-            setFailedVideoIds(new Set());
-        }
-    }, [resetTrigger, onIndexChange]);
+  const clampIndex = useCallback((raw: number) => {
+    if (feedItems.length === 0) return 0;
+    const last = feedItems.length - 1;
+    if (raw < 0) return 0;
+    if (raw > last) return last;
+    return raw;
+  }, [feedItems.length]);
 
-    const renderItem = ({ item: feedItem, index: itemIndex }: { item: FeedContentItem; index: number }) => {
-        if (!feedItem.video_url) {
-            return <View style={styles.videoContainer}/>;
-        }
+  const handleMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const raw = e.nativeEvent.contentOffset.x / ITEM_WIDTH;
+    const idx = clampIndex(Math.round(raw));
+    if (idx !== currentIndex) onIndexChange(idx);
+  };
 
-        let mode: 'play' | 'warm' | 'off' = 'off';
+  const renderItem = ({ item, index }: { item: FeedContentItem; index: number }) => {
+    if (!item.video_url) return <View style={styles.videoContainer} />;
 
-        if (rowMode === 'play') {
-            const isCurrent = itemIndex === currentIndex;
-            const isPreloaded = Math.abs(itemIndex - currentIndex) === 1;
-            if (isCurrent) {
-                mode = 'play';
-            } else if (isPreloaded) {
-                mode = 'warm';
-            }
-        } else if (rowMode === 'warm') {
-            if (itemIndex === 0) {
-                mode = 'warm';
-            }
-        }
+    // Decide per-cell mode based on rowMode + index proximity
+    let cellMode: 'play' | 'warm' | 'off' = 'off';
+    if (rowMode === 'play') {
+      if (index === currentIndex) cellMode = 'play';
+      else if (Math.abs(index - currentIndex) === 1) cellMode = 'warm';
+    } else if (rowMode === 'warm' && index === 0) {
+      cellMode = 'warm';
+    }
 
-        if (mode === 'off') {
-            return <View style={styles.videoContainer} />;
-        }
-
-        return (
-            <View style={styles.videoContainer}>
-                {mode === 'play' || mode === 'warm' ? (
-                    <VideoPlayer 
-                    uri={feedItem.video_url}
-                    thumbUri={feedItem.thumb_url ?? feedItem.video_url.replace('.mp4', '.jpg')}
-                    itemId={feedItem.id}
-                      mode={mode}
-                      width={W}
-                      height={H}
-                      onDoubleTapLike={onDoubleTapLike}
-                      onVideoFailed={handleVideoFailed}
-                />
-                ) : null}
-            </View>
-        );
-    };
+    if (cellMode === 'off') return <View style={styles.videoContainer} />;
 
     return (
-        <FlatList 
-          ref={flatListRef}
-          data={filteredFeedItems}
-          horizontal
-          pagingEnabled 
-          bounces={false}
-          keyExtractor={(feedItem) => feedItem.id.toString()}
-          onMomentumScrollEnd={(e) => {
-            const idx = Math.round(e.nativeEvent.contentOffset.x / W);
-            onIndexChange(idx);
-          }}
-          renderItem={renderItem}
-          getItemLayout={(_data, index) => ({
-            length: ITEM_WIDTH, 
-            offset: ITEM_WIDTH * index, 
-            index, 
-          })}
-          style={styles.flatList}
-          maxToRenderPerBatch={3}
-          windowSize={3}
-          initialNumToRender={1}
+      <View style={styles.videoContainer}>
+        <VideoPlayer
+          uri={item.video_url}
+          thumbUri={item.thumb_url ?? item.video_url.replace('.mp4', '.jpg')}
+          itemId={item.id}
+          mode={cellMode}
+          width={W}
+          height={H}
+          onDoubleTapLike={onDoubleTapLike}
+          onVideoFailed={onVideoFailed}
         />
+      </View>
     );
+  };
+
+  return (
+    <FlatList
+      ref={flatListRef}
+      data={feedItems}
+      horizontal
+      pagingEnabled
+      bounces={false}
+      keyExtractor={(it) => it.id.toString()}
+      renderItem={renderItem}
+      getItemLayout={(_d, index) => ({ length: ITEM_WIDTH, offset: ITEM_WIDTH * index, index })}
+      onMomentumScrollEnd={handleMomentumEnd}
+      style={styles.flatList}
+      // Slightly relaxed virtualization; avoid removeClippedSubViews here
+      maxToRenderPerBatch={3}
+      windowSize={3}
+      initialNumToRender={1}
+      scrollEventThrottle={16}
+      showsHorizontalScrollIndicator={false}
+    />
+  );
 };
 
 const styles = StyleSheet.create({
-    videoContainer: { width: W, height: H },
-    flatList: { width: W, height: H },
+  videoContainer: { width: W, height: H },
+  flatList: { width: W, height: H },
 });
 
 export const VideoCarousel = React.memo(VideoCarouselComponent);
