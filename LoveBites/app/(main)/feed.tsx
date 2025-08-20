@@ -24,7 +24,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SignInNudge from '@/components/SignInNudge';
 
 const { height: H } = Dimensions.get('screen');
-const TAB_BAR_HEIGHT = 80; 
+const TAB_BAR_HEIGHT = 45; 
 
 export default function FeedScreen() {
   const [modalData, setModalData] = useState<{

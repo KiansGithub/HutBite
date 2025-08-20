@@ -14,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { BlurView } from 'expo-blur';
 import { useLikes } from '@/hooks/useLikes';
 import { FAB_SIZE, FAB_RADIUS, FAB_BG, FAB_BLUR } from '@/ui/tokens';
 
@@ -36,7 +35,7 @@ interface LikeButtonProps {
   size?: number;
 }
 
-const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export const LikeButton: React.FC<LikeButtonProps> = ({
   restaurantId,
@@ -89,31 +88,37 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   };
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={handlePress}
       disabled={loading}
       hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel={isLiked ? 'Unlike' : 'Like'}
       accessibilityState={{ selected: isLiked, busy: loading, disabled: loading }}
-      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, style]}
+      style={[
+        styles.fab,
+        animStyle,
+        { 
+          opacity: loading ? 0.7 : 1,
+          shadowColor: isLiked ? '#fff' : '#fff',
+          shadowRadius: 15,
+          shadowOpacity: 0.9,
+          shadowOffset: { width: 0, height: 0 },
+          elevation: 10,
+        },
+        style,
+      ]}
     >
-      <AnimatedBlur
-        intensity={FAB_BLUR}
-        tint="dark"
-        style={[styles.fab, animStyle, isLiked && styles.fabLiked]}
-      >
-        {loading ? (
-          <ActivityIndicator size="small" color="#ff3040" />
-        ) : (
-          <Ionicons
-            name={isLiked ? 'heart' : 'heart-outline'}
-            size={size}
-            color={isLiked ? '#ff3040' : '#ffffff'}
-          />
-        )}
-      </AnimatedBlur>
-    </Pressable>
+      {loading ? (
+        <ActivityIndicator size="small" color="#ff3040" />
+      ) : (
+        <Ionicons
+          name={isLiked ? 'heart' : 'heart-outline'}
+          size={size}
+          color={isLiked ? '#ff3040' : '#ffffff'}
+        />
+      )}
+    </AnimatedPressable>
   );
 };
 
@@ -125,15 +130,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: FAB_BG,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 5,
-  },
-  fabLiked: {
-    shadowColor: '#ff4757',
   },
 });
 

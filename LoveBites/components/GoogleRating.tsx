@@ -1,7 +1,7 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, Image } from 'react-native';
 import { Text } from './Themed';
-import { formatReviewCount, formatGoogleRating } from '@/utils/googlePlaces';
+import { formatGoogleRating } from '@/utils/googlePlaces';
 
 interface GoogleRatingProps {
     rating: number | null; 
@@ -9,46 +9,54 @@ interface GoogleRatingProps {
 }
 
 export const GoogleRating: React.FC<GoogleRatingProps> = ({ rating, reviewCount }) => {
-    if (!rating && !reviewCount) return null; 
+    if (!rating) return null; 
 
     return (
         <View style={styles.container}>
-            {rating && (
-                <View style={styles.ratingContainer}>
-                    <Text style={styles.ratingText}>
-                    ⭐ {formatGoogleRating(rating)}
-                    </Text>
-                </View>
-            )}
-            {reviewCount && (
-                <Text style={styles.reviewText}>
-                    Based on {formatReviewCount(reviewCount)}
+            <View style={styles.ratingContainer}>
+                <Image 
+                    source={require('@/assets/images/google_logo.png')} 
+                    style={styles.googleLogo}
+                    resizeMode="contain"
+                />
+                <Text style={styles.ratingText}>
+                    {formatGoogleRating(rating)}
                 </Text>
-            )}
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        marginTop: 4
+        marginBottom: 4,
+        alignSelf: 'flex-start',
     },
     ratingContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 2,
+        backgroundColor: '#ffffff',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        marginBottom: 4,
+    },
+    googleLogo: {
+        width: 20,
+        height: 20,
+        marginRight: 4,
     },
     ratingText: {
         fontSize: 14, 
         fontWeight: '600',
-        color: '#FFD700',
-    },
-    reviewCount: {
-        fontSize: 12, 
-        opacity: 0.8
-    },
-    reviewText: {
-        fontSize: 12, 
-        opacity: 0.8, 
+        color: '#1a1a1a',
     },
 })

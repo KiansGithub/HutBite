@@ -80,12 +80,12 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
           toggleLike();
         }}
       />
+      
 
       {/* ──────────────── Bottom overlay ──────────────── */}
-      <LinearGradient
+      <View
         pointerEvents="box-none"
-        colors={['transparent', 'rgba(0,0,0,0.7)']}
-        style={[styles.bottomGradient, { paddingBottom: bottomOffset }]}
+        style={[styles.bottomOverlay, { paddingBottom: bottomOffset }]}
       >
         <View style={styles.menuItemInfo}>
         <GoogleRating 
@@ -102,7 +102,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
             onOrderPress={(orderLinks) => onOrderPress(orderLinks, restaurant.id, currentFeedItem.id)}
           />
         </View>
-      </LinearGradient>
+      </View>
       <FloatingActionRail>
       <LikeButton contentType={currentFeedItem.type}
           contentId={currentFeedItem.id}
@@ -126,21 +126,22 @@ const styles = StyleSheet.create({
   /* layout roots */
   container: { width: W, height: H },
 
-  /* bottom gradient */
-  bottomGradient: {
+  /* bottom overlay */
+  bottomOverlay: {
     ...StyleSheet.absoluteFillObject,
     top: undefined,
     paddingTop: 120,
     paddingBottom: 100,
-    paddingHorizontal: 24,
+    paddingLeft: 8, // Shift content left
+    paddingRight: 36,
     justifyContent: 'flex-end',
   },
 
   /* translucent card holding info + CTA */
   menuItemInfo: {
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    // backgroundColor: 'rgba(0,0,0,0.45)',
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 8,
     paddingHorizontal: 20,
   },
 });
