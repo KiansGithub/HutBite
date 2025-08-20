@@ -1,6 +1,12 @@
 // LikeButton.tsx
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Pressable,
+  ViewStyle,
+  Platform,
+} from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -12,10 +18,22 @@ import { BlurView } from 'expo-blur';
 import { useLikes } from '@/hooks/useLikes';
 import { FAB_SIZE, FAB_RADIUS, FAB_BG, FAB_BLUR } from '@/ui/tokens';
 
+type ContentType = 'menu_item' | 'ugc_video';
+
 interface LikeButtonProps {
-  contentType: 'menu_item' | 'ugc_video';
+  contentType: ContentType;
   contentId: string;
   restaurantId: string;
+
+  /** Optional: use lifted state to avoid double hooks (e.g., when double-tap is handled in VideoPlayer) */
+  isLikedExternal?: boolean;
+  loadingExternal?: boolean;
+  onPressExternal?: () => void;
+
+  /** Optional: style override for container */
+  style?: ViewStyle;
+  /** Optional: override icon size */
+  size?: number;
 }
 
 const AnimatedBlur = Animated.createAnimatedComponent(BlurView);
@@ -24,16 +42,22 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   restaurantId,
   contentType,
   contentId,
+  isLikedExternal,
+  loadingExternal,
+  onPressExternal,
+  style,
+  size = 30,
 }) => {
-  const { isLiked, loading, toggleLike, canLike } = useLikes({
-    restaurantId,
-    contentType,
-    contentId,
-  });
+  // Fallback to local hook when external props not provided
+  const hook = useLikes({ restaurantId, contentType, contentId });
 
+  const isLiked = isLikedExternal ?? hook.isLiked;
+  const loading = loadingExternal ?? hook.loading;
+  const canLike = hook.canLike; // external mode still benefits from this guard
+  const toggleLike = onPressExternal ?? hook.toggleLike;
+
+  // Bounce animation when switching into liked state
   const scale = useSharedValue(1);
-
-  // Kick the bounce whenever isLiked flips true
   useEffect(() => {
     if (isLiked) {
       scale.value = withSpring(1.25, { mass: 0.4, damping: 7 }, () => {
@@ -49,9 +73,15 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   if (!canLike) return null;
 
   const handlePress = async () => {
+    if (loading) return; // debounce rapid taps while request in-flight
+
     try {
-      // Fire haptic before awaiting anything 
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      // Give a bit stronger haptic on like, softer on unlike
+      if (Platform.OS !== 'web') {
+        await Haptics.impactAsync(
+          isLiked ? Haptics.ImpactFeedbackStyle.Light : Haptics.ImpactFeedbackStyle.Medium
+        );
+      }
       await toggleLike();
     } catch (error) {
       console.error('Error in like button press:', error);
@@ -59,26 +89,31 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   };
 
   return (
-    <AnimatedBlur
-    intensity={FAB_BLUR}
-    tint="dark"
-    style={[styles.fab, animStyle, isLiked && styles.fabLiked]}
-      onTouchEnd={handlePress}
-      accessible
+    <Pressable
+      onPress={handlePress}
+      disabled={loading}
+      hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel={isLiked ? 'Unlike' : 'Like'}
-      accessibilityState={{ selected: isLiked, busy: loading }}
+      accessibilityState={{ selected: isLiked, busy: loading, disabled: loading }}
+      style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }, style]}
     >
-      {loading ? (
-        <ActivityIndicator size="small" color="#ff3040" />
-      ) : (
-        <Ionicons
-          name={isLiked ? 'heart' : 'heart-outline'}
-          size={30}
-          color={isLiked ? '#ff3040' : '#ffffff'}
-        />
-      )}
-    </AnimatedBlur>
+      <AnimatedBlur
+        intensity={FAB_BLUR}
+        tint="dark"
+        style={[styles.fab, animStyle, isLiked && styles.fabLiked]}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#ff3040" />
+        ) : (
+          <Ionicons
+            name={isLiked ? 'heart' : 'heart-outline'}
+            size={size}
+            color={isLiked ? '#ff3040' : '#ffffff'}
+          />
+        )}
+      </AnimatedBlur>
+    </Pressable>
   );
 };
 
@@ -101,3 +136,5 @@ const styles = StyleSheet.create({
     shadowColor: '#ff4757',
   },
 });
+
+export default React.memo(LikeButton);

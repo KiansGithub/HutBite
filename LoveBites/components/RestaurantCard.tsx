@@ -13,6 +13,7 @@ import { VideoCarousel } from './VideoCarousel';
 import { MenuItemInfo } from'./MenuItemInfo';
 import { OrderButton } from './OrderButton';
 import { FeedContentItem } from '@/types/feedContent';
+import { useLikes } from '@/hooks/useLikes';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -49,14 +50,20 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
   const [hIndex, setHIndex] = useState(0);
   const currentFeedItem = feedItems[hIndex];
 
+  if (!currentFeedItem) {
+    return <View style={styles.container} />;
+  }  
+
+  const { isLiked, loading: likeLoading, toggleLike, canLike } = useLikes({
+    restaurantId: restaurant.id,
+    contentType: currentFeedItem.type,
+    contentId: currentFeedItem.id,
+  });
+
   const handleIndexChange = (index: number) => {
     setHIndex(index);
     onHorizontalScroll(index);
   };
-
-  if (!currentFeedItem) {
-    return <View style={styles.container} />;
-  }  
 
   return (
     <View style={styles.container}>
@@ -67,6 +74,10 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
         currentIndex={hIndex}
         onIndexChange={handleIndexChange}
         resetTrigger={resetTrigger}
+        onDoubleTapLike={() => {
+          if (!canLike) return;
+          toggleLike();
+        }}
       />
 
       {/* ──────────────── Bottom overlay ──────────────── */}
@@ -90,7 +101,11 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
       <FloatingActionRail>
       <LikeButton contentType={currentFeedItem.type}
           contentId={currentFeedItem.id}
-          restaurantId={restaurant.id} />
+          restaurantId={restaurant.id} 
+          isLikedExternal={isLiked}
+          loadingExternal={likeLoading}
+          onPressExternal={toggleLike}
+          />
   <ShareButton
     restaurantName={restaurant.name}
     menuItemTitle={currentFeedItem.title}

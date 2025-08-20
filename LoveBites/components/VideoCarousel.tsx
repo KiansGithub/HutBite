@@ -18,6 +18,7 @@ interface VideoCarouselProps {
     currentIndex: number; 
     onIndexChange: (index: number) => void; 
     resetTrigger: number;
+    onDoubleTapLike: () => void;
 }
 
 const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
@@ -27,6 +28,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     currentIndex, 
     onIndexChange, 
     resetTrigger,
+    onDoubleTapLike,
 }) => {
     const flatListRef = useRef<FlatList>(null);
 
@@ -72,6 +74,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
                       mode={mode}
                       width={W}
                       height={H}
+                      onDoubleTapLike={onDoubleTapLike}
                 />
                 ) : null}
             </View>

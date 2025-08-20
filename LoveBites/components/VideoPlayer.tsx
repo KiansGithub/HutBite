@@ -1,10 +1,14 @@
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withDelay, withTiming } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { Animated as RNAnimated } from 'react-native';
 import {
   StyleSheet,
   TouchableWithoutFeedback,
   View,
   Text,
-  Animated,
 } from 'react-native';
 import {
   useVideoPlayer,
@@ -21,6 +25,7 @@ interface VideoPlayerProps {
   mode: 'play' | 'warm';
   width: number;
   height: number;
+  onDoubleTapLike: () => void;
 }
 
 const LOADING_TIMEOUT_MS = 12_000;
@@ -38,7 +43,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   itemId,
   mode,
   width,
-  height,
+  height, 
+  onDoubleTapLike,
 }) => {
   /*──────────────────────────────
     State & refs
@@ -55,7 +61,33 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   // thumbnail fade
   const [showThumb, setShowThumb] = useState(true);
-  const opacity = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new RNAnimated.Value(1)).current;
+
+  const heartScale = useSharedValue(0);
+  const heartStyle = useAnimatedStyle(() => ({
+    opacity: heartScale.value,
+    transform: [{ scale: heartScale.value }],
+  }));
+  
+  const showHeart = () => {
+    heartScale.value = 0;
+    heartScale.value = withSpring(1, { damping: 8, stiffness: 120 });
+    heartScale.value = withDelay(400, withTiming(0, { duration: 200 }));
+  };
+  
+  // single tap = your existing play/pause
+  const singleTap = Gesture.Tap()
+    .maxDuration(250)
+    .onEnd(() => runOnJS(handleTap)());
+
+  // double tap = like/unlike
+  const doubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .maxDelay(250)
+    .onEnd(() => {
+      runOnJS(showHeart)();
+      runOnJS(onDoubleTapLike)(); // prop
+    });
 
   /*──────────────────────────────
     Video source (cache‑busted on retry)
@@ -160,7 +192,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         playerRef.current?.seekBy(0);
         startedOnceRef.current = true;
       }
-      Animated.timing(opacity, {
+      RNAnimated.timing(opacity, {
         toValue: 0,
         duration: 250,
         useNativeDriver: true,
@@ -222,19 +254,19 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   ──────────────────────────────*/
   if (hasError) {
     return (
-      <TouchableWithoutFeedback onPress={handleTap}>
+      <GestureDetector gesture={Gesture.Exclusive(doubleTap, singleTap)}>
         <View style={[styles.errorContainer, { width, height }]}>
           <Text style={styles.errorText}>Video unavailable</Text>
           <Text style={styles.retryText}>
             Tap to retry {retryCount > 0 ? `(${retryCount})` : ''}
           </Text>
         </View>
-      </TouchableWithoutFeedback>
+      </GestureDetector>
     );
   }
 
   return (
-    <TouchableWithoutFeedback onPress={handleTap}>
+    <GestureDetector gesture={Gesture.Exclusive(doubleTap, singleTap)}>
       <View style={{ width, height }}>
         <VideoView
           key={videoKey}
@@ -244,11 +276,26 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={true}
+          useExoShutter
           surfaceType="textureView"
         />
+  
+        {/* Heart burst overlay INSIDE the same parent */}
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            {
+              position: 'absolute',
+              top: height / 2 - 40,
+              left: width / 2 - 40,
+            },
+            heartStyle,
+          ]}
+        >
+          <Ionicons name="heart" size={80} color="#ff3040" />
+        </Animated.View>
       </View>
-    </TouchableWithoutFeedback>
+    </GestureDetector>
   );
 };
 
