@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
     StyleSheet, 
     FlatList, 
@@ -31,11 +31,23 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     onDoubleTapLike,
 }) => {
     const flatListRef = useRef<FlatList>(null);
+    const [failedVideoIds, setFailedVideoIds] = useState<Set<string>>(new Set());
+
+    // Filter out failed videos
+    const filteredFeedItems = useMemo(() => {
+        return feedItems.filter(item => !failedVideoIds.has(item.id));
+    }, [feedItems, failedVideoIds]);
+
+    const handleVideoFailed = (itemId: string) => {
+        setFailedVideoIds(prev => new Set(prev).add(itemId));
+    };
 
     useEffect(() => {
         if (resetTrigger > 0) {
             flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
             onIndexChange(0);
+            // Reset failed videos when carousel resets (new restaurant)
+            setFailedVideoIds(new Set());
         }
     }, [resetTrigger, onIndexChange]);
 
@@ -75,6 +87,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
                       width={W}
                       height={H}
                       onDoubleTapLike={onDoubleTapLike}
+                      onVideoFailed={handleVideoFailed}
                 />
                 ) : null}
             </View>
@@ -84,7 +97,7 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
     return (
         <FlatList 
           ref={flatListRef}
-          data={feedItems}
+          data={filteredFeedItems}
           horizontal
           pagingEnabled 
           bounces={false}

@@ -14,6 +14,7 @@ import { MenuItemInfo } from'./MenuItemInfo';
 import { OrderButton } from './OrderButton';
 import { FeedContentItem } from '@/types/feedContent';
 import { useLikes } from '@/hooks/useLikes';
+import { GoogleRating } from './GoogleRating';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
@@ -87,6 +88,10 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
         style={[styles.bottomGradient, { paddingBottom: bottomOffset }]}
       >
         <View style={styles.menuItemInfo}>
+        <GoogleRating 
+            rating={restaurant.google_rating}
+            reviewCount={restaurant.google_review_count}
+          />
           <MenuItemInfo 
             restaurant={restaurant}
             feedItem={currentFeedItem}

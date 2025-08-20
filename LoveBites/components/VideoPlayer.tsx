@@ -26,9 +26,11 @@ interface VideoPlayerProps {
   width: number;
   height: number;
   onDoubleTapLike: () => void;
+  onVideoFailed?: (itemId: string) => void;
 }
 
 const LOADING_TIMEOUT_MS = 12_000;
+const MAX_RETRY_ATTEMPTS = 2;
 
 /**
  * VideoPlayer with automatic cache‑busting retry logic.
@@ -45,6 +47,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   width,
   height, 
   onDoubleTapLike,
+  onVideoFailed,
 }) => {
   /*──────────────────────────────
     State & refs
@@ -223,6 +226,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     /* retry path */
     if (hasError) {
+      if (retryCount >= MAX_RETRY_ATTEMPTS) {
+        onVideoFailed?.(itemId);
+        return;
+      }
       console.log('[Video Retry]', { itemId, attempt: retryCount + 1 });
       try {
         await clearVideoCacheAsync();
@@ -252,6 +259,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   /*──────────────────────────────
     Render
   ──────────────────────────────*/
+  if (hasError && retryCount >= MAX_RETRY_ATTEMPTS) {
+    return null;
+  }
+
   if (hasError) {
     return (
       <GestureDetector gesture={Gesture.Exclusive(doubleTap, singleTap)}>
