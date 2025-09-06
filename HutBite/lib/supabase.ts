@@ -3,7 +3,7 @@ import 'react-native-url-polyfill';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 import { createClient } from '@supabase/supabase-js';
-import { Database } from './supabase.d';
+import { Database } from './supabase';
 
 const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_URL!; 
 const supabaseAnonKey = Constants.expoConfig?.extra?.SUPABASE_ANON_KEY!; 
