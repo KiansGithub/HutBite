@@ -108,19 +108,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
  
   initialize: async () => {
-    set({ loading: true });
- 
-    // 1) Restore persisted session (if any)
-    const { data: { session } } = await supabase.auth.getSession();
-    set({ session, user: session?.user ?? null });
- 
-    // 2) Subscribe to future auth events (login, logout, token refresh)
+    // No need to set loading: true here, onAuthStateChange will handle it.
+
+    // 1) Subscribe to auth events. The callback will be called
+    //    immediately with the initial session state.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       set({ session: sess ?? null, user: sess?.user ?? null, loading: false });
     });
- 
-    set({ loading: false });
- 
+
     // Return unsubscribe for callers that mount/unmount
     return () => sub.subscription.unsubscribe();
   },

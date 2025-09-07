@@ -169,7 +169,7 @@ export default function FeedScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <View style={[styles.container, styles.center, { flex: 1, paddingBottom: 88 }]}>
         <ActivityIndicator size="large" color={themeColors.primary} />
         {locationLoading && (
           <Text style={styles.locationText}>Getting your location...</Text>

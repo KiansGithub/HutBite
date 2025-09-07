@@ -8,23 +8,26 @@ import Colors from '@/constants/Colors';
 export default function MainLayout() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
-    const extraBottom= Platform.OS === 'android' ? insets.bottom : 0;
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarShowLabel: false,
+                tabBarShowLabel: true,
                 tabBarStyle: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    position: 'absolute',
+                    backgroundColor: 'transparent',
                     borderTopWidth: 0,
                     elevation: 0,
                     shadowOpacity: 0,
-                    height: 90, 
-                    paddingBottom: 20 + extraBottom,
+                    height: 60 + insets.bottom, 
+                    paddingBottom: insets.bottom + 5,
                     paddingTop: 10,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
                 },
                 tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.6)',
+                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.8)',
                 tabBarLabelStyle: {
                     fontSize: 12,
                     fontWeight: '600',

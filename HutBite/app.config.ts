@@ -49,7 +49,8 @@ const config: ExpoConfig = {
       googleMaps: {
         apiKey: process.env.GOOGLE_MAPS_API_KEY_ANDROID
       }
-    }
+    }, 
+    blockedPermissions: ["android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"],
   },
   web: {
     bundler: "metro",
