@@ -29,7 +29,8 @@ const config: ExpoConfig = {
       NSPhotoLibraryUsageDescription:
         "hutbite needs access to your photos to let you choose images.",
       NSPhotoLibraryAddUsageDescription:
-        "hutbite needs permission to save images to your photo library."
+        "hutbite needs permission to save images to your photo library.", 
+      ITSAppUsesNonExemptEncryption: false
     },
     config: {
       googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY_IOS
@@ -87,9 +88,9 @@ const config: ExpoConfig = {
     SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
     router: {},
-    eas: {
-      projectId: "166d213b-c90c-4e09-b0a0-d21a5f4078b3"
-    }
+    "eas": {
+        "projectId": "07c2cd9b-94b6-46ae-8e2c-40f669996c1e"
+      }
   }
 };
 

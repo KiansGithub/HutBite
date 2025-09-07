@@ -2,6 +2,7 @@ const tintColorLight = '#7C3AED'; // A nice purple
 const tintColorDark = '#E5E7EB'; // A light grey for dark mode text/icons
 
 const primary = '#7C3AED';
+const primaryLight = '#9a6aff';
 
 export default {
   light: {
@@ -11,6 +12,8 @@ export default {
     tabIconDefault: '#9CA3AF', // Medium grey
     tabIconSelected: tintColorLight,
     primary,
+    primaryStart: primaryLight,
+    primaryEnd: primary,
     card: '#F9FAFB', // Off-white for cards
     border: '#E5E7EB', // Light grey for borders
   },
@@ -21,6 +24,8 @@ export default {
     tabIconDefault: '#9CA3AF', // Medium grey
     tabIconSelected: tintColorLight,
     primary,
+    primaryStart: primaryLight,
+    primaryEnd: primary,
     card: '#F9FAFB', // Off-white for cards
     border: '#E5E7EB', // Light grey for borders
   },

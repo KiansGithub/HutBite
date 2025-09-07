@@ -8,6 +8,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Colors from '../constants/Colors';
 
 interface ExpandableSearchBarProps {
   value: string;
@@ -104,7 +105,7 @@ export const ExpandableSearchBar: React.FC<ExpandableSearchBarProps> = ({
         </View>
       ) : (
         <TouchableOpacity onPress={expand} style={styles.iconButton}>
-          <Ionicons name="search" size={24} color="#fff" />
+          <Ionicons name="search" size={24} color="#000" />
         </TouchableOpacity>
       )}
     </View>
@@ -118,14 +119,14 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     alignSelf: 'flex-end',
-    padding: 8,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 20,
+    padding: 6,
+    backgroundColor: Colors.light.card,
+    borderRadius: 18,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: Colors.light.card,
     borderRadius: 25,
     paddingHorizontal: 15,
     paddingVertical: 12,

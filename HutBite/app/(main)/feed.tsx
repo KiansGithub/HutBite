@@ -113,13 +113,13 @@ export default function FeedScreen() {
     setSearchType('restaurants');
   }, [setSearchType]);
 
-  const handleOrderPress = (
+  const handleOrderPress = useCallback((
     orderLinks: Record<string, string> | null, 
     restaurantId: string, 
     menuItemId: string
   ) => {
     setModalData({ orderLinks, restaurantId, menuItemId });
-  };
+  }, [setModalData]);
 
   const renderRestaurant = useCallback(
     ({ item, index }: { item: any; index: number }) => {

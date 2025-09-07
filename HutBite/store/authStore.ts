@@ -61,7 +61,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signInWithProvider: async (provider) => {
     // 1. Deep-link that brings the user back to the app.
-    const redirectTo = makeRedirectUri({ scheme: 'livebites' });
+    const redirectTo = makeRedirectUri({ scheme: 'hutbite' });
 
     // 2. Ask Supabase for the provider URL (skip auto-redirect so we handle tokens ourselves)
     const { data, error } = await supabase.auth.signInWithOAuth({

@@ -30,8 +30,8 @@ const dynamicStyles = (themeColors) => StyleSheet.create({
         backgroundColor: themeColors.primary,
     },
     categoryButton: {
-        backgroundColor: themeColors.background === '#fff' ? 'rgba(0, 0, 0, 0.05)' : 'rgba(0, 0, 0, 0.55)',
-        borderColor: themeColors.background === '#fff' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: themeColors.card, 
+        borderColor: themeColors.border, 
     },
     categoryText: {
         color: themeColors.text,
