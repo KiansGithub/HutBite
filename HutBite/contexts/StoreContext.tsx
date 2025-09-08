@@ -1,86 +1,121 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { IStoreProfile, IWebSettings } from '@/types/store';
-import { findNearestStore, getStoreProfile, getWebSettings } from '@/services/apiService';
+import React, { createContext, useState, useContext } from 'react';
+import type { MenuCategory, MenuGroup, IBaseProduct } from '@/types/store';
+import { IOptionSelections } from '@/types/productOptions';
+import { ITopping, IToppingGroup } from '@/types/toppings';
+import { IBasket } from '@/types/basket';
 
-interface StoreContextType {
-  currentStore: IStoreProfile | null;
-  webSettings: IWebSettings | null;
-  storeId: string | null;
-  loading: boolean;
-  error: string | null;
-  selectStore: (postcode: string) => Promise<void>;
-  clearStore: () => void;
+// Interface for storeInfo 
+export interface IStoreInfo {
+    name?: string; 
+    address?: string; 
+    postalCode?: string; 
+    openingTime?: string; 
+    closingTime?: string; 
+    status?: number;
+    openingHours?: string; 
+    isOpen?: boolean; 
+    closingIn?: number; 
 }
 
-const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
-interface StoreProviderProps {
-  children: ReactNode;
+// Define the shape of the state that will be shared across the app. 
+interface StoreState {
+    postcode: string; 
+    nearestStoreId: string; 
+    storePhone: string; 
+    currency: string; 
+    storeInfo?: {
+        name?: string;
+        address?: string;
+        postalCode?: string;
+        status?: number;
+        openingHours?: string;
+        isOpen?: boolean;
+        closingIn?: number;
+    };
+    urlForImages: string;
+    isStoreInfoVisible: boolean;
+    stripeStoreUrl: string; 
+    error: string | null;
+    selectedCategoryId: string | null;
+    minDeliveryValue: number; 
+    stripeApiKey: string; 
+    menuSRV: string; 
+    orderType: string; 
+    categories: MenuCategory[];
+    groups: MenuGroup[];
+    toppingGroups: IToppingGroup[];
+    deliveryCharge: number; 
+    serviceCharge: number; 
+    selectedGroupId: string | null;
+    optionCategoryId: string | null;
+    loading: boolean; 
+    storeClosedMode: boolean;
 }
 
-export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
-  const [currentStore, setCurrentStore] = useState<IStoreProfile | null>(null);
-  const [webSettings, setWebSettings] = useState<IWebSettings | null>(null);
-  const [storeId, setStoreId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// Extends the StoreState to include the `setStoreState function 
+// which allows components to update the shared state.
+interface StoreContextType extends StoreState {
+    setStoreState: React.Dispatch<React.SetStateAction<StoreState>>; 
+    handleError: (errorMessage: string) => void;
+}
 
-  const selectStore = async (postcode: string) => {
-    setLoading(true);
-    setError(null);
+// Define the default state values for the context
+const defaultState: StoreState = {
+    postcode: '',
+    nearestStoreId: '',
+    storePhone: '',
+    currency: '',
+    storeInfo: undefined,
+    urlForImages: '',
+    isStoreInfoVisible: false,
+    stripeStoreUrl: '',
+    error: null,
+    selectedCategoryId: null,
+    stripeApiKey: '',
+    minDeliveryValue: 0,
+    menuSRV: '',
+    orderType: '',
+    groups: [],
+    toppingGroups: [],
+    deliveryCharge: 0, 
+    serviceCharge: 0.90,
+    selectedGroupId: null,
+    optionCategoryId: null,
+    categories: [],  // Placeholder for menu categories.
+    loading: false,
+    storeClosedMode: false,
+};
 
-    try {
-      const foundStoreId = await findNearestStore(postcode);
-      if (!foundStoreId) {
-        throw new Error('No store found for this postcode');
-      }
+// Create the context with the default state and a placeholder `setStoreState function.
+// The `createContext` function initializes a context object.
+const StoreContext = createContext<StoreContextType>({
+    ...defaultState, 
+    setStoreState: () => {},
+    handleError: () => {},
+});
 
-      const storeProfile = await getStoreProfile(foundStoreId);
-      if (!storeProfile) {
-        throw new Error('Failed to load store profile');
-      }
+// Define the StoreProvider component, which wraps the app and provides the shared state.
+export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Use React's useState to manage the store state within the provider.
+    const [storeState, setStoreState] = useState(defaultState);
 
-      const settings = await getWebSettings(storeProfile.StoreURL);
-      if (!settings) {
-        throw new Error('Failed to load store settings');
-      }
-
-      setStoreId(foundStoreId);
-      setCurrentStore(storeProfile);
-      setWebSettings(settings);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to select store');
-    } finally {
-      setLoading(false);
+    // Utility method to handle errors in the store context 
+    const handleError = (errorMessage: string) => {
+        setStoreState(prev => ({ ...prev, error: errorMessage}));
     }
-  };
 
-  const clearStore = () => {
-    setCurrentStore(null);
-    setWebSettings(null);
-    setStoreId(null);
-    setError(null);
-  };
-
-  return (
-    <StoreContext.Provider value={{
-      currentStore,
-      webSettings,
-      storeId,
-      loading,
-      error,
-      selectStore,
-      clearStore
-    }}>
-      {children}
-    </StoreContext.Provider>
-  );
+    // Provide the store state and the `setStoreState` function to child components.
+    return (
+        <StoreContext.Provider value={{ 
+            ...storeState, 
+            setStoreState, 
+            handleError,  
+            }}>
+            {children}
+        </StoreContext.Provider>
+    );
 };
 
-export const useStore = () => {
-  const context = useContext(StoreContext);
-  if (context === undefined) {
-    throw new Error('useStore must be used within a StoreProvider');
-  }
-  return context;
-};
+// Create a custom hook to easily access the Store
+export const useStore = () => useContext(StoreContext);
