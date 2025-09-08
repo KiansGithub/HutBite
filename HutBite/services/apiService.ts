@@ -54,7 +54,7 @@ export const findNearestStore = async (postcode: string): Promise<string | null>
         const xmlText = await response.text();
 
         return new Promise<string | null>((resolve, reject) => {
-            parseString(xmlText, { explicitArray: false }, (err, result: IStoreResponse) => {
+            parseString(xmlText, { explicitArray: false }, (err: any, result: IStoreResponse) => {
                 if (err) {
                     console.error('Error parsing XML:', err);
                     reject(err);
