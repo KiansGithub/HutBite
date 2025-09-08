@@ -1,37 +1,78 @@
-// This will be dynamic based on the store, but we can have a base
-const BASE_API_URL = 'http://Services.tgfpizza.com/WinPizzaMainServices/WinPizzaService20014.WebSubmitOrder.svc';
-
-export const API = {
-    BASE_URL: BASE_API_URL,
-    ENDPOINTS: {
-        GET_NEAREST_STORE: 'GetNearestStore',
-        GET_STORE_PROFILE: 'GetStoreProfile',
-        GET_WEB_SERVICES_ENDPOINT: 'GetWebServicesEndpoint',
-        // Store-specific endpoints (prefixed with storeUrl/api/)
-        UNIT_STATUS: 'UnitStatus',
-        STORE_WEB_SETTING: 'StoreWebSetting',
-        VERIFY_USER: 'VerifyUser',
-        CATEGORIES: 'Categorys',
-        GROUPS_IN_CATEGORY: 'GrpsInCat',
-        GET_OFFERS: 'GetOffers',
-        GET_MIN_DLV: 'GetMinDlv',
-    },
-};
-
-export const AUTH = {
-    HEADERS: {
-        'Content-Type': 'application/json',
-    },
-};
-
 /**
- * Builds a URL with query parameters.
- * @param endpoint - The API endpoint.
- * @param params - An object of query parameters.
- * @returns The full URL string.
+ * API Base URLs and endpoints configuration 
  */
-export const buildApiUrl = (endpoint: string, params: Record<string, string | number>): string => {
-    const url = new URL(`${API.BASE_URL}/${endpoint}`);
-    Object.keys(params).forEach(key => url.searchParams.append(key, String(params[key])));
-    return url.toString();
-};
+export const API = {
+    BASE_URL: 'https://services.tgfpizza.com/ThirdPartyServices/StoreServices.svc/',
+    ENDPOINTS: {
+      GET_STORE_PROFILE: 'GetStoreProfile',
+      GET_WEB_SETTINGS: 'GetWebSettings',
+      GET_WEB_SERVICES_ENDPOINT: 'GetWebServicesEndPoint',
+    //   GET_NEAREST_STORE: 'GetGermanyNereast_1',
+      EXTRACT_MENU_CATEGORIES: 'ExtractOnlineMenu',
+      HOST_URL_SUBMIT_ORDER: '/HostURLSubmitOrder',
+      FINALIZE_ORDER: 'FinalizeOrder',
+      LOAD_MENU: 'LoadMenuJson',
+      GROUPS_IN_CATEGORY: 'GrpsInCat',
+      TGFPIZZA_CALLBACK: 'tgfpizza_callback',
+      GET_OFFERS: 'GetOffers'
+    }
+  } as const;
+
+  /**
+   * Development configuration - use DEVDATA storee for testing
+   */
+  const DEV_CONFIG = {
+    STORE_ID: 'DEVDATA',
+    USE_DEV_STORE: true, 
+  };
+
+  /**
+   * Default parameters for menu categories API endpoint
+   */
+  export const MENU_CATEGORIES_PARAMS = {
+    DataName: 'testdata',
+    MenueID: 'TGFONLINE',
+    ImgDomain: '',
+    Category: ''
+  } as const;
+
+  /**
+   * Default parameters for groups in category API endpoint
+   */
+  export const GROUPS_PARAMS = {
+    DataName: 'testdata',
+    MenueID: 'TGFONLINE',
+    CatType: 'PRODUCT'
+  } as const;
+
+  /**
+   * Authentication configuration 
+   */
+  export const AUTH = {
+    USERNAME: 'Mobileuser',
+    PASSWORD: 'WinPizza1020',
+    get HEADERS() {
+        return {
+            'Authorization': `Basic ${btoa(`${this.USERNAME}:${this.PASSWORD}`)}`,
+            'Accept': 'application/xml',
+        }
+    }
+  } as const; 
+
+  /**
+   * Store configuration constants 
+   */
+  export const STORE_CONFIG = {
+    TEST_STORE_ID: 'DEVDATA',
+    GROUP_NAME: 'TGFPIZZAGERMANY',
+  } as const;
+
+  /**
+   * Helper function to build API URLs 
+   */
+  export const buildApiUrl = (endpoint: string, params: Record<string, string> = {}): string => {
+    const queryString = Object.entries(params)
+      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+      .join('&')
+    return `${API.BASE_URL}${endpoint}${queryString ? '?' + queryString : ''}`;
+  }

@@ -26,50 +26,50 @@ export interface IStoreStatusResponse {
  * @param postcode - Customer's postcode
  * @returns Correct StoreType
 */
-const getStoreType = (postcode: string): string => {
+// const getStoreType = (postcode: string): string => {
     // Check if postcode belongs to Germany or UK
-    const isGermany = /^[0-9]{5}$/.test(postcode);
-    return isGermany ? 'TGFPIZZAGERMANY' : 'TGFPIZZA';
-}
+//     const isGermany = /^[0-9]{5}$/.test(postcode);
+//     return isGermany ? 'TGFPIZZAGERMANY' : 'TGFPIZZA';
+// }
 
 /**
  * Finds the nearest store based on postcode
  * @param postcode - Customer's postcode
  * @returns Promise with store ID or null if not found
  */
-export const findNearestStore = async (postcode: string): Promise<string | null> => {
-    try {
-        const storeType = getStoreType(postcode);
+// export const findNearestStore = async (postcode: string): Promise<string | null> => {
+//     try {
+//         const storeType = getStoreType(postcode);
 
-        const url = buildApiUrl(API.ENDPOINTS.GET_NEAREST_STORE, {
-            Postcode: postcode,
-            StoreType: storeType
-        });
+//         const url = buildApiUrl(API.ENDPOINTS.GET_NEAREST_STORE, {
+//             Postcode: postcode,
+//             StoreType: storeType
+//         });
 
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: AUTH.HEADERS
-        });
+//         const response = await fetch(url, {
+//             method: 'GET',
+//             headers: AUTH.HEADERS
+//         });
 
-        const xmlText = await response.text();
+//         const xmlText = await response.text();
 
-        return new Promise<string | null>((resolve, reject) => {
-            parseString(xmlText, { explicitArray: false }, (err: any, result: IStoreResponse) => {
-                if (err) {
-                    console.error('Error parsing XML:', err);
-                    reject(err);
-                    return;
-                }
+//         return new Promise<string | null>((resolve, reject) => {
+//             parseString(xmlText, { explicitArray: false }, (err: any, result: IStoreResponse) => {
+//                 if (err) {
+//                     console.error('Error parsing XML:', err);
+//                     reject(err);
+//                     return;
+//                 }
 
-                const storeId = result.Stores.$.ID;
-                resolve(storeId);
-            });
-        });
-    } catch (error) {
-        console.error('Error finding nearest store:', error);
-        return null;
-    }
-};
+//                 const storeId = result.Stores.$.ID;
+//                 resolve(storeId);
+//             });
+//         });
+//     } catch (error) {
+//         console.error('Error finding nearest store:', error);
+//         return null;
+//     }
+// };
 
 /**
  * Fetches store profile information
