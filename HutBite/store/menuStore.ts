@@ -9,6 +9,8 @@ interface MenuState {
   products: IBaseProduct[];
   toppings: IToppingGroup[];
   cart: IBaseProduct[];
+  loading: boolean;
+  error: string | null;
   setSelectedStore: (store: IStoreProfile) => void;
   setMenuCategories: (categories: MenuCategory[]) => void;
   setMenuGroups: (groups: MenuGroup[]) => void;
@@ -16,6 +18,9 @@ interface MenuState {
   setToppings: (toppings: IToppingGroup[]) => void;
   addToCart: (product: IBaseProduct) => void;
   removeFromCart: (productId: string) => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearCart: () => void;
 }
 
 export const useMenuStore = create<MenuState>((set) => ({
@@ -25,6 +30,8 @@ export const useMenuStore = create<MenuState>((set) => ({
   products: [],
   toppings: [],
   cart: [],
+  loading: false,
+  error: null,
   setSelectedStore: (store) => set({ selectedStore: store }),
   setMenuCategories: (categories) => set({ menuCategories: categories }),
   setMenuGroups: (groups) => set({ menuGroups: groups }),
@@ -33,4 +40,7 @@ export const useMenuStore = create<MenuState>((set) => ({
   addToCart: (product) => set((state) => ({ cart: [...state.cart, product] })),
   removeFromCart: (productId) =>
     set((state) => ({ cart: state.cart.filter((p) => p.ID !== productId) })),
+  setLoading: (loading) => set({ loading }),
+  setError: (error) => set({ error }),
+  clearCart: () => set({ cart: [] }),
 }));
