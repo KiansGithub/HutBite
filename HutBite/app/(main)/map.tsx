@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import { View, StyleSheet, Alert, Platform, ActivityIndicator } from 'react-native';
 import MapView, { Marker, Callout} from 'react-native-maps';
 import { router } from 'expo-router';
@@ -8,6 +8,8 @@ import { Text } from 'react-native';
 import { Database } from '@/lib/supabase.d';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { useTabTheme } from '@/contexts/TabThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type RestaurantWithDistance = Restaurant & { distance?: number };
@@ -15,10 +17,17 @@ type RestaurantWithDistance = Restaurant & { distance?: number };
 export default function MapScreen() {
     const colorScheme = useColorScheme();
     const themeColors = Colors[colorScheme];
+    const { setTheme } = useTabTheme();
 
     const { restaurants, loading } = useRestaurantData();
     const { location } = useLocation();
     const [mapReady, setMapReady] = useState(false);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            setTheme('light');
+        }, [setTheme])
+    );
 
     // Function to offset duplicate coordinates slightly
     const offsetDuplicateCoordinates = (restaurants: RestaurantWithDistance[]): RestaurantWithDistance[] => {

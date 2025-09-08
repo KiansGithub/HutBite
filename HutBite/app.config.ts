@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { ExpoConfig } from '@expo/config';
+import { ExpoConfig, ConfigContext } from '@expo/config';
 
 const config: ExpoConfig = {
   name: "HutBite",
@@ -14,7 +14,7 @@ const config: ExpoConfig = {
   splash: {
     image: "./assets/images/logo.png",
     resizeMode: "contain",
-    backgroundColor: "#F5A235"
+    backgroundColor: "#F9FAFB"
   },
   ios: {
     bundleIdentifier: "com.hutbite.hutbite",
@@ -41,7 +41,7 @@ const config: ExpoConfig = {
     newArchEnabled: false,
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#F5A235"
+      backgroundColor: "#F9FAFB"
     },
     edgeToEdgeEnabled: true,
     googleServicesFile: "./google-services.json",
@@ -88,6 +88,10 @@ const config: ExpoConfig = {
   extra: {
     SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+    FEATURES: {
+      MENU: process.env.EXPO_PUBLIC_FEATURE_MENU === 'true' || false,
+      ORCHESTRATOR: process.env.EXPO_PUBLIC_FEATURE_ORCHESTRATOR === 'true' || false,
+    },
     router: {},
     "eas": {
         "projectId": "07c2cd9b-94b6-46ae-8e2c-40f669996c1e"

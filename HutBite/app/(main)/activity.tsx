@@ -24,6 +24,8 @@ import { UserCard } from '@/components/UserCard';
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { RequireAuth } from '@/components/RequireAuth';
+import { useTabTheme } from '@/contexts/TabThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface UserProfile {
     id: string; 
@@ -38,7 +40,9 @@ interface UserProfile {
 export default function ActivityScreen() {
     const { user } = useAuthStore();
     const colorScheme = useColorScheme();
+    const { setTheme } = useTabTheme();
     const themeColors = Colors[colorScheme];
+    const insets = useSafeAreaInsets();
     const { activities, loading, refreshing, hasMore, refresh, loadMore } = useActivityFeed();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [usersLoading, setUserLoading] = useState(false);
@@ -53,6 +57,12 @@ export default function ActivityScreen() {
         searchType, 
         setSearchType
     } = useSearch([], users);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            setTheme('light');
+        }, [setTheme])
+    );
 
     // Load users for search functionality
     useEffect(() => {
@@ -222,7 +232,7 @@ export default function ActivityScreen() {
                                 data={userResults}
                                 renderItem={renderUserItem}
                                 keyExtractor={(item) => item.id}
-                                contentContainerStyle={styles.listContainer}
+                                contentContainerStyle={[styles.listContainer, { paddingBottom: insets.bottom + 20 }]}
                                 showsVerticalScrollIndicator={false}
                                 ListEmptyComponent={
                                     <View style={styles.emptyContainer}>
@@ -239,7 +249,7 @@ export default function ActivityScreen() {
                               data={activities}
                               renderItem={renderActivityItem}
                               keyExtractor={(item) => item.id}
-                              contentContainerStyle={styles.listContainer}
+                              contentContainerStyle={[styles.listContainer, { paddingBottom: insets.bottom + 20 }]}
                               refreshControl={
                                 <RefreshControl 
                                   refreshing={refreshing}

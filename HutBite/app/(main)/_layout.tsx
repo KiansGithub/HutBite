@@ -1,18 +1,33 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { TabThemeProvider, useTabTheme } from '@/contexts/TabThemeContext';
+import { BlurView } from 'expo-blur';
 
-export default function MainLayout() {
+function TabLayout() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
+    const { theme } = useTabTheme();
+
+    const isDark = theme === 'dark';
+
     return (
         <Tabs
             screenOptions={{
                 headerShown: false,
                 tabBarShowLabel: true,
+                tabBarBackground: () => (
+                    !isDark ? (
+                        <BlurView
+                            intensity={90}
+                            tint="light"
+                            style={StyleSheet.absoluteFill}
+                        />
+                    ) : null
+                ),
                 tabBarStyle: {
                     position: 'absolute',
                     backgroundColor: 'transparent',
@@ -26,11 +41,14 @@ export default function MainLayout() {
                     right: 0,
                     bottom: 0,
                 },
-                tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-                tabBarInactiveTintColor: 'rgba(255, 255, 255, 0.8)',
+                tabBarActiveTintColor: isDark ? Colors[colorScheme ?? 'light'].tint : '#000',
+                tabBarInactiveTintColor: isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.6)',
                 tabBarLabelStyle: {
                     fontSize: 12,
-                    fontWeight: '600',
+                    fontWeight: 'bold',
+                    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+                    textShadowOffset: { width: 0, height: 1 },
+                    textShadowRadius: 3,
                 },
             }}
         >
@@ -39,7 +57,7 @@ export default function MainLayout() {
                 options={{
                     title: 'Feed',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="home" size={size} color={color} />
+                        <Ionicons name="home-outline" size={size} color={color} />
                     ),
                 }}
             />
@@ -48,7 +66,7 @@ export default function MainLayout() {
                 options={{
                     title: 'Activity',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="heart" size={size} color={color} />
+                        <Ionicons name="heart-outline" size={size} color={color} />
                     ),
                 }}
             />
@@ -57,7 +75,7 @@ export default function MainLayout() {
                 options={{
                     title: 'Upload',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="add-circle" size={size} color={color} />
+                        <Ionicons name="add-circle-outline" size={size} color={color} />
                     ),
                 }}
             />
@@ -66,7 +84,7 @@ export default function MainLayout() {
                 options={{
                     title: 'Map',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="map" size={size} color={color} />
+                        <Ionicons name="map-outline" size={size} color={color} />
                     ),
                 }}
             />
@@ -75,7 +93,7 @@ export default function MainLayout() {
                 options={{
                     title: 'Profile',
                     tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="person" size={size} color={color} />
+                        <Ionicons name="person-outline" size={size} color={color} />
                     ),
                 }}
             />
@@ -86,5 +104,13 @@ export default function MainLayout() {
                 }}
             />
         </Tabs>
+    );
+}
+
+export default function MainLayout() {
+    return (
+        <TabThemeProvider>
+            <TabLayout />
+        </TabThemeProvider>
     );
 }

@@ -20,6 +20,9 @@ import { MenuItemSelector } from '@/components/MenuItemSelector';
 import { CTAButton } from '@/components/CTAButton';
 import { useAuthStore } from '@/store/authStore';
 import * as ImagePicker from 'expo-image-picker';
+import { useTabTheme } from '@/contexts/TabThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
+import { RequireAuth } from '@/components/RequireAuth';
 
 export default function UploadScreen() {
   const [selectedVideo, setSelectedVideo] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -33,7 +36,14 @@ export default function UploadScreen() {
   const [videoThumbnail, setVideoThumbnail] = useState<string | null>(null);
 
   const { user } = useAuthStore();
+  const { setTheme } = useTabTheme();
   const { uploading, uploadProgress, pickVideo, uploadUGCVideo } = useUGCUpload();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      setTheme('light');
+    }, [setTheme])
+  );
 
   const handleVideoSelect = async () => {
     const video = await pickVideo();
@@ -120,139 +130,141 @@ export default function UploadScreen() {
   const canUpload = selectedVideo && title.trim() && (restaurantId || suggestedRestaurantName.trim());
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="close" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Upload Video</Text>
-        <View style={styles.placeholder} />
-      </View>
+    <RequireAuth>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Ionicons name="close" size={24} color="#333" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Upload Video</Text>
+          <View style={styles.placeholder} />
+        </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Video Selection */}
-        <TouchableOpacity
-          style={styles.videoSelector}
-          onPress={handleVideoSelect}
-          disabled={uploading}
-        >
-          {selectedVideo ? (
-            <View style={styles.selectedVideoContainer}>
-              {videoThumbnail ? (
-                <Image source={{ uri: videoThumbnail }} style={styles.videoThumbnail} />
-              ) : (
-                <View style={[styles.videoThumbnail, styles.videoPlaceholderThumb]}>
-                  <Ionicons name="videocam" size={48} color="#666" />
-                  <Text style={styles.thumbnailGeneratingText}>
-                    {videoThumbnail === null ? 'Video selected' : 'Video selected'}
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {/* Video Selection */}
+          <TouchableOpacity
+            style={styles.videoSelector}
+            onPress={handleVideoSelect}
+            disabled={uploading}
+          >
+            {selectedVideo ? (
+              <View style={styles.selectedVideoContainer}>
+                {videoThumbnail ? (
+                  <Image source={{ uri: videoThumbnail }} style={styles.videoThumbnail} />
+                ) : (
+                  <View style={[styles.videoThumbnail, styles.videoPlaceholderThumb]}>
+                    <Ionicons name="videocam" size={48} color="#666" />
+                    <Text style={styles.thumbnailGeneratingText}>
+                      {videoThumbnail === null ? 'Video selected' : 'Video selected'}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.videoOverlay}>
+                <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
+                </View>
+                <View style={styles.videoInfo}>
+                  <Text style={styles.videoInfoText}>
+                    Video selected • {Math.round((selectedVideo.duration || 0) / 1000)}s
+                    {selectedVideo.fileSize && ` • ${(selectedVideo.fileSize / (1024 * 1024)).toFixed(1)}MB`}
                   </Text>
                 </View>
-              )}
-              <View style={styles.videoOverlay}>
-              <Ionicons name="play-circle" size={48} color="rgba(255,255,255,0.9)" />
+                <TouchableOpacity
+                  style={styles.changeVideoButton}
+                  onPress={handleVideoSelect}
+                  disabled={uploading}
+                >
+                  <Text style={styles.changeVideoText}>Change Video</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.videoInfo}>
-                <Text style={styles.videoInfoText}>
-                  Video selected • {Math.round((selectedVideo.duration || 0) / 1000)}s
-                  {selectedVideo.fileSize && ` • ${(selectedVideo.fileSize / (1024 * 1024)).toFixed(1)}MB`}
-                </Text>
+            ) : (
+              <View style={styles.videoPlaceholder}>
+                <Ionicons name="add-circle-outline" size={64} color={Colors.light.primary} />
+                <Text style={styles.videoPlaceholderText}>Select Video</Text>
+                <Text style={styles.videoPlaceholderSubtext}>Choose a video from your gallery</Text>
               </View>
-              <TouchableOpacity
-                style={styles.changeVideoButton}
-                onPress={handleVideoSelect}
-                disabled={uploading}
-              >
-                <Text style={styles.changeVideoText}>Change Video</Text>
-              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+
+          {/* Form Fields */}
+          <View style={styles.form}>
+            <RestaurantSelector
+              selectedRestaurantId={restaurantId}
+              selectedRestaurantName={restaurantName || suggestedRestaurantName}
+              onRestaurantSelect={handleRestaurantSelect}
+              onCustomRestaurantName={handleCustomRestaurantName}
+            />
+
+            <MenuItemSelector
+              restaurantId={restaurantId}
+              selectedMenuItemId={menuItemId}
+              selectedMenuItemName={menuItemName}
+              onMenuItemSelect={handleMenuItemSelect}
+              disabled={!restaurantId}
+              hasCustomRestaurant={!!suggestedRestaurantName}
+            />
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Title *</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="What's in this video?"
+                value={title}
+                onChangeText={setTitle}
+                maxLength={100}
+                editable={!uploading}
+              />
+              <Text style={styles.charCount}>{title.length}/100</Text>
             </View>
-          ) : (
-            <View style={styles.videoPlaceholder}>
-              <Ionicons name="add-circle-outline" size={64} color={Colors.light.primary} />
-              <Text style={styles.videoPlaceholderText}>Select Video</Text>
-              <Text style={styles.videoPlaceholderSubtext}>Choose a video from your gallery</Text>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Description</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                placeholder="Tell us more about this dish..."
+                value={description}
+                onChangeText={setDescription}
+                multiline
+                numberOfLines={4}
+                maxLength={500}
+                textAlignVertical="top"
+                editable={!uploading}
+              />
+              <Text style={styles.charCount}>{description.length}/500</Text>
+            </View>
+          </View>
+
+          {/* Upload Progress */}
+          {uploading && (
+            <View style={styles.progressContainer}>
+              <View style={styles.progressBar}>
+                <View style={[styles.progressFill, { width: `${uploadProgress}%` }]} />
+              </View>
+              <Text style={styles.progressText}>Uploading... {uploadProgress}%</Text>
             </View>
           )}
-        </TouchableOpacity>
 
-        {/* Form Fields */}
-        <View style={styles.form}>
-          <RestaurantSelector
-            selectedRestaurantId={restaurantId}
-            selectedRestaurantName={restaurantName || suggestedRestaurantName}
-            onRestaurantSelect={handleRestaurantSelect}
-            onCustomRestaurantName={handleCustomRestaurantName}
-          />
-
-          <MenuItemSelector
-            restaurantId={restaurantId}
-            selectedMenuItemId={menuItemId}
-            selectedMenuItemName={menuItemName}
-            onMenuItemSelect={handleMenuItemSelect}
-            disabled={!restaurantId}
-            hasCustomRestaurant={!!suggestedRestaurantName}
-          />
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Title *</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="What's in this video?"
-              value={title}
-              onChangeText={setTitle}
-              maxLength={100}
-              editable={!uploading}
+          {/* Upload Button */}
+          <View style={styles.uploadButtonContainer}>
+            <CTAButton
+              title={uploading ? 'Uploading...' : 'Upload Video'}
+              onPress={handleUpload}
+              disabled={!canUpload || uploading}
+              loading={uploading}
+              size="large"
             />
-            <Text style={styles.charCount}>{title.length}/100</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Tell us more about this dish..."
-              value={description}
-              onChangeText={setDescription}
-              multiline
-              numberOfLines={4}
-              maxLength={500}
-              textAlignVertical="top"
-              editable={!uploading}
-            />
-            <Text style={styles.charCount}>{description.length}/500</Text>
+          {/* Guidelines */}
+          <View style={styles.guidelines}>
+            <Text style={styles.guidelinesTitle}>Upload Guidelines</Text>
+            <Text style={styles.guidelinesText}>• Videos should be under 60 seconds</Text>
+            <Text style={styles.guidelinesText}>• Show food clearly and appetizingly</Text>
+            <Text style={styles.guidelinesText}>• All uploads are reviewed before going live</Text>
+            <Text style={styles.guidelinesText}>• Be respectful and follow community guidelines</Text>
           </View>
-        </View>
-
-        {/* Upload Progress */}
-        {uploading && (
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${uploadProgress}%` }]} />
-            </View>
-            <Text style={styles.progressText}>Uploading... {uploadProgress}%</Text>
-          </View>
-        )}
-
-        {/* Upload Button */}
-        <View style={styles.uploadButtonContainer}>
-          <CTAButton
-            title={uploading ? 'Uploading...' : 'Upload Video'}
-            onPress={handleUpload}
-            disabled={!canUpload || uploading}
-            loading={uploading}
-            size="large"
-          />
-        </View>
-
-        {/* Guidelines */}
-        <View style={styles.guidelines}>
-          <Text style={styles.guidelinesTitle}>Upload Guidelines</Text>
-          <Text style={styles.guidelinesText}>• Videos should be under 60 seconds</Text>
-          <Text style={styles.guidelinesText}>• Show food clearly and appetizingly</Text>
-          <Text style={styles.guidelinesText}>• All uploads are reviewed before going live</Text>
-          <Text style={styles.guidelinesText}>• Be respectful and follow community guidelines</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </RequireAuth>
   );
 }
 

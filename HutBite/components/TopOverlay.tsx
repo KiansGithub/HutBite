@@ -90,29 +90,47 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
                 ))}
             </View>
 
-            {/*Category buttons - only show when search not expanded */}
-            {!searchExpanded && (
-              <ScrollView 
-              horizontal
-    showsHorizontalScrollIndicator={false}
-    style={staticStyles.categoryContainer}
-    contentContainerStyle={staticStyles.categoryContent}
-    scrollEventThrottle={16}
-    nestedScrollEnabled
-              >
-                {COMMON_CUISINES.slice(0, Platform.OS === 'android' ? 4 : 8).map((cuisine) => (
-                  <TouchableOpacity 
-                      key={cuisine}
-                      style={[staticStyles.categoryButton, styles.categoryButton]}
-                      onPress={() => handleCategoryPress(cuisine)}
-                  >
-                    <Text style={[staticStyles.categoryText, styles.categoryText]}>
-                      {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            )}
+            {/* Container for Search Bar and Category Filters */}
+            <View style={staticStyles.searchAndFiltersContainer}>
+              {/* Search bar */}
+              <ExpandableSearchBar
+                value={searchQuery}
+                onChangeText={onSearchQueryChange}
+                onClear={() => onSearchQueryChange('')}
+                onExpand={handleSearchExpand}
+                onCollapse={handleSearchCollapse}
+                expanded={searchExpanded}
+                autoFocus={shouldFocus}
+                style={[
+                  staticStyles.searchBarContainer,
+                  searchExpanded && staticStyles.searchBarContainerExpanded,
+                ]}
+              />
+
+              {/*Category buttons - only show when search not expanded */}
+              {!searchExpanded && (
+                <ScrollView 
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={staticStyles.categoryContainer}
+                  contentContainerStyle={staticStyles.categoryContent}
+                  scrollEventThrottle={16}
+                  nestedScrollEnabled
+                >
+                  {COMMON_CUISINES.slice(0, Platform.OS === 'android' ? 4 : 8).map((cuisine) => (
+                    <TouchableOpacity 
+                        key={cuisine}
+                        style={[staticStyles.categoryButton, styles.categoryButton]}
+                        onPress={() => handleCategoryPress(cuisine)}
+                    >
+                      <Text style={[staticStyles.categoryText, styles.categoryText]}>
+                        {cuisine.charAt(0).toUpperCase() + cuisine.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
 
             {/* Restaurant info - hidden when search expanded */}
             {!searchExpanded && distance !== undefined && (
@@ -131,18 +149,6 @@ export const TopOverlay: React.FC<TopOverlayProps> = ({
                         </View>
                 </View>
             )}
-
-            {/* Search bar */}
-      <ExpandableSearchBar
-        value={searchQuery}
-        onChangeText={onSearchQueryChange}
-        onClear={() => onSearchQueryChange('')}
-        onExpand={handleSearchExpand}
-        onCollapse={handleSearchCollapse}
-        expanded={searchExpanded}
-        autoFocus={shouldFocus}
-        style={staticStyles.searchBarContainer}
-      />
         </View>
     )
 }
@@ -179,7 +185,7 @@ const staticStyles = StyleSheet.create({
     /* Restaurant info container */
     restaurantInfoContainer: {
         position: 'absolute',
-        top: 110, 
+        top: 120, 
         left: 0, 
         right: 0, 
         alignItems: 'center',
@@ -216,28 +222,33 @@ const staticStyles = StyleSheet.create({
     fontWeight: '600',
   },
  
+  searchAndFiltersContainer: {
+    position: 'absolute',
+    top: 75, 
+    left: 12,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 30,
+  },
+
   /* Search bar container */
   searchBarContainer: {
-    position: 'absolute',
-    top: 100,
-    left: 20,
-    right: 20,
     paddingHorizontal: 0,
     paddingVertical: 0,
-    zIndex: 30
+    marginRight: 8, 
+  },
+  searchBarContainerExpanded: {
+    flex: 1,
   },
 
   /* Category buttons */
   categoryContainer: {
-    position: 'absolute',
-    top: 75,
-    left: 0, 
-    right: 0, 
+    flex: 1, 
     maxHeight: 32, 
-    zIndex: 25
   },
   categoryContent: {
-    paddingHorizontal: 20
+    paddingRight: 20, 
   },
   categoryButton: {
     borderRadius: 12,

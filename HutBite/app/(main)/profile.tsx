@@ -21,6 +21,8 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useFollow } from '@/hooks/useFollow';
 import { useSafety } from '@/hooks/useSafety';
 import { RequireAuth } from '@/components/RequireAuth';
+import { useTabTheme } from '@/contexts/TabThemeContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export default function ProfileScreen() {
     const { user, signOut, deleteAccount } = useAuthStore();
@@ -31,7 +33,14 @@ export default function ProfileScreen() {
     const [showEditProfile, setShowEditProfile] = useState(false);
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
+    const { setTheme } = useTabTheme();
     const themeColors = Colors[colorScheme];
+
+    useFocusEffect(
+        React.useCallback(() => {
+            setTheme('light');
+        }, [setTheme])
+    );
 
     const { followersCount, followingCount } = useFollow({
         targetUserId: user?.id,
@@ -99,7 +108,11 @@ export default function ProfileScreen() {
                     <Text style={[styles.headerTitle, { color: themeColors.text }]}>Profile</Text>
                 </View>
 
-                <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+                <ScrollView 
+                    style={styles.scrollView} 
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: insets.bottom }}
+                >
                     <GlassPanel style={styles.profilePanel}>
                         <View style={styles.profileHeader}>
                             <TouchableOpacity 

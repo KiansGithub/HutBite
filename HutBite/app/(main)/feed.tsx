@@ -22,6 +22,7 @@ import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/components/useColorScheme';
+import { useTabTheme } from '@/contexts/TabThemeContext';
 // import AnalyticsService from '@/lib/analytics';
 import SignInNudge from '@/components/SignInNudge';
 
@@ -49,6 +50,7 @@ export default function FeedScreen() {
   const [isScreenFocused, setIsScreenFocused] = useState(true);
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
+  const { setTheme } = useTabTheme();
   const themeColors = Colors[colorScheme];
   const styles = { ...staticStyles, ...dynamicStyles(themeColors) };
   const bottomOffset = TAB_BAR_HEIGHT + insets.bottom;
@@ -74,6 +76,12 @@ export default function FeedScreen() {
        resetIndexes,
      } = useViewabilityTracking();
   
+  useFocusEffect(
+    useCallback(() => {
+      setTheme('dark');
+    }, [setTheme])
+  );
+
   useFocusEffect(
     useCallback(() => {
       setIsScreenFocused(true);
