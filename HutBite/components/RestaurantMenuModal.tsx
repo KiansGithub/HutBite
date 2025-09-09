@@ -56,6 +56,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
 
   const { basketItems, addItem, removeItem } = useBasket();
+  const [isProductOptionsOpen, setIsProductOptionsOpen] = useState(false);
 
   useEffect(() => {
     console.log(' [RestaurantMenuModal] useEffect triggered:', { visible, restaurantId: restaurant?.id });
@@ -172,6 +173,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
     if (product.Modifiable && product.DeGroupedPrices) {
       setSelectedProduct(product);
       setOptionsModalVisible(true);
+      setIsProductOptionsOpen(true);
     } else {
       const newItem: IBasketItem = {
         id: `${product.ID}-${Date.now()}`,
@@ -220,6 +222,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
     }
     setOptionsModalVisible(false);
     setSelectedProduct(null);
+    setIsProductOptionsOpen(false);
   };
 
   const handleCategoryPress = (categoryId: string) => {
@@ -231,7 +234,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
   return (
     <>
       <Modal
-        visible={visible}
+        visible={visible && !isProductOptionsOpen}
         animationType="slide"
         presentationStyle="fullScreen"
         onRequestClose={onClose}
@@ -332,6 +335,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
           onDismiss={() => {
             setOptionsModalVisible(false);
             setSelectedProduct(null);
+            setIsProductOptionsOpen(false);
           }}
           product={selectedProduct}
           onConfirm={handleOptionsConfirm}
@@ -344,6 +348,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    zIndex: 1000,
   },
   header: {
     flexDirection: 'row',
