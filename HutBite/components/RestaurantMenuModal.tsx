@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
-import { getStoreProfile, getWebSettings, getMenuCategories, getGroupsByCategory, getToppings } from '@/services/apiService';
+import { getStoreProfile, getWebSettings, getMenuCategories, getGroupsByCategory, getToppings, getStoreStatus } from '@/services/apiService';
 import { STORE_CONFIG } from '@/constants/api';
 import type { IStoreProfile, IWebSettings, MenuCategory, IBaseProduct } from '@/types/store';
 import { RestaurantCategoryHeader } from './RestaurantCategoryHeader';
@@ -116,14 +116,38 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
       setCategories(menuCategories);
       console.log(' [RestaurantMenuModal] Menu categories set successfully');
 
-      // Step 4: Fetch Toppings and store in context
-      console.log(' [RestaurantMenuModal] Step 4: Fetching toppings...');
+      // Step 4: Fetch and store store information for status functionality
+      console.log(' [RestaurantMenuModal] Step 4: Fetching store information...');
+      const storeInfo = {
+        name: profile.StoreName,
+        address: profile.Address,
+        phone: profile.Phone,
+        isOpen: true, // Will be updated by store status check
+        status: 1 // Default to open, will be updated
+      };
+      
+      // Fetch actual store status
+      try {
+        const storeStatus = await getStoreStatus(profile.StoreURL);
+        if (storeStatus !== null) {
+          storeInfo.isOpen = !storeStatus; // API returns true if closed, false if open
+          storeInfo.status = storeStatus ? 0 : 1; // 0 = closed, 1 = open
+        }
+      } catch (error) {
+        console.warn('Could not fetch store status, defaulting to open:', error);
+      }
+      
+      setStoreState((prev) => ({ ...prev, storeInfo }));
+      console.log(' [RestaurantMenuModal] Store info stored in context:', storeInfo);
+
+      // Step 5: Fetch Toppings and store in context
+      console.log(' [RestaurantMenuModal] Step 5: Fetching toppings...');
       const fetchedToppings = await getToppings(profile.StoreURL, storeId);
       setStoreState((prev) => ({ ...prev, toppingGroups: fetchedToppings }));
       console.log(' [RestaurantMenuModal] Toppings fetched and stored in context:', fetchedToppings.length);
 
-      // Step 5: Load all product categories
-      console.log(' [RestaurantMenuModal] Step 5: Loading all product categories...');
+      // Step 6: Load all product categories
+      console.log(' [RestaurantMenuModal] Step 6: Loading all product categories...');
       const productCategories = menuCategories.filter(cat => cat.CatType === 1);
       console.log(' [RestaurantMenuModal] Product categories found:', productCategories.length);
       

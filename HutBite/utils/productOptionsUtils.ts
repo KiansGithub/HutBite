@@ -170,21 +170,46 @@ export function validateOptionSelections(
             }
         }
     
+        console.log('=== VALIDATION DEBUG START ===');
+        console.log('Selections object:', selections);
+        console.log('Requirements object:', requirements);
+        console.log('Mandatory keys:', requirements.mandatoryKeys);
+        
+        // Debug each mandatory key
+        requirements.mandatoryKeys.forEach(key => {
+            const value = selections[key];
+            console.log(`Key "${key}":`, {
+                value: value,
+                type: typeof value,
+                isUndefined: value === undefined,
+                isNull: value === null,
+                isEmpty: value === '',
+                isFalsy: !value,
+                stringValue: String(value)
+            });
+        });
 
     const missingRequired = requirements.mandatoryKeys.filter(
-        key => !selections[key]
+        key => selections[key] === undefined || selections[key] === null || selections[key] === ''
     );
+
+    console.log('Missing required keys:', missingRequired);
 
     const invalidCombinations = validateOptionCombinations(
         selections, 
         requirements.allowedCombinations
     );
 
+    console.log('Invalid combinations:', invalidCombinations);
+
     const result = {
         isValid: missingRequired.length === 0 && !invalidCombinations?.length, 
         missingRequired, 
         invalidCombinations
     }
+
+    console.log('Final validation result:', result);
+    console.log('=== VALIDATION DEBUG END ===');
 
     // Cache result 
     if (!validationCache.has(selections)) {

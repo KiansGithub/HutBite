@@ -68,16 +68,28 @@ export function useProductOptions({
             options.defaultSelections &&
             Object.keys(options.defaultSelections).length > 0; 
         
-        if (noSelectionsYet && hasDefaultSelections) {
+        // Also check if we have actual option groups (not just empty initial state)
+        const hasActualOptions = options.groups && options.groups.length > 0;
+        
+        if (noSelectionsYet && hasDefaultSelections && hasActualOptions) {
+            console.log('Applying default selections:', options.defaultSelections);
             setSelections(options.defaultSelections!);
         }
-    }, [options.defaultSelections, selections]);
+    }, [options.defaultSelections, options.groups, selections]);
 
     // Memoized validation state 
     const validationState = useMemo(() => {
+        console.log('=== USEPRODUCTOPTIONS VALIDATION START ===');
+        console.log('Current selections:', selections);
+        console.log('Options requirements:', options.requirements);
+        console.log('Options groups:', options.groups);
+        
         try {
-            return validateOptionSelections(selections, options.requirements);
+            const result = validateOptionSelections(selections, options.requirements);
+            console.log('Validation result from validateOptionSelections:', result);
+            return result;
         } catch (err) {
+            console.error('Validation error in useProductOptions:', err);
             if (err instanceof ValidationError) {
                 setError(formatValidationError(err));
             } else {
@@ -88,11 +100,14 @@ export function useProductOptions({
                 missingRequired: [],
                 invalidCombinations: []
             };
+        } finally {
+            console.log('=== USEPRODUCTOPTIONS VALIDATION END ===');
         }
     }, [selections, options.requirements]);
 
     // Notify parent of selection changes 
     useEffect(() => {
+        console.log('Selections updated:', selections);
         onSelectionsChange?.(selections, validationState.isValid);
     }, [selections, validationState.isValid, onSelectionsChange]);
 
@@ -133,6 +148,7 @@ export function useProductOptions({
 
     // Memoized handlers 
     const handleOptionSelect = useCallback((groupKey: string, value: string) => {
+        console.log('Option selected:', groupKey, value);
         const operation = () => {
             setLoading(true);
             setError(null);
@@ -157,6 +173,7 @@ export function useProductOptions({
     }, [resetIncompatibleSelections]);
 
     const handleOptionChange = useCallback((key: string, value: string) => {
+        console.log('Option changed:', key, value);
         const operation = () => {
             setLoading(true);
             setError(null);

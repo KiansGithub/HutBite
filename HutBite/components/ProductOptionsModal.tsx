@@ -29,6 +29,7 @@ import { useStoreStatus } from '@/hooks/useStoreStatus';
 import Colors from '@/constants/Colors';
 import { buildImageUrl } from '@/utils/imageUtils';
 import { useStore } from '@/contexts/StoreContext';
+import { processToppingSelections } from '@/utils/toppingUtils';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const lightColors = Colors.light;
@@ -55,11 +56,11 @@ export function ProductOptionsModal({
   product,
   onConfirm,
   existingItem,
-  onDelete,
+  onDelete
 }: ProductOptionsModalProps) {
   const theme = useTheme();
   const { getToppingsByGroup } = useToppings();
-  const { canAddToBasket } = useStoreStatus();
+  const { canAddToBasket, isOpen, storeMessage} = useStoreStatus();
   const { urlForImages } = useStore();
 
   const [loading, setLoading] = useState(true);
@@ -122,6 +123,14 @@ export function ProductOptionsModal({
     }
   }, [existingItem, visible]);
 
+  useEffect(() => {
+    if (visible && !existingItem && product.Toppings) {
+      // Process initial toppings to respect OrgPortion values
+      const initialToppingSelections = processToppingSelections(product.Toppings, toppings);
+      setToppingSelections(initialToppingSelections);
+    }
+  }, [visible, product.Toppings, toppings, existingItem]);
+
   const handleDelete = () => {
     if (existingItem?.id) {
       onDelete?.(existingItem.id);
@@ -173,6 +182,19 @@ export function ProductOptionsModal({
   }, []);
 
   const handleConfirm = useCallback(() => {
+    console.log('=== PRODUCTOPTIONSMODAL HANDLECONFIRM DEBUG ===');
+    console.log('Current selections:', selections);
+    console.log('Validation state:', validationState);
+    console.log('Validation state isValid:', validationState.isValid);
+    console.log('Validation state missingRequired:', validationState.missingRequired);
+    console.log('Processed options requirements:', processedOptions.requirements);
+    console.log('Processed options groups:', processedOptions.groups);
+    console.log('Can add to basket:', canAddToBasket);
+    console.log('Store status - isOpen:', isOpen, 'canAddToBasket:', canAddToBasket, 'storeMessage:', storeMessage);
+    console.log('Is editing:', isEditing);
+    console.log('Button should be enabled:', validationState.isValid && (canAddToBasket || isEditing));
+    console.log('=== END PRODUCTOPTIONSMODAL DEBUG ===');
+    
     if (validationState.isValid) {
       onConfirm({
         options: selections,
@@ -183,6 +205,8 @@ export function ProductOptionsModal({
         quantity,
       });
       onDismiss();
+    } else {
+      console.log('Cannot confirm - validation failed:', validationState);
     }
   }, [
     validationState.isValid,
@@ -194,6 +218,11 @@ export function ProductOptionsModal({
     quantity,
     onConfirm,
     onDismiss,
+    validationState,
+    processedOptions,
+    canAddToBasket,
+    isOpen,
+    storeMessage,
   ]);
 
   const handleQuantityChange = (amount: number) => {
