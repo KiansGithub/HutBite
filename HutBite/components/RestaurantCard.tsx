@@ -29,7 +29,7 @@ interface RestaurantCardProps {
   rowMode: RowMode;
   isVisible: boolean;
   onHorizontalScroll: (index: number) => void;
-  onOrderPress: (orderLinks: Record<string, string> | null, restaurantId: string, menuItemId: string) => void;
+  onOrderPress: (menuItemId: string) => void;
   distance?: number; 
   isDescriptionExpanded: boolean; 
   setIsDescriptionExpanded: (expanded: boolean) => void; 
@@ -120,7 +120,7 @@ const RestaurantCardComponent: React.FC<RestaurantCardProps> = ({
           <OrderButton 
             restaurant={restaurant}
             feedItem={currentFeedItem}
-            onOrderPress={(orderLinks) => onOrderPress(orderLinks, restaurant.id, currentFeedItem.id)}
+            onOrderPress={() => onOrderPress(currentFeedItem.id)}
           />
         </View>
       </View>

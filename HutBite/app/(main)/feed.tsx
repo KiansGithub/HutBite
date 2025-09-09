@@ -15,19 +15,19 @@ import { useRestaurantData, RestaurantWithDistance } from '@/hooks/useRestaurant
 import { FeedContentItem } from '@/types/feedContent';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
-import { OrderLinksModal } from '@/components/OrderLinksModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
 import { useFocusEffect } from '@react-navigation/native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useTabTheme } from '@/contexts/TabThemeContext';
-// import AnalyticsService from '@/lib/analytics';
+import { useBasket } from '@/contexts/BasketContext';
 import SignInNudge from '@/components/SignInNudge';
 
 const { height: H } = Dimensions.get('screen');
-const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80; 
+const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
 
 const dynamicStyles = (themeColors) => StyleSheet.create({
   container: { backgroundColor: themeColors.background },
@@ -39,12 +39,6 @@ const dynamicStyles = (themeColors) => StyleSheet.create({
 });
 
 export default function FeedScreen() {
-  const [modalData, setModalData] = useState<{
-    orderLinks: Record<string, string> | null; 
-    restaurantId: string; 
-    menuItemId: string; 
-  } | null>(null);
-  
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
   const [isScreenFocused, setIsScreenFocused] = useState(true);
@@ -57,25 +51,26 @@ export default function FeedScreen() {
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, feedContent, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching, setSearchType } = useSearch(allRestaurants, []);
+  const { addItemToBasket } = useBasket();
 
   // Track previous search state to detect when search is cleared
   const prevIsSearching = useRef(isSearching);
-  // Track previous restaurant to only reset carousel when restaurant changes 
+  // Track previous restaurant to only reset carousel when restaurant changes
   const prevRestaurantId = useRef<string | null>(null);
 
-  // Use search results when searching, otherwise use all restaurants 
-  const restaurants: RestaurantWithDistance[] = isSearching? searchResults: allRestaurants;
+  // Use search results when searching, otherwise use all restaurants
+  const restaurants: RestaurantWithDistance[] = isSearching ? searchResults : allRestaurants;
 
-  // Ref to control scrolling when search results change 
+  // Ref to control scrolling when search results change
   const listRef = useRef<FlatList<any>>(null);
   const {
-       vIndex,
-       visibleHIndex,
-       onViewableChange,
-       updateHorizontalIndex,
-       resetIndexes,
-     } = useViewabilityTracking();
-  
+    vIndex,
+    visibleHIndex,
+    onViewableChange,
+    updateHorizontalIndex,
+    resetIndexes,
+  } = useViewabilityTracking();
+
   useFocusEffect(
     useCallback(() => {
       setTheme('dark');
@@ -91,9 +86,9 @@ export default function FeedScreen() {
     }, [])
   );
 
-     /* one stable object – create it once with useRef */
+  /* one stable object – create it once with useRef */
   const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 5,        // 5 % for percent fields
+    itemVisiblePercentThreshold: 5, // 5 % for percent fields
   }).current;
 
   React.useEffect(() => {
@@ -111,7 +106,7 @@ export default function FeedScreen() {
 
   React.useEffect(() => {
     setIsDescriptionExpanded(false);
- }, [vIndex]);
+  }, [vIndex]);
 
   React.useEffect(() => {
     // AnalyticsService.logScreenView('Feed', 'MainScreen');
@@ -122,58 +117,81 @@ export default function FeedScreen() {
   }, [setSearchType]);
 
   const handleOrderPress = useCallback((
-    orderLinks: Record<string, string> | null, 
-    restaurantId: string, 
+    restaurant: RestaurantWithDistance,
     menuItemId: string
   ) => {
-    setModalData({ orderLinks, restaurantId, menuItemId });
-  }, [setModalData]);
+    // If the restaurant receives orders through our system, use the new flow
+    if (restaurant.receives_orders) {
+      const restaurantFeedItems = feedContent[restaurant.id] || [];
+      const selectedItem = restaurantFeedItems.find(item => item.id === menuItemId);
+
+      if (!selectedItem) {
+        console.error('Could not find the selected menu item.');
+        return;
+      }
+
+      addItemToBasket(
+        {
+          id: selectedItem.id,
+          name: selectedItem.name,
+          price: selectedItem.price || 0,
+          quantity: 1,
+        },
+        restaurant.id
+      );
+
+      router.push(`/menu/${restaurant.id}`);
+    } else {
+      // When a restaurant doesn't receive orders, navigate to its page
+      router.push(`/restaurant/${restaurant.id}`);
+    }
+  }, [feedContent, addItemToBasket]);
 
   const renderRestaurant = useCallback(
-    ({ item, index }: { item: any; index: number }) => {
-    const feedItems = feedContent[item.id] || [];
-    const isCurrent = index === vIndex; 
-    const isPreloaded = Math.abs(index - vIndex) <= 2;
+    ({ item, index }: { item: RestaurantWithDistance; index: number }) => {
+      const feedItems = feedContent[item.id] || [];
+      const isCurrent = index === vIndex;
+      const isPreloaded = Math.abs(index - vIndex) <= 2;
 
-    if (!isCurrent && !isPreloaded) {
-      return <View style={{ width: '100%', height: H }} />;
-    }
+      if (!isCurrent && !isPreloaded) {
+        return <View style={{ width: '100%', height: H }} />;
+      }
 
-    const rowMode = !isScreenFocused
-  ? 'off'
-  : index === vIndex
-    ? 'play'
-    : index === vIndex + 1
-      ? 'warm'
-      : 'off';
+      const rowMode = !isScreenFocused
+        ? 'off'
+        : index === vIndex
+          ? 'play'
+          : index === vIndex + 1
+            ? 'warm'
+            : 'off';
 
-
-    return (
-      <RestaurantCard
-        restaurant={item}
-        feedItems={feedItems}
-        rowMode={rowMode}
-        isVisible={isCurrent && isScreenFocused}
-        onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
-        onOrderPress={handleOrderPress}
-        distance={item.distance}
-        isDescriptionExpanded={isCurrent ? isDescriptionExpanded : false}
-        setIsDescriptionExpanded={setIsDescriptionExpanded}
-        resetTrigger={carouselResetTrigger}
-        bottomOffset={bottomOffset}
-      />
-    );
-  },
-  [feedContent, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused, bottomOffset]);
+      return (
+        <RestaurantCard
+          restaurant={item}
+          feedItems={feedItems}
+          rowMode={rowMode}
+          isVisible={isCurrent && isScreenFocused}
+          onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
+          onOrderPress={(menuItemId) => handleOrderPress(item, menuItemId)}
+          distance={item.distance}
+          isDescriptionExpanded={isCurrent ? isDescriptionExpanded : false}
+          setIsDescriptionExpanded={setIsDescriptionExpanded}
+          resetTrigger={carouselResetTrigger}
+          bottomOffset={bottomOffset}
+        />
+      );
+    },
+    [feedContent, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused, bottomOffset]
+  );
 
   const getItemLayout = useCallback(
     (data: any, index: number) => ({
-    length: H, 
-    offset: H * index, 
-    index, 
-  }),
-  []
-);
+      length: H,
+      offset: H * index,
+      index,
+    }),
+    []
+  );
 
   if (loading) {
     return (
@@ -202,7 +220,7 @@ export default function FeedScreen() {
         onCategoryPress={(category) => setSearchQuery(category)}
       />
 
-{isSearching && restaurants.length === 0 ? (
+      {isSearching && restaurants.length === 0 ? (
         <View style={[styles.container, styles.center, styles.noResultsContainer]}>
           <Text style={styles.noResultsText}>No restaurants found</Text>
           <Text style={styles.noResultsSubtext}>
@@ -242,23 +260,14 @@ export default function FeedScreen() {
       )}
 
       {!location && (
-            <View style={styles.locationBanner}>
-              <Text style={styles.locationBannerText}>
-                Enable location for nearby restaurants
-              </Text>
-            </View>
-          )}
-
-      {modalData && (
-        <OrderLinksModal 
-          orderLinks={modalData.orderLinks}
-          restaurantId={modalData.restaurantId}
-          menuItemId={modalData.menuItemId}
-          onClose={() => setModalData(null)}
-        />
+        <View style={styles.locationBanner}>
+          <Text style={styles.locationBannerText}>
+            Enable location for nearby restaurants
+          </Text>
+        </View>
       )}
 
-<SignInNudge topOverlayHeight={88} />
+      <SignInNudge topOverlayHeight={88} />
     </View>
   );
 }
@@ -267,34 +276,34 @@ const staticStyles = StyleSheet.create({
   container: { flex: 1 },
   center: { justifyContent: 'center', alignItems: 'center' },
   noResultsContainer: {
-    paddingTop: 0, 
+    paddingTop: 0,
   },
   locationText: {
-    marginTop: 10, 
+    marginTop: 10,
     fontSize: 16
   },
   locationBanner: {
     position: 'absolute',
-    top: 50, 
-    left: 20, 
-    right: 20, 
+    top: 50,
+    left: 20,
+    right: 20,
     padding: 10,
-    borderRadius: 8, 
-    zIndex: 1000, 
+    borderRadius: 8,
+    zIndex: 1000,
   },
   locationBannerText: {
     textAlign: 'center',
-    fontSize: 14, 
+    fontSize: 14,
     fontWeight: '600'
   },
   noResultsText: {
-    fontSize: 18, 
+    fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 8, 
+    marginBottom: 8,
   },
   noResultsSubtext: {
-    fontSize: 14, 
+    fontSize: 14,
     textAlign: 'center'
   },
   signInNudge: {

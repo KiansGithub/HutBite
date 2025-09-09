@@ -9,7 +9,6 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -23,6 +22,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useTabTheme } from '@/contexts/TabThemeContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { RequireAuth } from '@/components/RequireAuth';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function UploadScreen() {
   const [selectedVideo, setSelectedVideo] = useState<ImagePicker.ImagePickerAsset | null>(null);
@@ -38,6 +38,7 @@ export default function UploadScreen() {
   const { user } = useAuthStore();
   const { setTheme } = useTabTheme();
   const { uploading, uploadProgress, pickVideo, uploadUGCVideo } = useUGCUpload();
+  const insets = useSafeAreaInsets();
 
   useFocusEffect(
     React.useCallback(() => {
@@ -131,16 +132,12 @@ export default function UploadScreen() {
 
   return (
     <RequireAuth>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="close" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Upload Video</Text>
-          <View style={styles.placeholder} />
-        </View>
-
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <View style={styles.container}>
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
+        >
           {/* Video Selection */}
           <TouchableOpacity
             style={styles.videoSelector}
@@ -263,7 +260,7 @@ export default function UploadScreen() {
             <Text style={styles.guidelinesText}>• Be respectful and follow community guidelines</Text>
           </View>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </RequireAuth>
   );
 }
@@ -285,22 +282,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '500',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 24,
   },
   content: {
     flex: 1,

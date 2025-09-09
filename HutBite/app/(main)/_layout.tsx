@@ -1,23 +1,45 @@
-import { Tabs } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { TabThemeProvider, useTabTheme } from '@/contexts/TabThemeContext';
+import { StoreProvider } from '@/contexts/StoreContext';
+import { BasketProvider, useBasket } from '@/contexts/BasketContext';
 import { BlurView } from 'expo-blur';
+import { CartIcon } from '@/components/CartIcon';
 
 function TabLayout() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const { theme } = useTabTheme();
+    const { currentStoreId } = useBasket();
+
+    const handleCartPress = () => {
+        if (currentStoreId) {
+            router.push(`/menu/${currentStoreId}`);
+        }
+    };
 
     const isDark = theme === 'dark';
 
     return (
         <Tabs
             screenOptions={{
-                headerShown: false,
+                headerShown: true,
+                headerStyle: { backgroundColor: 'white' },
+                headerTitleAlign: 'center',
+                headerTitleStyle: { 
+                    fontWeight: 'bold',
+                    fontSize: 16,
+                    color: '#000',
+                },
+                headerRight: () => (
+                    <View style={{ marginRight: 15 }}>
+                        <CartIcon onPress={handleCartPress} />
+                    </View>
+                ),
                 tabBarShowLabel: true,
                 tabBarBackground: () => (
                     !isDark ? (
@@ -56,6 +78,7 @@ function TabLayout() {
                 name="feed"
                 options={{
                     title: 'Feed',
+                    headerShown: false,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="home-outline" size={size} color={color} />
                     ),
@@ -64,7 +87,7 @@ function TabLayout() {
             <Tabs.Screen
                 name="activity"
                 options={{
-                    title: 'Activity',
+                    title: 'Friends',
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="heart-outline" size={size} color={color} />
                     ),
@@ -83,6 +106,7 @@ function TabLayout() {
                 name="map"
                 options={{
                     title: 'Map',
+                    headerShown: false,
                     tabBarIcon: ({ color, size }) => (
                         <Ionicons name="map-outline" size={size} color={color} />
                     ),
@@ -101,16 +125,38 @@ function TabLayout() {
                 name="restaurant/[id]"
                 options={{
                     href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+            <Tabs.Screen
+                name="menu/[id]"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
                 }}
             />
         </Tabs>
     );
 }
 
-export default function MainLayout() {
+function LayoutWithProviders() {
     return (
         <TabThemeProvider>
-            <TabLayout />
+            <View style={{ flex: 1 }}>
+                <TabLayout />
+            </View>
         </TabThemeProvider>
+    );
+}
+
+export default function MainLayout() {
+    return (
+        <StoreProvider>
+            <BasketProvider>
+                <LayoutWithProviders />
+            </BasketProvider>
+        </StoreProvider>
     );
 }

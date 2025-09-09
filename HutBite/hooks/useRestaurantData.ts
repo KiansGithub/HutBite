@@ -37,7 +37,7 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                   .from('restaurants')
                   .select('*')
                   .order('created_at', { ascending: false });
-                
+
                 const { data: ms } = await supabase 
                   .from('menu_items')
                   .select('*')

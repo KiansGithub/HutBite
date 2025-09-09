@@ -47,7 +47,6 @@ export default function ActivityScreen() {
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [usersLoading, setUserLoading] = useState(false);
     const [usersError, setUsersError] = useState<string | null>(null);
-    const [isSearchMode, setIsSearchMode] = useState(false);
 
     const {
         searchQuery, 
@@ -160,139 +159,127 @@ export default function ActivityScreen() {
         );
     };
 
-        return (
-            <RequireAuth>
-                <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-                    <SafeAreaView style={styles.safeArea}>
-                        <View style={styles.header}>
-                            {!isSearchMode ? (
-                                <>
-                                <View style={styles.headerRow}>
-                                    <Text style={[styles.headerTitle, { color: themeColors.text }]}>Activity</Text>
-                                </View>
-                                <TouchableOpacity
-                                    style={styles.searchButton}
-                                    onPress={() => setIsSearchMode(true)}
-                                >
-                                    <Ionicons name="search" size={24} color={themeColors.text} />
-                                </TouchableOpacity>
-                            </>
-                            ) : (
-                                <View style={styles.searchHeader}>
-                                    <TouchableOpacity
-                                        style={styles.backButton}
-                                        onPress={() => {
-                                            setIsSearchMode(false);
-                                            setSearchQuery('');
-                                        }}
-                                    >
-                                        <Ionicons name="arrow-back" size={24} color={themeColors.text} />
-                                    </TouchableOpacity>
-                                    <View style={styles.searchContainer}>
-                                        <GlassPanel style={styles.searchPanel}>
-                                            <View style={styles.searchInputContainer}>
-                                                <Ionicons
-                                                    name="search"
-                                                    size={20}
-                                                    color={themeColors.text}
-                                                    style={styles.searchIcon}
-                                                />
-                                                <TextInput
-                                                    style={[styles.searchInput, { color: themeColors.text }]}
-                                                    placeholder="find your friends..."
-                                                    placeholderTextColor={themeColors.placeholder}
-                                                    value={searchQuery}
-                                                    onChangeText={setSearchQuery}
-                                                    autoCapitalize="none"
-                                                    autoCorrect={false}
-                                                    autoFocus={true}
-                                                />
-                                                {searchQuery.length > 0 && (
-                                                    <TouchableOpacity
-                                                        onPress={() => setSearchQuery('')}
-                                                        style={styles.clearButton}
-                                                    >
-                                                        <Ionicons
-                                                            name="close-circle"
-                                                            size={20}
-                                                            color={themeColors.text}
-                                                        />
-                                                    </TouchableOpacity>
-                                                )}
-                                            </View>
-                                        </GlassPanel>
-                                    </View>
-                                </View>
-                            )}
-                        </View>
- 
-                        {/* Show user search results when in search mode, otherwise show activity feed */}
-                        {isSearchMode ? (
-                            <FlatList 
-                                data={userResults}
-                                renderItem={renderUserItem}
-                                keyExtractor={(item) => item.id}
-                                contentContainerStyle={[styles.listContainer, { paddingBottom: insets.bottom + 20 }]}
-                                showsVerticalScrollIndicator={false}
-                                ListEmptyComponent={
-                                    <View style={styles.emptyContainer}>
-                                        <Ionicons name="people-outline" size={48} color={themeColors.text} />
-                                        <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No Users Found</Text>
-                                        <Text style={[styles.emptySubtitle, { color: themeColors.text }]}>
-                                            Try searching with a different name or handle
-                                        </Text>
-                                    </View>
-                                }
-                            />
-                        ) : (
-                            <FlatList 
-                              data={activities}
-                              renderItem={renderActivityItem}
-                              keyExtractor={(item) => item.id}
-                              contentContainerStyle={[styles.listContainer, { paddingBottom: insets.bottom + 20 }]}
-                              refreshControl={
-                                <RefreshControl 
-                                  refreshing={refreshing}
-                                  onRefresh={refresh}
-                                  tintColor={themeColors.primary}
+    return (
+        <RequireAuth>
+            <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+                <View style={styles.searchHeader}>
+                    <View style={styles.searchContainer}>
+                        <GlassPanel style={styles.searchPanel}>
+                            <View style={styles.searchInputContainer}>
+                                <Ionicons
+                                    name="search"
+                                    size={20}
+                                    color={themeColors.text}
+                                    style={styles.searchIcon}
                                 />
-                              }
-                              onEndReached={loadMore}
-                              onEndReachedThreshold={0.5}
-                              showsVerticalScrollIndicator={false}
-                              ListEmptyComponent={
-                                <View style={styles.emptyContainer}>
-                                    <Ionicons name="heart-outline" size={48} color={themeColors.text} />
-                                    <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No Activity Yet</Text>
-                                    <Text style={[styles.emptySubtitle, { color: themeColors.text }]}>
-                                        Follow friends to see their likes here
-                                    </Text>
-                                </View>
-                              }
-                            />
-                        )}
-                    </SafeAreaView>
+                                <TextInput
+                                    style={[styles.searchInput, { color: themeColors.text }]}
+                                    placeholder="find your friends..."
+                                    placeholderTextColor={themeColors.placeholder}
+                                    value={searchQuery}
+                                    onChangeText={setSearchQuery}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                                {searchQuery.length > 0 && (
+                                    <TouchableOpacity
+                                        onPress={() => setSearchQuery('')}
+                                        style={styles.clearButton}
+                                    >
+                                        <Ionicons
+                                            name="close-circle"
+                                            size={20}
+                                            color={themeColors.text}
+                                        />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                        </GlassPanel>
+                    </View>
                 </View>
-            </RequireAuth>
-        );
-    }
+
+                {/* Show user search results when searching, otherwise show activity feed */}
+                {searchQuery.length > 0 ? (
+                    <FlatList 
+                        data={userResults}
+                        renderItem={renderUserItem}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={[styles.listContainer, { paddingBottom: insets.bottom + 20 }]}
+                        showsVerticalScrollIndicator={false}
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Ionicons name="people-outline" size={48} color={themeColors.text} />
+                                <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No Users Found</Text>
+                                <Text style={[styles.emptySubtitle, { color: themeColors.text }]}>
+                                    Try searching with a different name or handle
+                                </Text>
+                            </View>
+                        }
+                    />
+                ) : (
+                    <FlatList 
+                      data={activities}
+                      renderItem={renderActivityItem}
+                      keyExtractor={(item) => item.id}
+                      contentContainerStyle={[styles.listContainer, { paddingBottom: insets.bottom + 20 }]}
+                      refreshControl={
+                        <RefreshControl 
+                          refreshing={refreshing}
+                          onRefresh={refresh}
+                          tintColor={themeColors.primary}
+                        />
+                      }
+                      onEndReached={loadMore}
+                      onEndReachedThreshold={0.5}
+                      showsVerticalScrollIndicator={false}
+                      ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Ionicons name="heart-outline" size={48} color={themeColors.text} />
+                            <Text style={[styles.emptyTitle, { color: themeColors.text }]}>No Activity Yet</Text>
+                            <Text style={[styles.emptySubtitle, { color: themeColors.text }]}>
+                                Follow friends to see their likes here
+                            </Text>
+                        </View>
+                      }
+                    />
+                )}
+            </View>
+        </RequireAuth>
+    );
+}
 
 const styles = StyleSheet.create({
     container: {
         flex: 1, 
     },
-    safeArea: {
-        flex: 1, 
-    },
-    header: {
-        paddingHorizontal: 20, 
-        paddingVertical: 16, 
+    searchHeader: {
+        paddingHorizontal: 20,
+        paddingVertical: 12,
+        flexDirection: 'row',
         alignItems: 'center',
-        width: '100%',
     },
-    headerTitle: {
-        fontSize: 20, 
-        fontWeight: '700',
+    searchContainer: {
+        flex: 1,
+    },
+    searchPanel: {
+        padding: 4, 
+        borderRadius: 12, 
+    },
+    searchInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    searchIcon: {
+        marginHorizontal: 8, 
+    },
+    searchInput: {
+        flex: 1, 
+        fontSize: 16, 
+        paddingVertical: 8, 
+    },
+    clearButton: {
+        marginLeft: 8,
+        padding: 4, 
     },
     listContainer: {
         paddingHorizontal: 20, 
@@ -361,62 +348,5 @@ const styles = StyleSheet.create({
     emptySubtitle: {
         fontSize: 14, 
         textAlign: 'center',
-    },
-    searchContainer: {
-        flex: 1,
-        paddingBottom: 12, 
-    },
-    searchPanel: {
-        padding: 4, 
-        borderRadius: 12, 
-    },
-    searchInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    searchIcon: {
-        marginRight: 8, 
-    },
-    searchInput: {
-        flex: 1, 
-        fontSize: 16, 
-        paddingVertical: 8, 
-    },
-    clearButton: {
-        marginLeft: 8,
-        padding: 4, 
-    },
-    searchResultsContainer: {
-        paddingHorizontal: 20, 
-        paddingVertical: 12, 
-    },
-    searchResultItem: {
-        padding: 12, 
-        borderBottomWidth: 1, 
-        borderBottomColor: 'rgba(255,255,255,0.2)',
-    },
-    searchResultText: {
-        fontSize: 16, 
-    },
-    searchButton: {
-        position: 'absolute',
-        right: 40,
-        top: 7,
-        padding: 8,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-    },
-    searchHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    backButton: {
-        padding: 8,
-        marginRight: 12,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
     },
 });

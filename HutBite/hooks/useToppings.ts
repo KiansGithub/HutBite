@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { useStore } from '@/store/StoreContext';
+import { useStore } from '@/contexts/StoreContext';
 import { ITopping, IToppingGroup } from '@/types/toppings';
 import { GROUPS_PARAMS } from '@/constants/api';
 import { normalizeOptionList } from '@/utils/productOptionsUtils';

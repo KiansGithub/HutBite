@@ -11,7 +11,7 @@ import {
 import { useColorScheme } from '@/components/useColorScheme';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/authStore';
 import { GlassPanel } from '@/components/GlassPanel';
 import { CTAButton } from '@/components/CTAButton';
@@ -103,112 +103,106 @@ export default function ProfileScreen() {
     return (
         <RequireAuth>
         <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-            <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-                <View style={styles.header}>
-                    <Text style={[styles.headerTitle, { color: themeColors.text }]}>Profile</Text>
-                </View>
-
-                <ScrollView 
-                    style={styles.scrollView} 
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ paddingBottom: insets.bottom }}
-                >
-                    <GlassPanel style={styles.profilePanel}>
-                        <View style={styles.profileHeader}>
-                            <TouchableOpacity 
-                              style={styles.avatarContainer}
-                              onPress={() => setShowEditProfile(true)}
-                            >
-                                {profile?.avatar_url ? (
-                                    <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
-                                ) : (
-                                    <Ionicons name="person" size={40} color={themeColors.text} />
-                                )}
-                            </TouchableOpacity>
-                            <Text style={[styles.displayNameText, { color: themeColors.text }]}>
-                                {profile?.display_name || user?.email?.split('@')[0] || 'User'}
-                            </Text>
-                            {profile?.handle && (
-                                <Text style={[styles.handleText, { color: themeColors.text, opacity: 0.8 }]}>@{profile.handle}</Text>
+            <ScrollView 
+                style={styles.scrollView} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: insets.bottom }}
+            >
+                <GlassPanel style={styles.profilePanel}>
+                    <View style={styles.profileHeader}>
+                        <TouchableOpacity 
+                          style={styles.avatarContainer}
+                          onPress={() => setShowEditProfile(true)}
+                        >
+                            {profile?.avatar_url ? (
+                                <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
+                            ) : (
+                                <Ionicons name="person" size={40} color={themeColors.text} />
                             )}
-                            {profile?.bio && (
-                                <Text style={[styles.bioText, { color: themeColors.text, opacity: 0.8 }]}>{profile.bio}</Text>
-                            )}
-                            <Text style={[styles.emailText, { color: themeColors.text }]}>{user?.email}</Text>
-                            <Text style={[styles.memberSinceText, { color: themeColors.text, opacity: 0.7 }]}>
-                                Member since {user?.created_at ? formatDate(user.created_at): 'Unknown'}
-                            </Text>
+                        </TouchableOpacity>
+                        <Text style={[styles.displayNameText, { color: themeColors.text }]}>
+                            {profile?.display_name || user?.email?.split('@')[0] || 'User'}
+                        </Text>
+                        {profile?.handle && (
+                            <Text style={[styles.handleText, { color: themeColors.text, opacity: 0.8 }]}>@{profile.handle}</Text>
+                        )}
+                        {profile?.bio && (
+                            <Text style={[styles.bioText, { color: themeColors.text, opacity: 0.8 }]}>{profile.bio}</Text>
+                        )}
+                        <Text style={[styles.emailText, { color: themeColors.text }]}>{user?.email}</Text>
+                        <Text style={[styles.memberSinceText, { color: themeColors.text, opacity: 0.7 }]}>
+                            Member since {user?.created_at ? formatDate(user.created_at): 'Unknown'}
+                        </Text>
 
-                            <View style={[styles.statsContainer, { borderTopColor: 'rgba(128,128,128,0.3)'}]}>
-                                <View style={styles.statItem}>
-                                    <Text style={[styles.statNumber, { color: themeColors.text }]}>0</Text>
-                                    <Text style={[styles.statLabel, { color: themeColors.text, opacity: 0.7 }]}>Likes</Text>
-                                </View>
-                                <View style={styles.statItem}>
-                                    <Text style={[styles.statNumber, { color: themeColors.text }]}>{followingCount}</Text>
-                                    <Text style={[styles.statLabel, { color: themeColors.text, opacity: 0.7 }]}>Following</Text>
-                                </View>
-                                <View style={styles.statItem}>
-                                    <Text style={[styles.statNumber, { color: themeColors.text }]}>{followersCount}</Text>
-                                    <Text style={[styles.statLabel, { color: themeColors.text, opacity: 0.7 }]}>Followers</Text>
-                                </View>
+                        <View style={[styles.statsContainer, { borderTopColor: 'rgba(128,128,128,0.3)'}]}>
+                            <View style={styles.statItem}>
+                                <Text style={[styles.statNumber, { color: themeColors.text }]}>0</Text>
+                                <Text style={[styles.statLabel, { color: themeColors.text, opacity: 0.7 }]}>Likes</Text>
+                            </View>
+                            <View style={styles.statItem}>
+                                <Text style={[styles.statNumber, { color: themeColors.text }]}>{followingCount}</Text>
+                                <Text style={[styles.statLabel, { color: themeColors.text, opacity: 0.7 }]}>Following</Text>
+                            </View>
+                            <View style={styles.statItem}>
+                                <Text style={[styles.statNumber, { color: themeColors.text }]}>{followersCount}</Text>
+                                <Text style={[styles.statLabel, { color: themeColors.text, opacity: 0.7 }]}>Followers</Text>
                             </View>
                         </View>
-                    </GlassPanel>
+                    </View>
+                </GlassPanel>
 
-                    <GlassPanel style={styles.actionsPanel}>
-                        <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Account Actions</Text>
+                <GlassPanel style={styles.actionsPanel}>
+                    <Text style={[styles.sectionTitle, { color: themeColors.text }]}>Account Actions</Text>
 
-                        <TouchableOpacity style={styles.actionItem} onPress={handleSignOut}>
-                            <Ionicons name="log-out-outline" size={20} color={themeColors.text} />
-                            <Text style={[styles.actionText, { color: themeColors.text }]}>Sign Out</Text>
-                            <Ionicons name="chevron-forward" size={16} color={themeColors.text} style={{ opacity: 0.6 }} />
-                        </TouchableOpacity>
-                    </GlassPanel>
+                    <TouchableOpacity style={styles.actionItem} onPress={handleSignOut}>
+                        <Ionicons name="log-out-outline" size={20} color={themeColors.text} />
+                        <Text style={[styles.actionText, { color: themeColors.text }]}>Sign Out</Text>
+                        <Ionicons name="chevron-forward" size={16} color={themeColors.text} style={{ opacity: 0.6 }} />
+                    </TouchableOpacity>
+                </GlassPanel>
 
-                    {/* <TouchableOpacity 
-                      style={styles.actionItem}
-                      onPress={() => updateProfile({ is_private: !profile?.is_private })}
-                    >
-                        <Ionicons name="lock-closed-outline" size={20} color={themeColors.text} />
-                        <Text style={styles.actionText}>
-                            {profile?.is_private ? 'Private Profile' : 'Public Profile'}
-                        </Text>
-                        <Ionicons 
-                          name={profile?.is_private ? "toggle" : "toggle-outline"}
-                          size={20}
-                          color={profile?.is_private ? Colors.light.primary : themeColors.text}
-                        />
-                    </TouchableOpacity> */}
+                {/* <TouchableOpacity 
+                  style={styles.actionItem}
+                  onPress={() => updateProfile({ is_private: !profile?.is_private })}
+                >
+                    <Ionicons name="lock-closed-outline" size={20} color={themeColors.text} />
+                    <Text style={styles.actionText}>
+                        {profile?.is_private ? 'Private Profile' : 'Public Profile'}
+                    </Text>
+                    <Ionicons 
+                      name={profile?.is_private ? "toggle" : "toggle-outline"}
+                      size={20}
+                      color={profile?.is_private ? Colors.light.primary : themeColors.text}
+                    />
+                </TouchableOpacity> */}
 
-                    <GlassPanel style={styles.dangerPanel}>
-                        <Text style={styles.dangerTitle}>Danger Zone</Text>
-                        <Text style={[styles.dangerDescription, { color: themeColors.text, opacity: 0.8 }]}>
-                            Once you delete your account, there is no going back. This will permanently delete your account and remove all associated data. 
-                        </Text>
+                <GlassPanel style={styles.dangerPanel}>
+                    <Text style={styles.dangerTitle}>Danger Zone</Text>
+                    <Text style={[styles.dangerDescription, { color: themeColors.text, opacity: 0.8 }]}>
+                        Once you delete your account, there is no going back. This will permanently delete your account and remove all associated data. 
+                    </Text>
 
-                        <CTAButton 
-                          title="Delete Account"
-                          onPress={() => setShowDeleteDialog(true)}
-                          variant="outline"
-                          style={styles.deleteButton}
-                          textStyle={styles.deleteButtonText}
-                        />
-                    </GlassPanel>
-                </ScrollView>
+                    <CTAButton 
+                      title="Delete Account"
+                      onPress={() => setShowDeleteDialog(true)}
+                      variant="outline"
+                      style={styles.deleteButton}
+                      textStyle={styles.deleteButtonText}
+                    />
+                </GlassPanel>
+            </ScrollView>
 
-                <ConfirmationDialog 
-                  visible={showDeleteDialog}
-                  title="Delete Account"
-                  message="Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data including likes and preferences."
-                  confirmText="Delete Account"
-                  cancelText="Cancel"
-                  onConfirm={handleDeleteAccount}
-                  onCancel={() => setShowDeleteDialog(false)}
-                  loading={deleteLoading}
-                  destructive
-                />
-            </SafeAreaView>
+            <ConfirmationDialog 
+              visible={showDeleteDialog}
+              title="Delete Account"
+              message="Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data including likes and preferences."
+              confirmText="Delete Account"
+              cancelText="Cancel"
+              onConfirm={handleDeleteAccount}
+              onCancel={() => setShowDeleteDialog(false)}
+              loading={deleteLoading}
+              destructive
+            />
         </View>
         </RequireAuth>
     );
@@ -217,21 +211,6 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1, 
-    },
-    safeArea: {
-        flex: 1, 
-    },
-    header: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 20, 
-        paddingVertical: 16, 
-    },
-    headerTitle: {
-        flex: 1, 
-        fontSize: 20, 
-        fontWeight: '700',
-        textAlign: 'center',
     },
     scrollView: {
         flex: 1, 

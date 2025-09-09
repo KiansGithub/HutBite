@@ -22,6 +22,7 @@ export interface Database {
           place_id: string | null
           google_rating: number | null
           google_review_count: number | null
+          receives_orders: boolean
         }
         Insert: {
           id?: string
@@ -35,6 +36,7 @@ export interface Database {
           place_id: string | null
           google_rating: number | null
           google_review_count: number | null
+          receives_orders?: boolean
         }
         Update: {
           id?: string
@@ -48,6 +50,7 @@ export interface Database {
           place_id: string | null
           google_rating: number | null
           google_review_count: number | null
+          receives_orders?: boolean
         }
       }
       menu_items: {

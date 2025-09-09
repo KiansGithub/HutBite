@@ -4,7 +4,7 @@ import type { IBasketItem } from '../components/basket/types';
 import type { IBaseProduct } from '@/types/product';
 import type { IToppingSelection, IToppingGroup, ITopping } from '@/types/toppings';
 import { buildImageUrl } from '@/utils/imageUtils';
-import { IStoreInfo, useStore } from '@/store/StoreContext';
+import { IStoreInfo, useStore } from '@/contexts/StoreContext';
 import { formatCurrency } from '@/utils/orderUtils';
 import { calculateItemPrice, generateSimpleId } from '@/utils/basketUtils';
 import { IOptionSelections } from '@/types/productOptions';
