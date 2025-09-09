@@ -37,9 +37,13 @@ export function useProductOptions({
     onSelectionsChange
 }: UseProductOptionsProps): UseProductOptionsReturn {
     // State management 
-    const [selections, setSelections] = useState<IOptionSelections>(
-        initialSelections || options.defaultSelections || {}
-    );
+    const [selections, setSelections] = useState<IOptionSelections>(() => {
+        // Determine initial state based on editing mode vs new item
+        if (initialSelections && Object.keys(initialSelections).length > 0) {
+            return initialSelections;
+        }
+        return options.defaultSelections || {};
+    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [filteredOptions, setFilteredOptions] = useState<IFilteredOptionGroups>(
@@ -52,7 +56,6 @@ export function useProductOptions({
     useEffect(() => {
         const isEditing = initialSelections && Object.keys(initialSelections).length > 0;
         const hasDefaults = options.defaultSelections && Object.keys(options.defaultSelections).length > 0;
-        const selectionsAreEmpty = Object.keys(selections).length === 0;
 
         if (isEditing) {
             // If in edit mode, apply the existing selections.
@@ -65,11 +68,11 @@ export function useProductOptions({
                 );
                 setFilteredOptions(filtered);
             }
-        } else if (selectionsAreEmpty && hasDefaults) {
-            // If creating a new item and defaults are available, apply them.
+        } else if (hasDefaults && Object.keys(selections).length === 0) {
+            // If creating a new item and no selections exist yet, apply defaults.
             setSelections(options.defaultSelections || {});
         }
-    }, [initialSelections, options.defaultSelections, selections]);
+    }, [initialSelections, options.defaultSelections, options.groups, options.validCombinations]);
 
     // Memoized validation state 
     const validationState = useMemo(() => {
