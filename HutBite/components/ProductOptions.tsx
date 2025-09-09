@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
-import { RadioButton, Text, TouchableRipple } from 'react-native-paper';
+import { Text, TouchableRipple } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 
 import { IProcessedProductOptions, IOptionSelections, IFilteredOptionGroups } from '@/types/productOptions';
@@ -15,10 +15,13 @@ interface ProductOptionsProps {
   onOptionSelect: (groupKey: string, value: string) => void;
 }
 
-export const ProductOptions: React.FC<ProductOptionsProps> = ({ options, filteredOptions, selections, onOptionSelect }) => {
-  if (!options.groups || options.groups.length === 0) {
-    return null;
-  }
+export const ProductOptions: React.FC<ProductOptionsProps> = ({
+  options,
+  filteredOptions,
+  selections,
+  onOptionSelect,
+}) => {
+  if (!options.groups || options.groups.length === 0) return null;
 
   return (
     <View style={styles.container}>
@@ -28,9 +31,7 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({ options, filtere
             ? filteredOptions[group.key]
             : group.options;
 
-        if (displayOptions.length === 0) {
-          return null; // Don't render group if no options are available
-        }
+        if (displayOptions.length === 0) return null;
 
         return (
           <View key={group.key} style={styles.groupContainer}>
@@ -38,15 +39,40 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({ options, filtere
               <Text style={styles.groupTitle}>{group.key}</Text>
               {group.isRequired && <Text style={styles.requiredText}>Required</Text>}
             </View>
+
             <View>
               {displayOptions.map((option) => {
                 const isSelected = String(selections[group.key] ?? '') === String(option.ID);
                 return (
-                  <TouchableRipple key={option.ID} onPress={() => onOptionSelect(group.key, option.ID)}>
-                    <View style={[styles.optionContainer, isSelected && styles.optionSelected]}>
-                      <Text style={[styles.optionName, isSelected && styles.optionNameSelected]}>{option.Name}</Text>
-                      <View style={[styles.radioButtonContainer, isSelected && styles.radioButtonSelected]}>
-                        {isSelected && <Ionicons name="checkmark" size={18} color="#fff" />}
+                  <TouchableRipple
+                    key={option.ID}
+                    onPress={() => onOptionSelect(group.key, option.ID)}
+                    rippleColor={`${lightColors.primary}1A`} // subtle ripple
+                    borderless={false}
+                  >
+                    <View
+                      style={[
+                        styles.optionContainer,
+                        isSelected && styles.optionSelected, // only changes border color now
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.optionName,
+                          isSelected && styles.optionNameSelected, // slight weight only; keeps text color
+                        ]}
+                        numberOfLines={2}
+                      >
+                        {option.Name}
+                      </Text>
+
+                      <View
+                        style={[
+                          styles.radioButton,
+                          isSelected && styles.radioButtonSelected, // purple fill
+                        ]}
+                      >
+                        {isSelected && <Ionicons name="checkmark" size={16} color="#fff" />}
                       </View>
                     </View>
                   </TouchableRipple>
@@ -61,23 +87,23 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({ options, filtere
 };
 
 const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-  },
-  groupContainer: {
-    marginBottom: 24,
-  },
+  container: { width: '100%' },
+
+  groupContainer: { marginBottom: 24 },
+
   groupHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
   },
+
   groupTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: lightColors.text,
   },
+
   requiredText: {
     fontSize: 12,
     fontWeight: '500',
@@ -88,41 +114,49 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: 'hidden',
   },
+
   optionContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
     borderWidth: 1.5,
     borderColor: lightColors.border,
+    backgroundColor: '#fff',       // stays white even when selected
     borderRadius: 12,
     marginBottom: 10,
+    gap: 12,
   },
+
+  // Selected state: only emphasize the border; no fill change
   optionSelected: {
-    backgroundColor: lightColors.primary,
     borderColor: lightColors.primary,
   },
+
   optionName: {
+    flex: 1,
     fontSize: 16,
     color: lightColors.text,
-    flex: 1,
   },
+
+  // Slight emphasis but keep same color to avoid overwhelm
   optionNameSelected: {
-    color: '#fff',
     fontWeight: '600',
   },
-  radioButtonContainer: {
+
+  radioButton: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: lightColors.border,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
   },
+
+  // Purple pill with white checkmark
   radioButtonSelected: {
     backgroundColor: lightColors.primary,
-    borderColor: '#fff',
+    borderColor: lightColors.primary,
   },
 });

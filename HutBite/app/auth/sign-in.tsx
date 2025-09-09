@@ -10,65 +10,30 @@ import {
   ActivityIndicator,
   Text
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "@/store/authStore";
 import Colors from "@/constants/Colors";
-import { GradientText } from "@/components/GradientText";
 import { GlassPanel } from "@/components/GlassPanel";
 import { GoogleSignInButton, AppleSignInButton } from "@/components/OAuthButtons";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useLocalSearchParams, router } from "expo-router";
 
-const dynamicStyles = (themeColors) => StyleSheet.create({
-  title: {
-    color: themeColors.text,
-  },
-  subtitle: {
-    color: themeColors.text,
-    opacity: 0.85,
-  },
-  dividerText: {
-    color: themeColors.text,
-    opacity: 0.65,
-  },
-  segmentedWrapper: {
-    borderColor: 'rgba(0,0,0,0.1)',
-  },
-  segmentedSelected: {
-    backgroundColor: 'rgba(0,0,0,0.05)',
-  },
-  segmentedText: {
-    color: themeColors.text,
-    opacity: 0.7,
-  },
-  segmentedTextSelected: {
-    color: themeColors.text,
-  },
-  label: {
-    color: themeColors.text,
-    opacity: 0.85,
-  },
-  inputWrapper: {
-    backgroundColor: '#f0f0f0',
-    borderColor: '#d0d0d0',
-  },
-  input: {
-    color: themeColors.text,
-  },
-  legal: {
-    color: themeColors.text,
-    opacity: 0.65,
-  },
-  link: {
-    color: themeColors.primary,
-  },
-  guestBtn: {
-    borderColor: 'rgba(0,0,0,0.2)',
-    backgroundColor: 'rgba(0,0,0,0.02)',
-  },
-  guestBtnText: {
-    color: themeColors.text,
-  },
+const dynamicStyles = (themeColors: any) => StyleSheet.create({
+  title: { color: themeColors.text },
+  subtitle: { color: themeColors.text, opacity: 0.85 },
+  dividerText: { color: themeColors.text, opacity: 0.65 },
+  segmentedWrapper: { borderColor: 'rgba(0,0,0,0.1)' },
+  segmentedSelected: { backgroundColor: 'rgba(0,0,0,0.05)' },
+  segmentedText: { color: themeColors.text, opacity: 0.7 },
+  segmentedTextSelected: { color: themeColors.text },
+  label: { color: themeColors.text, opacity: 0.85 },
+  inputWrapper: { backgroundColor: '#f0f0f0', borderColor: '#d0d0d0' },
+  input: { color: themeColors.text },
+  legal: { color: themeColors.text, opacity: 0.65 },
+  link: { color: themeColors.primary },
+  guestBtn: { borderColor: 'rgba(0,0,0,0.2)', backgroundColor: 'rgba(0,0,0,0.02)' },
+  guestBtnText: { color: themeColors.text },
 });
 
 export default function SignInScreen() {
@@ -77,69 +42,89 @@ export default function SignInScreen() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const { next } = useLocalSearchParams<{ next?: string }>();
+
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme];
   const styles = { ...staticStyles, ...dynamicStyles(themeColors) };
 
   const insets = useSafeAreaInsets();
-
   const { signIn, signUp, signInWithProvider } = useAuthStore();
-
-  React.useEffect(() => {
-    // AnalyticsService.logScreenView('SignIn', 'AuthScreen');
-  }, []);
 
   const handleAuth = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-
     setLoading(true);
-
     const { error } = isSignUp ? await signUp(email, password) : await signIn(email, password);
-
-    if (error) {
-      Alert.alert("Error", error.message);
-    } else {
-      router.replace(next || '/(main)/feed');
-    }
-
+    if (error) Alert.alert("Error", error.message);
+    else router.replace(next || '/(main)/feed');
     setLoading(false);
   };
 
   const handleOAuth = async (provider: 'google' | 'apple') => {
     setLoading(true);
     const { error } = await signInWithProvider(provider);
-    if (error) {
-      Alert.alert('Error', error.message);
-    } else {
-      router.replace(next || '/(main)/feed');
-    }
+    if (error) Alert.alert('Error', error.message);
+    else router.replace(next || '/(main)/feed');
     setLoading(false);
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: Colors[colorScheme].background }]}>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <View style={staticStyles.container}>
+      {/* BACKGROUND GRADIENT (same as RequireAuth) */}
+      <LinearGradient
+        colors={[themeColors.primaryStart, themeColors.primaryEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+
+      {/* Optional soft vignette for depth */}
+      <View pointerEvents="none" style={staticStyles.vignette} />
+
+      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+  <LinearGradient
+    colors={['rgba(255,255,255,0.25)', 'rgba(255,255,255,0)']}
+    start={{ x: 0.2, y: 0.1 }}
+    end={{ x: 0.8, y: 0.6 }}
+    style={{ position: 'absolute', width: 280, height: 280, borderRadius: 280, top: 40, left: -60, opacity: 0.35 }}
+  />
+  <LinearGradient
+    colors={['rgba(255,255,255,0.18)', 'rgba(255,255,255,0)']}
+    start={{ x: 0.2, y: 0.1 }}
+    end={{ x: 0.8, y: 0.8 }}
+    style={{ position: 'absolute', width: 340, height: 340, borderRadius: 340, bottom: -40, right: -80, opacity: 0.3 }}
+  />
+</View>
+
+      <SafeAreaView style={staticStyles.safeArea} edges={['top', 'bottom']}>
         <KeyboardAvoidingView
-          style={styles.kav}
+          style={staticStyles.kav}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-          <View style={styles.wrapper}>
-            <GlassPanel>
-              {/* Header */}
+          <View style={staticStyles.wrapper}>
+          <GlassPanel
+  style={{
+    backgroundColor: 'rgba(255,255,255,0.9)', // pin it to off-white
+    borderColor: 'rgba(255,255,255,0.8)',
+    borderWidth: 1,
+    borderRadius: 24,
+    // nice depth:
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8, // Android
+  }}
+>
               <Text style={[staticStyles.title, styles.title]}>Welcome to HutBite</Text>
-              <Text style={[staticStyles.subtitle, styles.subtitle]}>Your culinary adventure awaits</Text>
-              {/* OAUTH buttons – same width */}
-              <GoogleSignInButton
-                onPress={() => handleOAuth('google')}
-                loading={loading}
-              />
-              <AppleSignInButton
-                onPress={() => handleOAuth('apple')}
-                loading={loading}
-              />
+              {/* <Text style={[staticStyles.subtitle, styles.subtitle]}>
+                Your culinary adventure awaits
+              </Text> */}
+
+              <GoogleSignInButton onPress={() => handleOAuth('google')} loading={loading} />
+              <AppleSignInButton onPress={() => handleOAuth('apple')} loading={loading} />
 
               <TouchableOpacity
                 style={[staticStyles.guestBtn, styles.guestBtn, loading && staticStyles.btnDisabled]}
@@ -148,30 +133,33 @@ export default function SignInScreen() {
                 activeOpacity={0.85}
                 accessibilityRole="button"
                 accessibilityLabel="Continue as guest"
-                accessibilityHint="Skips sign-in and takes you to the feed"
               >
-                <Text style={[staticStyles.guestBtnText, styles.guestBtnText]}>Continue as guest</Text>
+                <Text style={[staticStyles.guestBtnText, styles.guestBtnText]}>
+                  Continue as guest
+                </Text>
               </TouchableOpacity>
 
               <Text style={[staticStyles.dividerText, styles.dividerText]}>OR CONTINUE WITH EMAIL</Text>
 
-              {/* Sign-in / Sign-up segmented */}
               <View style={[staticStyles.segmentedWrapper, styles.segmentedWrapper]}>
                 <TouchableOpacity
                   style={[staticStyles.segmentedBtn, !isSignUp && styles.segmentedSelected]}
                   onPress={() => setIsSignUp(false)}
                 >
-                  <Text style={[staticStyles.segmentedText, !isSignUp && styles.segmentedTextSelected]}>Sign In</Text>
+                  <Text style={[staticStyles.segmentedText, !isSignUp && styles.segmentedTextSelected]}>
+                    Sign In
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[staticStyles.segmentedBtn, isSignUp && styles.segmentedSelected]}
                   onPress={() => setIsSignUp(true)}
                 >
-                  <Text style={[staticStyles.segmentedText, isSignUp && styles.segmentedTextSelected]}>Sign Up</Text>
+                  <Text style={[staticStyles.segmentedText, isSignUp && styles.segmentedTextSelected]}>
+                    Sign Up
+                  </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Form */}
               <Text style={[staticStyles.label, styles.label]}>Email</Text>
               <View style={[staticStyles.inputWrapper, styles.inputWrapper]}>
                 <TextInput
@@ -197,21 +185,19 @@ export default function SignInScreen() {
                 />
               </View>
 
-              {/* CTA */}
               <TouchableOpacity
                 style={[staticStyles.authBtn, loading && staticStyles.btnDisabled]}
                 onPress={handleAuth}
                 disabled={loading}
                 activeOpacity={0.85}
               >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={staticStyles.authBtnText}>{isSignUp ? "Sign Up to HutBite" : "Sign In to HutBite"}</Text>
-                )}
+                {loading
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={staticStyles.authBtnText}>
+                      {isSignUp ? "Sign Up to HutBite" : "Sign In to HutBite"}
+                    </Text>}
               </TouchableOpacity>
 
-              {/* Legal */}
               <Text style={[staticStyles.legal, styles.legal]}>
                 By continuing, you agree to our <Text style={[staticStyles.link, styles.link]}>Terms of Service</Text> and <Text style={[staticStyles.link, styles.link]}>Privacy Policy</Text>
               </Text>
@@ -232,28 +218,26 @@ const staticStyles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
+  // soft edge darkening so the glass pops
+  vignette: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 40,
+  },
+
   title: {
     fontSize: 32,
     fontWeight: "700",
     textAlign: "center",
-    marginBottom: 4,
+    marginBottom: 15,
   },
   subtitle: {
     fontSize: 16,
     textAlign: "center",
     marginBottom: 24,
   },
-  oauthBtn: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.35)",
-    borderRadius: 14,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginBottom: 12,
-    backgroundColor: "rgba(255,255,255,0.05)",
-  },
-  oauthText: { color: "#fff", fontSize: 16, fontWeight: "500" },
   dividerText: {
     fontSize: 12,
     alignSelf: "center",
@@ -272,16 +256,7 @@ const staticStyles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
   },
-  segmentedSelected: {},
-  segmentedText: {
-    fontSize: 15,
-    fontWeight: "500",
-  },
-  segmentedTextSelected: {},
-  label: {
-    fontSize: 14,
-    marginBottom: 6,
-  },
+  label: { fontSize: 14, marginBottom: 6 },
   inputWrapper: {
     borderRadius: 14,
     borderWidth: 1,
@@ -292,10 +267,7 @@ const staticStyles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
   },
-  input: {
-    height: 46,
-    fontSize: 16,
-  },
+  input: { height: 46, fontSize: 16 },
   authBtn: {
     backgroundColor: Colors.light.primary,
     borderRadius: 999,
@@ -310,31 +282,13 @@ const staticStyles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.7 },
   authBtnText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  legal: {
-    fontSize: 12,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-  link: {
-    textDecorationLine: "underline",
-  },
-  guestLink: {
-    alignSelf: 'center',
-    paddingVertical: 0,       // keeps a decent tap target without looking like a button
-    paddingHorizontal: 12,
-    marginTop: 0,
-    marginBottom: 12,
-  },
-  guestLinkText: {
-    fontSize: 14,
-    fontWeight: '500',
-    textDecorationLine: 'underline', // optional: comment out if you don't want the link look
-  },
+  legal: { fontSize: 12, textAlign: "center", lineHeight: 18 },
+  link: { textDecorationLine: "underline" },
   guestBtn: {
     width: "100%",
     borderWidth: 1,
     borderRadius: 999,
-    paddingVertical: 14,         // ≥44px target with line height/text
+    paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 8,
@@ -344,8 +298,5 @@ const staticStyles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 4 },
   },
-  guestBtnText: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
+  guestBtnText: { fontSize: 15, fontWeight: "600" },
 });

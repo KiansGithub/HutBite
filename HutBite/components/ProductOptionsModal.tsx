@@ -435,6 +435,7 @@ console.log('Validation state:', validationState);
           disabled={!validationState.isValid || (!canAddToBasket && !isEditing)}
           style={[
             styles.cta,
+            styles.ctaNarrow, // ← add this
             (!validationState.isValid || (!canAddToBasket && !isEditing)) && styles.ctaDisabled,
           ]}
         >
@@ -480,7 +481,7 @@ const styles = StyleSheet.create({
   heroImageWrap: { position: 'relative' },
   heroImage: {
     width: '100%',
-    aspectRatio: 1.25, // keeps a nice, consistent hero height
+    aspectRatio: 2, // keeps a nice, consistent hero height
     resizeMode: 'cover',
   },
   heroTopOverlay: {
@@ -549,14 +550,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  /* STICKY FOOTER */
   footer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: '#fff',
-    paddingTop: 10,
+    paddingTop: 8,
     paddingBottom: Platform.OS === 'ios' ? 24 : 14,
     paddingHorizontal: 16,
     borderTopWidth: StyleSheet.hairlineWidth,
@@ -566,6 +566,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     shadowOffset: { width: 0, height: -3 },
     elevation: 12,
+    alignItems: 'center',            // ← center children so they don't stretch full width
   },
 
   stepperWrap: {
@@ -600,21 +601,30 @@ const styles = StyleSheet.create({
   cta: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 28,
+    justifyContent: 'center',
+    borderRadius: 25,                 // match basket pill
     backgroundColor: lightColors.primary,
-    paddingVertical: 16,
-    paddingHorizontal: 18,
+    height: 48,                       // match basket pill height
+    paddingHorizontal: 16,
   },
+  
+  // NEW: cap width + center
+  ctaNarrow: {
+    alignSelf: 'center',
+    width: '90%',
+    maxWidth: 520,                    // feels nice on tablets
+  },
+  
   ctaDisabled: { backgroundColor: '#AAB8C2' },
   ctaText: { color: '#fff', fontSize: 16, fontWeight: '700', flex: 1 },
-
+  
   pricePill: {
     backgroundColor: 'rgba(255,255,255,0.18)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
     alignItems: 'center',
-    minWidth: 84,
+    minWidth: 72,
   },
   priceText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   strike: {

@@ -4,7 +4,6 @@ import {
   StyleSheet,
   Modal,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
 import { Text } from '@/components/Themed';
@@ -12,6 +11,8 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import {
   getStoreProfile,
   getWebSettings,
@@ -20,6 +21,7 @@ import {
   getToppings,
   getStoreStatus
 } from '@/services/apiService';
+import { LinearGradient } from 'expo-linear-gradient'; // make sure this import exists
 import { STORE_CONFIG } from '@/constants/api';
 import type { IStoreProfile, IWebSettings, MenuCategory, IBaseProduct } from '@/types/store';
 import { RestaurantCategoryHeader } from './RestaurantCategoryHeader';
@@ -56,6 +58,8 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
   const [products, setProducts] = useState<IBaseProduct[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
+const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
 
   // 🔀 Internal route: menu ↔ options
   const [route, setRoute] = useState<'menu' | 'options'>('menu');
@@ -215,44 +219,48 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
         }
       }}
     >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <View style={[styles.header, {
-          backgroundColor: colors.background,
-          borderBottomColor: colors.tabIconDefault + '20'
-        }]}>
-          <TouchableOpacity
-            onPress={() => (route === 'options' ? (setRoute('menu'), setActiveProduct(null)) : onClose())}
-            style={styles.closeButton}
-          >
-            <Ionicons
-              name={route === 'options' ? 'chevron-back' : 'close'}
-              size={24}
-              color={colors.text}
-            />
-          </TouchableOpacity>
+      <SafeAreaView
+    style={[styles.container, { backgroundColor: colors.background }]}
+    edges={['left','right','bottom']}   // ← don't consume the top inset here
+  >
+    <StatusBar style="light" translucent backgroundColor="transparent" />
 
-          <View style={styles.headerContent}>
-            <Text style={[styles.restaurantName, { color: colors.text }]}>
-              {storeProfile?.StoreName || restaurant?.name || 'Restaurant'}
-            </Text>
-            <Text style={[styles.restaurantStatus, {
-              color: colors.text,
-              backgroundColor: colors.tabIconDefault + '20'
-            }]}>
-              {route === 'options' ? 'Choose options' : 'Open'}
-            </Text>
-          </View>
+    {/* Gradient Header spans under the status bar */}
+    <LinearGradient
+      colors={[colors.primaryStart, colors.primaryEnd]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.gradientTop, { paddingTop: topPad }]}  // ← include top inset
+    >
+      <View style={styles.headerRow}>
+        <TouchableOpacity
+          onPress={() =>
+            route === 'options' ? (setRoute('menu'), setActiveProduct(null)) : onClose()
+          }
+          style={styles.headerIcon}
+        >
+          <Ionicons name={route === 'options' ? 'chevron-back' : 'close'} size={22} color="#111" />
+        </TouchableOpacity>
 
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.infoButton}>
-              <Ionicons name="information-circle-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.shareButton}>
-              <Ionicons name="share-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
-          </View>
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>
+            {storeProfile?.StoreName || restaurant?.name || 'Restaurant'}
+          </Text>
+          <Text style={styles.headerPill}>
+            {route === 'options' ? 'Choose options' : 'Open'}
+          </Text>
         </View>
+
+        <View style={styles.headerRight}>
+          <TouchableOpacity style={styles.headerIcon}>
+            <Ionicons name="information-circle-outline" size={22} color="#111" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerIcon}>
+            <Ionicons name="share-outline" size={22} color="#111" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </LinearGradient>
 
         {/* ROUTE: MENU */}
         {route === 'menu' && (
@@ -340,6 +348,38 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+  },
+  gradientTop: {
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    overflow: 'hidden',
+    paddingBottom: 10,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  headerIcon: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(17,17,17,0.08)',
+  },
+  headerCenter: { flex: 1, alignItems: 'center', gap: 4 },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  headerPill: {
+    color: '#fff',
+    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    overflow: 'hidden',
   },
   closeButton: { padding: 8 },
   headerContent: { flex: 1, alignItems: 'center' },

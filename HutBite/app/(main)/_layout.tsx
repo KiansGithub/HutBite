@@ -9,12 +9,14 @@ import { StoreProvider } from '@/contexts/StoreContext';
 import { BasketProvider, useBasket } from '@/contexts/BasketContext';
 import { BlurView } from 'expo-blur';
 import { CartIcon } from '@/components/CartIcon';
+import { useAuthGate } from '@/hooks/useAuthGate';
 
 function TabLayout() {
     const insets = useSafeAreaInsets();
     const colorScheme = useColorScheme();
     const { theme } = useTabTheme();
     const { currentStoreId } = useBasket();
+    const { isAuthed } = useAuthGate();
 
     const handleCartPress = () => {
         if (currentStoreId) {
@@ -27,8 +29,8 @@ function TabLayout() {
     return (
         <Tabs
             screenOptions={{
-                headerShown: true,
-                headerStyle: { backgroundColor: 'white' },
+                headerShown: isAuthed,
+                headerStyle: { backgroundColor: isAuthed ? 'white' : 'transparent' },
                 headerTitleAlign: 'center',
                 headerTitleStyle: { 
                     fontWeight: 'bold',
