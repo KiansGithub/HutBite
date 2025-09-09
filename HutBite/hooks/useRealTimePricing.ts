@@ -3,8 +3,8 @@ import { IBaseProduct } from '@/types/product';
 import { IOptionSelections } from '@/types/productOptions';
 import { IToppingSelection, ITopping } from '@/types/toppings';
 import { calculateItemPrice } from '@/utils/basketUtils';
-import { useStore } from '@/store/StoreContext';
-import { formatCurrency, CurrencyCode } from '@/utils/currency';
+import { useStore } from '@/contexts/StoreContext';
+import { formatCurrency, CurrencyCode } from '@/utils/orderUtils';
 
 interface UseRealTimePricingProps {
     product: IBaseProduct; 

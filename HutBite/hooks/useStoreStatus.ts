@@ -1,4 +1,4 @@
-import { useStore } from '@/store/StoreContext';
+import { useStore } from '@/contexts/StoreContext';
 import { isStoreOpen, getStoreHoursMessage } from '@/utils/storeUtils';
 
 export const useStoreStatus = () => {

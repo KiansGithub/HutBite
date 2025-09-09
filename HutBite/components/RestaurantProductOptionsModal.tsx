@@ -1,425 +1,442 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-  Dimensions,
-} from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ScrollView, StyleSheet, View, ImageSourcePropType } from 'react-native';
+import { Modal, Portal, useTheme, ActivityIndicator, HelperText, IconButton, Card, Button } from 'react-native-paper';
+import { IBaseProduct } from '@/types/product';
+import { IOptionSelections, IProcessedProductOptions } from '@/types/productOptions';
+import { ProductOptions } from './ProductOptions';
 import { Text } from '@/components/Themed';
-import { Ionicons } from '@expo/vector-icons';
-import Colors from '@/constants/Colors';
-import { IBaseProduct } from '@/types/store';
-
-const colors = Colors.light;
-const { height: SCREEN_HEIGHT } = Dimensions.get('window');
-
-interface ProductOption {
-  id: string;
-  name: string;
-  price?: number;
-  selected?: boolean;
-}
-
-interface ProductOptionGroup {
-  id: string;
-  name: string;
-  required?: boolean;
-  multiSelect?: boolean;
-  options: ProductOption[];
-}
+import { processProductOptions } from '@/utils/productOptionsUtils';
+import { useToppings } from '@/hooks/useToppings';
+import { IToppingSelection, ITopping } from '@/types/toppings';
+import { ProductToppings } from './ProductToppings';
+import { useProductOptions } from '@/hooks/useProductOptions';
+import { IBasketItem } from '@/types/basket';
+import { useBasketContext } from '@/context/BasketContext';
+import { useRealTimePricing } from '@/hooks/useRealTimePricing';
+import { useStoreStatus } from '@/hooks/useStoreStatus';
 
 interface RestaurantProductOptionsModalProps {
-  visible: boolean;
-  onDismiss: () => void;
-  product: IBaseProduct;
-  onConfirm: (selections: any) => void;
-  imageUrl?: string;
+    visible: boolean; 
+    onDismiss: () => void; 
+    product: IBaseProduct; 
+    onConfirm: (selections: { 
+        options: IOptionSelections;
+        toppings?: IToppingSelection[];  
+        availableToppings?: ITopping[];
+        isEditing?: boolean; 
+        itemId?: string; 
+        quantity?: number; 
+    }) => void; 
+    imageSource?: ImageSourcePropType;
+    existingItem?: IBasketItem; 
+    onDelete?: (itemId: string) => void; 
 }
 
 export function RestaurantProductOptionsModal({
-  visible,
-  onDismiss,
-  product,
-  onConfirm,
-  imageUrl,
+    visible, 
+    onDismiss, 
+    product, 
+    onConfirm,
+    imageSource,
+    existingItem, 
+    onDelete
 }: RestaurantProductOptionsModalProps) {
-  const [selectedOptions, setSelectedOptions] = useState<Record<string, string[]>>({});
-  const [quantity, setQuantity] = useState(1);
+    const theme = useTheme();
+    const { getToppingsByGroup } = useToppings();
+    const { canAddToBasket } = useStoreStatus();
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const colors = theme.colors;
 
-  // Mock option groups - in real implementation, these would come from product.DeGroupedPrices
-  const optionGroups: ProductOptionGroup[] = [
-    {
-      id: 'size',
-      name: 'Size',
-      required: true,
-      multiSelect: false,
-      options: [
-        { id: 'small', name: 'Small', price: 0 },
-        { id: 'medium', name: 'Medium', price: 2.50 },
-        { id: 'large', name: 'Large', price: 5.00 },
-      ],
-    },
-    {
-      id: 'toppings',
-      name: 'Extra Toppings',
-      required: false,
-      multiSelect: true,
-      options: [
-        { id: 'cheese', name: 'Extra Cheese', price: 1.50 },
-        { id: 'pepperoni', name: 'Pepperoni', price: 2.00 },
-        { id: 'mushrooms', name: 'Mushrooms', price: 1.00 },
-        { id: 'olives', name: 'Olives', price: 1.00 },
-      ],
-    },
-  ];
+    const [processedOptions, setProcessedOptions] = useState<IProcessedProductOptions>({
+        groups: [],
+        requirements: { mandatoryKeys: [] },
+        validCombinations: {}
+    });
 
-  useEffect(() => {
-    if (visible) {
-      // Reset selections when modal opens
-      setSelectedOptions({});
-      setQuantity(1);
-    }
-  }, [visible]);
+    const initialSelections = useMemo(() => ({}), []);
+    const [toppingSelections, setToppingSelections] = useState<IToppingSelection[]>([]);
+    const [toppings, setToppings] = useState<ITopping[]>([]);
+    const [quantity, setQuantity] = useState(1);
 
-  const handleOptionSelect = (groupId: string, optionId: string) => {
-    const group = optionGroups.find(g => g.id === groupId);
-    if (!group) return;
+    const hasToppings = useMemo(() => (
+        Boolean(product.ToppingGrpID && Array.isArray(product.Toppings) && product.Toppings.length > 0)
+    ), [product.ToppingGrpID, product.Toppings]);
 
-    setSelectedOptions(prev => {
-      const currentSelections = prev[groupId] || [];
-      
-      if (group.multiSelect) {
-        // Toggle selection for multi-select groups
-        if (currentSelections.includes(optionId)) {
-          return {
-            ...prev,
-            [groupId]: currentSelections.filter(id => id !== optionId),
-          };
-        } else {
-          return {
-            ...prev,
-            [groupId]: [...currentSelections, optionId],
-          };
+    const isEditing = !!existingItem;
+
+    const {
+        selections, 
+        validationState, 
+        filteredOptions, 
+        handleOptionSelect, 
+        handleOptionChange, 
+        loading: optionsLoading 
+    } = useProductOptions({ options: processedOptions });
+
+    const { formattedPrice, currentPrice } = useRealTimePricing({
+        product, 
+        selections, 
+        toppingSelections, 
+        availableToppings: toppings
+    });
+
+    useEffect(() => {
+        if (!visible) {
+            setToppingSelections([]);
+            setQuantity(1);
         }
-      } else {
-        // Single selection for radio groups
-        return {
-          ...prev,
-          [groupId]: [optionId],
+    }, [visible]);
+
+    useEffect(() => {
+        if (existingItem && visible) {
+            const extractedOptions: IOptionSelections = {};
+            
+            existingItem.options.forEach(option => {
+                if (option.option_list_name !== 'Topping') {
+                    extractedOptions[option.option_list_name] = option.ref;
+                }
+            });
+
+            Object.entries(extractedOptions).forEach(([key, value]) => {
+                if (value !== null) {
+                    handleOptionSelect(key, value);
+                }
+            });
+
+            const extractedToppings: IToppingSelection[] = existingItem.options
+              .filter(option => option.option_list_name === 'Topping')
+              .map(topping => ({
+                id: topping.ref.split('-').pop() || topping.ref,
+                name: topping.label, 
+                portions: topping.quantity
+              }));
+
+            if (extractedToppings.length > 0) {
+                setToppingSelections(extractedToppings);
+            }
+            
+            if (existingItem.quantity) {
+                setQuantity(existingItem.quantity);
+            }
+        }
+    }, [existingItem, visible, handleOptionSelect]);
+
+    const handleDelete = () => {
+        if (existingItem?.id) {
+            onDelete?.(existingItem.id);
+        }
+    };
+
+    useEffect(() => {
+        let isMounted = true; 
+
+        const fetchToppings = async () => {
+            if (product.ToppingGrpID) {
+                try {
+                    const fetchedToppings = await getToppingsByGroup(product.ToppingGrpID);
+                    if (isMounted) {
+                        setToppings(fetchedToppings || []);
+                    }
+                } catch (err) {
+                    console.error("Error fetching toppings:", err);
+                }
+            }
+            if (isMounted) setLoading(false);
         };
-      }
-    });
-  };
 
-  const calculateTotalPrice = () => {
-    let total = product.Price || 0;
-    
-    optionGroups.forEach(group => {
-      const selections = selectedOptions[group.id] || [];
-      selections.forEach(optionId => {
-        const option = group.options.find(o => o.id === optionId);
-        if (option?.price) {
-          total += option.price;
+        fetchToppings();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [product.ToppingGrpID, getToppingsByGroup]);
+
+    useEffect(() => {
+        let mounted = true;
+
+        if (visible) {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const opts = processProductOptions(product, product.DeGroupedPrices);
+                if (mounted) {
+                    setProcessedOptions(opts);
+                }
+            } catch (err) {
+                if (mounted) {
+                    setError('Failed to process product options');
+                }
+            } finally {
+                if (mounted) {
+                    setLoading(false);
+                }
+            }
         }
-      });
-    });
-    
-    return total * quantity;
-  };
+        return () => {
+            mounted = false;
+        };
+    }, [visible, product, product.DeGroupedPrices]);
 
-  const canConfirm = () => {
-    // Check if all required groups have selections
-    return optionGroups.every(group => {
-      if (!group.required) return true;
-      const selections = selectedOptions[group.id] || [];
-      return selections.length > 0;
-    });
-  };
+    const handleToppingChange = useCallback((newToppings: IToppingSelection[]) => {
+        setToppingSelections(newToppings);
+    }, []);
 
-  const handleConfirm = () => {
-    if (!canConfirm()) return;
-    
-    onConfirm({
-      options: selectedOptions,
-      quantity,
-      totalPrice: calculateTotalPrice(),
-    });
-  };
+    const handleQuantityChange = useCallback((newQuantity: number) => {
+        setQuantity(Math.max(1, newQuantity));
+    }, []);
 
-  const renderOptionGroup = (group: ProductOptionGroup) => (
-    <View key={group.id} style={styles.optionGroup}>
-      <View style={styles.groupHeader}>
-        <Text style={[styles.groupTitle, { color: colors.text }]}>
-          {group.name}
-        </Text>
-        {group.required && (
-          <Text style={[styles.requiredLabel, { color: colors.primary }]}>
-            Required
-          </Text>
-        )}
-      </View>
-      
-      {group.options.map(option => {
-        const isSelected = (selectedOptions[group.id] || []).includes(option.id);
-        
-        return (
-          <TouchableOpacity
-            key={option.id}
-            style={[
-              styles.optionItem,
-              { borderBottomColor: colors.tabIconDefault + '20' },
-              isSelected && { backgroundColor: colors.primary + '10' },
-            ]}
-            onPress={() => handleOptionSelect(group.id, option.id)}
-          >
-            <View style={styles.optionInfo}>
-              <Text style={[styles.optionName, { color: colors.text }]}>
-                {option.name}
-              </Text>
-              {option.price && option.price > 0 && (
-                <Text style={[styles.optionPrice, { color: colors.text }]}>
-                  +${option.price.toFixed(2)}
-                </Text>
-              )}
-            </View>
-            
-            <View style={[
-              styles.selectionIndicator,
-              { borderColor: colors.primary },
-              isSelected && { backgroundColor: colors.primary },
-            ]}>
-              {isSelected && (
-                <Ionicons name="checkmark" size={16} color="#fff" />
-              )}
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
-  );
+    const handleConfirm = useCallback(() => {
+        console.log("Confirming product with selections: ", {
+            options: selections, 
+            toppings: toppingSelections,
+            isEditing,
+            itemId: existingItem?.id,
+            quantity
+        });
 
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onDismiss}
-    >
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: colors.tabIconDefault + '20' }]}>
-          <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color={colors.text} />
-          </TouchableOpacity>
-          
-          <Text style={[styles.headerTitle, { color: colors.text }]}>
-            Customize Order
-          </Text>
-          
-          <View style={styles.headerSpacer} />
-        </View>
+        if (validationState.isValid) {
+            onConfirm({
+                options: selections,
+                toppings: toppingSelections,
+                availableToppings: toppings,
+                isEditing, 
+                itemId: existingItem?.id,
+                quantity
+            });
 
-        {/* Product Info */}
-        <View style={[styles.productInfo, { backgroundColor: colors.background }]}>
-          {imageUrl && (
-            <Image source={{ uri: imageUrl }} style={styles.productImage} />
-          )}
-          <View style={styles.productDetails}>
-            <Text style={[styles.productName, { color: colors.text }]}>
-              {product.Name}
-            </Text>
-            {product.Description && (
-              <Text style={[styles.productDescription, { color: colors.text }]}>
-                {product.Description}
-              </Text>
-            )}
-          </View>
-        </View>
+            setTimeout(() => {
+                setToppingSelections([]);
+                setQuantity(1);
+            }, 0);
 
-        {/* Options */}
-        <ScrollView style={styles.optionsContainer} showsVerticalScrollIndicator={false}>
-          {optionGroups.map(renderOptionGroup)}
-        </ScrollView>
+            onDismiss();
+        }
+    }, [
+        validationState.isValid,
+        selections,
+        toppingSelections,
+        quantity,
+        isEditing, 
+        existingItem, 
+        onConfirm,
+        onDismiss,
+        toppings
+    ]);
 
-        {/* Footer */}
-        <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.tabIconDefault + '20' }]}>
-          <View style={styles.quantityControls}>
-            <TouchableOpacity
-              style={[styles.quantityButton, { backgroundColor: colors.primary }]}
-              onPress={() => setQuantity(Math.max(1, quantity - 1))}
+    return (
+        <Portal>
+            <Modal 
+                testID="product-options-modal"
+                visible={visible}
+                onDismiss={onDismiss}
+                contentContainerStyle={[
+                    styles.modal, 
+                    { backgroundColor: theme.colors.background, paddingBottom: 0, margin: 0 }
+                ]}
             >
-              <Ionicons name="remove" size={20} color="#fff" />
-            </TouchableOpacity>
-            
-            <Text style={[styles.quantityText, { color: colors.text }]}>
-              {quantity}
-            </Text>
-            
-            <TouchableOpacity
-              style={[styles.quantityButton, { backgroundColor: colors.primary }]}
-              onPress={() => setQuantity(quantity + 1)}
-            >
-              <Ionicons name="add" size={20} color="#fff" />
-            </TouchableOpacity>
-          </View>
-          
-          <TouchableOpacity
-            style={[
-              styles.confirmButton,
-              { backgroundColor: canConfirm() ? colors.primary : colors.tabIconDefault },
-            ]}
-            onPress={handleConfirm}
-            disabled={!canConfirm()}
-          >
-            <Text style={[styles.confirmButtonText, { color: '#fff' }]}>
-              Add to Basket • ${calculateTotalPrice().toFixed(2)}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    </Modal>
-  );
+                <View style={styles.headerRow}>
+                    {imageSource && (
+                        <Card.Cover
+                            source={imageSource}
+                            style={styles.headerImage}
+                        />
+                    )}
+                    <View style={styles.headerContent}>
+                        <Text style={styles.title}>{product.Name}</Text>
+                        {product.Description && (
+                            <Text style={styles.description}>{product.Description}</Text>
+                        )}
+                    </View>
+                    <IconButton icon="close" onPress={onDismiss} style={styles.closeButton} />
+                </View>
+
+                <View style={[styles.contentWrapper, { backgroundColor: colors.surface }]}>
+                    {(loading || optionsLoading) && (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="large" color={theme.colors.primary} />
+                        </View>
+                    )}
+
+                    {error && (
+                        <View style={styles.errorContainer}>
+                            <HelperText type="error" style={styles.errorText}>{error}</HelperText>
+                        </View>
+                    )}
+
+                    {!loading && !optionsLoading && !error && (
+                        <ScrollView 
+                            style={[styles.scrollContainer, { backgroundColor: colors.background }]}
+                            contentContainerStyle={[styles.scrollContent]}
+                        >
+                            {processedOptions.groups.length > 0 && (
+                                <ProductOptions 
+                                    options={processedOptions}
+                                    filteredOptions={filteredOptions}
+                                    selections={selections}
+                                    onOptionSelect={handleOptionSelect}
+                                    onOptionChange={handleOptionChange}
+                                />
+                            )}
+
+                            {hasToppings && toppings.length > 0 && (
+                                <ProductToppings 
+                                    toppings={toppings}
+                                    onToppingsChange={handleToppingChange}
+                                    initialToppings={product.Toppings || []}
+                                    maxAllowedToppings={9}
+                                />
+                            )}
+                        </ScrollView>
+                    )}
+                </View>
+
+                <View style={[styles.footer, { backgroundColor: colors.background }]}>
+                    <View style={styles.quantityControls}>
+                        <IconButton
+                            icon="minus"
+                            size={20}
+                            onPress={() => handleQuantityChange(quantity - 1)}
+                            disabled={quantity <= 1}
+                            style={[styles.quantityButton, { backgroundColor: colors.primary }]}
+                            iconColor="#fff"
+                        />
+                        <Text style={styles.quantityText}>{quantity}</Text>
+                        <IconButton
+                            icon="plus"
+                            size={20}
+                            onPress={() => handleQuantityChange(quantity + 1)}
+                            style={[styles.quantityButton, { backgroundColor: colors.primary }]}
+                            iconColor="#fff"
+                        />
+                    </View>
+
+                    <Button 
+                        onPress={handleConfirm}
+                        style={[
+                            styles.footerButton,
+                            !validationState.isValid && styles.disabledButton
+                        ]}
+                        testID="confirm-button"
+                        disabled={(!canAddToBasket && !isEditing) || !validationState.isValid}
+                    >
+                        {isEditing ? 'Update Item' : `Add To Cart - ${formattedPrice}`}
+                    </Button>
+
+                    {isEditing && onDelete && (
+                        <Button 
+                            onPress={handleDelete}
+                            style={[styles.footerButton, styles.deleteButton]}
+                            testID="delete-button"
+                        >
+                            Delete Item
+                        </Button>
+                    )}
+                </View>
+            </Modal>
+        </Portal>
+    )
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerSpacer: {
-    width: 40,
-  },
-  productInfo: {
-    flexDirection: 'row',
-    padding: 16,
-  },
-  productImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 12,
-    marginRight: 16,
-  },
-  productDetails: {
-    flex: 1,
-  },
-  productName: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  productDescription: {
-    fontSize: 14,
-    opacity: 0.8,
-    lineHeight: 20,
-  },
-  optionsContainer: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  optionGroup: {
-    marginBottom: 24,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  groupTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  requiredLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  optionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  optionInfo: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  optionName: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  optionPrice: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  selectionIndicator: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-  },
-  quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  quantityButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantityText: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginHorizontal: 16,
-    minWidth: 30,
-    textAlign: 'center',
-  },
-  confirmButton: {
-    flex: 1,
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  confirmButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    modal: {
+        paddingHorizontal: 16,
+        borderRadius: 12,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16, 
+        borderBottomWidth: 1, 
+        borderBottomColor: '#e0e0e0',
+        borderTopLeftRadius: 12,
+        borderTopRightRadius: 12,
+    },
+    headerImage: {
+        width: 80, 
+        height: 80, 
+        resizeMode: 'cover',
+        borderRadius: 8,
+    },
+    headerContent: {
+        flex: 1, 
+        marginLeft: 16,
+    },
+    title: {
+        fontWeight: '600',
+        fontSize: 16, 
+        marginBottom: 4, 
+    },
+    description: {
+        color: '#666',
+        fontSize: 14, 
+        lineHeight: 18,
+    },
+    closeButton: {
+        margin: 0,
+    },
+    contentWrapper: {
+        flexShrink: 1,
+    },
+    loadingContainer: {
+        flex: 1, 
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 32,
+    },
+    errorContainer: {
+        padding: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorText: {
+        textAlign: 'center',
+    },
+    scrollContainer: {
+        flexGrow: 1,
+    },
+    scrollContent: { 
+        paddingHorizontal: 16, 
+        paddingBottom: 8, 
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingBottom: 24, 
+        paddingHorizontal: 24,
+        paddingTop: 16,
+    },
+    quantityControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 16,
+    },
+    quantityButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        margin: 0,
+    },
+    quantityText: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginHorizontal: 16,
+        minWidth: 30,
+        textAlign: 'center',
+    },
+    footerButton: {
+        flex: 1,
+        minWidth: 120, 
+    },
+    disabledButton: {
+        opacity: 0.6,
+    },
+    deleteButton: {
+        backgroundColor: '#d32f2f',
+        marginLeft: 8,
+        flex: 0,
+        minWidth: 100, 
+    }
 });
