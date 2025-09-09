@@ -40,7 +40,7 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({ options, filtere
             </View>
             <View>
               {displayOptions.map((option) => {
-                const isSelected = selections[group.key] === option.ID;
+                const isSelected = String(selections[group.key] ?? '') === String(option.ID);
                 return (
                   <TouchableRipple key={option.ID} onPress={() => onOptionSelect(group.key, option.ID)}>
                     <View style={[styles.optionContainer, isSelected && styles.optionSelected]}>

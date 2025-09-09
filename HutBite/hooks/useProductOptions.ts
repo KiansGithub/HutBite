@@ -13,6 +13,8 @@ import {
     getCompatibleOptions
 } from '@/utils/productOptionsUtils';
 
+const toId = (v: any) => (v == null ? null : String(v));
+
 interface UseProductOptionsProps {
     options: IProcessedProductOptions; 
     initialSelections?: IOptionSelections; 
@@ -43,26 +45,64 @@ export function useProductOptions({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [filteredOptions, setFilteredOptions] = useState<IFilteredOptionGroups>(
-        options.groups.reduce((acc, group) => ({ ...acc, [group.key]: group.options }), {})
-    );
+        options?.groups?.reduce((acc, group) => ({ ...acc, [group.key]: group.options }), {}) || {}
+      );
+      useEffect(() => {
+        setFilteredOptions(
+          options?.groups?.reduce(
+            (acc, group) => ({ ...acc, [group.key]: group.options }),
+            {}
+          ) || {}
+        );
+      }, [options?.groups]);
     const [lastOperation, setLastOperation] = useState<(() => void) | null>(null);
 
-    // Update selections if initialSelections change (e.g., for editing an item)
     useEffect(() => {
         if (initialSelections && Object.keys(initialSelections).length > 0) {
-            setSelections(initialSelections);
+          const normalized = Object.fromEntries(
+            Object.entries(initialSelections).map(([k, v]) => [k, String(v)])
+          );
+          setSelections(normalized);
         }
-    }, [initialSelections]);
-
-    // Apply default selections only for new items when options are processed
-    useEffect(() => {
-        const isNewItem = !initialSelections || Object.keys(initialSelections).length === 0;
-        const hasDefaults = options.defaultSelections && Object.keys(options.defaultSelections).length > 0;
-
-        if (isNewItem && hasDefaults) {
-            setSelections(options.defaultSelections);
-        }
-    }, [options.defaultSelections, initialSelections]);
+      }, [initialSelections]);
+      
+    // Apply defaults: processed -> required groups -> fallback(all groups)
+useEffect(() => {
+    const isNewItem = !initialSelections || Object.keys(initialSelections).length === 0;
+    if (!isNewItem) return;
+  
+    // 1) Prefer processed defaults if present
+    const ds = options?.defaultSelections ?? {};
+    if (Object.keys(ds).length > 0) {
+      const normalized = Object.fromEntries(
+        Object.entries(ds).map(([k, v]) => [k, String(v)])
+      );
+      setSelections(normalized);
+      return;
+    }
+  
+    // 2) If you *do* want to prefer "required" when available, keep this block.
+    //    BUT in your data required is empty, so it will skip to step 3 anyway.
+    const requiredFirsts = Object.fromEntries(
+      (options?.groups ?? [])
+        .filter(g => g.isRequired && g.options && g.options.length)
+        .map(g => [g.key, String(g.options[0].ID)])
+    );
+    if (Object.keys(requiredFirsts).length > 0) {
+      setSelections(requiredFirsts);
+      return;
+    }
+  
+    // 3) Fallback: pick the first option for *every* group
+    const allFirsts = Object.fromEntries(
+      (options?.groups ?? [])
+        .filter(g => g.options && g.options.length)
+        .map(g => [g.key, String(g.options[0].ID)])
+    );
+    if (Object.keys(allFirsts).length > 0) {
+      setSelections(allFirsts);
+    }
+  }, [options?.defaultSelections, options?.groups, initialSelections]);
 
     // Memoized validation state 
     const validationState = useMemo(() => {
@@ -102,75 +142,59 @@ export function useProductOptions({
         }
     }, [selections, options.groups, options.validCombinations]);
 
-    // Reset incompatible selections when a parent option changes 
     const resetIncompatibleSelections = useCallback((changedKey: string, newValue: string) => {
         if (!options.validCombinations) return {};
-
-        const validCombinations = options.validCombinations;
-
+        const v = String(newValue);
         const resetSelections: IOptionSelections = {};
         Object.keys(selections).forEach(key => {
-            if (key !== changedKey) {
-                const compatibleOptions = getCompatibleOptions(
-                    key, { [changedKey]: newValue }, 
-                    validCombinations, 
-                    options.groups.find(g => g.key === key)?.options || []
-                );
-                if (!compatibleOptions.some(opt => opt.ID === selections[key])) {
-                    resetSelections[key] = compatibleOptions.length > 0 ? compatibleOptions[0].ID : null; 
-                }
+          if (key !== changedKey) {
+            const allOptions = options.groups.find(g => g.key === key)?.options || [];
+            const compatible = getCompatibleOptions(key, { [changedKey]: v }, options.validCombinations, allOptions);
+            const current = String(selections[key] ?? '');
+            const stillValid = compatible.some(opt => String(opt.ID) === current);
+            if (!stillValid) {
+              resetSelections[key] = compatible.length ? String(compatible[0].ID) : null;
             }
+          }
         });
-        return resetSelections; 
-    }, [selections, options.validCombinations, options.groups]);
+        return resetSelections;
+      }, [selections, options.validCombinations, options.groups]);
 
-    // Memoized handlers 
     const handleOptionSelect = useCallback((groupKey: string, value: string) => {
+        const v = String(value);
         const operation = () => {
-            setLoading(true);
-            setError(null);
-            try {
-                setSelections(prev => ({
-                    ...prev, 
-                    [groupKey]: value,
-                    ...resetIncompatibleSelections(groupKey, value)
-                }));
-                setFilteredOptions(prev => ({
-                    ...prev
-                }));
-            } catch (err) {
-                setError('Failed to select option. Please try again.');
-                console.error('Error selection option:', err);
-            } finally {
-                setLoading(false);
-            }
+          setLoading(true);
+          setError(null);
+          try {
+            setSelections(prev => ({
+              ...prev,
+              [groupKey]: v,
+              ...resetIncompatibleSelections(groupKey, v),
+            }));
+            setFilteredOptions(prev => ({ ...prev }));
+          } finally {
+            setLoading(false);
+          }
         };
         setLastOperation(() => operation);
         operation();
-    }, [resetIncompatibleSelections]);
-
-    const handleOptionChange = useCallback((key: string, value: string) => {
+      }, [resetIncompatibleSelections]);
+      
+      const handleOptionChange = useCallback((key: string, value: string) => {
+        const v = String(value);
         const operation = () => {
-            setLoading(true);
-            setError(null);
-            try {
-                setSelections(prev => ({ ...prev, [key]: value }));
-
-                // Reset incompatible selections 
-                setSelections(prev => ({
-                    ...prev, 
-                    ...resetIncompatibleSelections(key, value)
-                }));
-            } catch (err) {
-                setError('Failed to update selection. Please try again.');
-                console.error('Error updating selection:', err);
-            } finally {
-                setLoading(false);
-            }
+          setLoading(true);
+          setError(null);
+          try {
+            const resets = resetIncompatibleSelections(key, v);
+            setSelections(prev => ({ ...prev, [key]: v, ...resets }));
+          } finally {
+            setLoading(false);
+          }
         };
         setLastOperation(() => operation);
         operation();
-    }, [resetIncompatibleSelections]);
+      }, [resetIncompatibleSelections]);
 
     const resetError = useCallback(() => setError(null), []);
     const retryLastOperation = useCallback(() => {

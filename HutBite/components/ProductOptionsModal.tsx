@@ -193,6 +193,7 @@ export function ProductOptionsModal({
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onDismiss}>
       {optionsReady ? (
         <ProductOptionsContent
+          key={`${product.ID}-${JSON.stringify(processedOptions?.defaultSelections || {})}`}
           product={product}
           onDismiss={onDismiss}
           onConfirm={onConfirm}
@@ -212,7 +213,7 @@ export function ProductOptionsModal({
   );
 }
 
-function ProductOptionsContent({
+export function ProductOptionsContent({
   product,
   onDismiss,
   onConfirm,
@@ -232,15 +233,35 @@ function ProductOptionsContent({
 
   const isEditing = !!existingItem;
 
-  const { selections, validationState, filteredOptions, handleOptionSelect, loading: optionsLoading } = useProductOptions({
-    options: processedOptions,
-    initialSelections: existingItem?.options.reduce((acc, opt) => {
+  const editSelections = useMemo(() => {
+    if (!existingItem?.options) return {};
+    return existingItem.options.reduce((acc, opt) => {
       if (opt.option_list_name !== 'Topping') {
-        acc[opt.option_list_name] = opt.ref;
+        acc[opt.option_list_name] = String(opt.ref); // ← normalize here
       }
       return acc;
-    }, {} as IOptionSelections),
+    }, {} as IOptionSelections);
+  }, [existingItem]);
+
+// Merge defaults (from processedOptions) with edits (edits win)
+const baseInitialSelections: IOptionSelections = useMemo(() => {
+  return {
+    ...(processedOptions?.defaultSelections ?? {}),
+    ...editSelections,
+  };
+}, [processedOptions?.defaultSelections, editSelections]);
+
+  const { selections, validationState, filteredOptions, handleOptionSelect, loading: optionsLoading } = useProductOptions({
+    options: processedOptions,
+  initialSelections: baseInitialSelections,
   });
+
+  console.log('--- DEBUG useProductOptions ---');
+console.log('Processed groups:', processedOptions?.groups?.map((g: any) => g.key));
+console.log('Processed defaults:', processedOptions?.defaultSelections);
+console.log('Initial selections passed in:', baseInitialSelections);
+console.log('Hook selections state:', selections);
+console.log('Validation state:', validationState);
 
   const { formattedPrice, currentPrice } = useRealTimePricing({
     product,
@@ -352,76 +373,80 @@ function ProductOptionsContent({
 
   return (
     <View style={styles.container}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 250 }}>
-        <ImageBackground source={{ uri: imageUrl || undefined }} style={styles.imageBackground}>
-          <LinearGradient
-            colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.imageOverlay}
-          />
-          <SafeAreaView style={styles.header}>
-            <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
-              <Ionicons name="close" size={28} color="#fff" />
-            </TouchableOpacity>
-          </SafeAreaView>
-          <View style={styles.productInfoContainer}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 180 }}>
+        {/* HERO */}
+        <View style={styles.heroCard}>
+          <View style={styles.heroImageWrap}>
+            {imageUrl ? (
+              <Image source={{ uri: imageUrl }} style={styles.heroImage} />
+            ) : (
+              <View style={[styles.heroImage, { backgroundColor: '#eee' }]} />
+            )}
+  
+            {/* subtle top gradient + close */}
+            <LinearGradient
+              colors={['rgba(0,0,0,0.35)', 'transparent']}
+              style={styles.heroTopOverlay}
+            />
+            <SafeAreaView style={styles.heroSafeTop}>
+              {/* <TouchableOpacity onPress={onDismiss} style={styles.closeFab}>
+                <Ionicons name="close" size={22} color="#111" />
+              </TouchableOpacity> */}
+            </SafeAreaView>
+          </View>
+  
+          {/* Title / Description */}
+          <View style={styles.titleBlock}>
             <Text style={styles.productName}>{product.Name}</Text>
-            {product.Description && (
+            {!!product.Description && (
               <Text style={styles.productDescription}>{product.Description}</Text>
             )}
           </View>
-        </ImageBackground>
-
-        <View style={styles.modalContent}>{renderContent()}</View>
+        </View>
+  
+        {/* CONTENT */}
+        <View style={styles.contentBlock}>{renderContent()}</View>
       </ScrollView>
-
+  
+      {/* STICKY FOOTER */}
       <SafeAreaView style={styles.footer}>
-        <View style={styles.quantityControlContainer}>
-          <View style={styles.quantityControl}>
-            <TouchableOpacity
-              onPress={() => handleQuantityChange(-1)}
-              style={styles.quantityButton}
-              disabled={quantity === 1}
-            >
-              <Ionicons
-                name="remove"
-                size={24}
-                color={quantity === 1 ? lightColors.tabIconDefault : lightColors.primary}
-              />
-            </TouchableOpacity>
-            <Text style={styles.quantityText}>{quantity}</Text>
-            <TouchableOpacity onPress={() => handleQuantityChange(1)} style={styles.quantityButton}>
-              <Ionicons name="add" size={24} color={lightColors.primary} />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.footerActions}>
+        <View style={styles.stepperWrap}>
           <TouchableOpacity
-            onPress={handleConfirm}
-            style={styles.confirmButton}
-            disabled={!validationState.isValid || (!canAddToBasket && !isEditing)}
+            onPress={() => handleQuantityChange(-1)}
+            style={[styles.stepperBtn, quantity === 1 && styles.stepperBtnDisabled]}
+            disabled={quantity === 1}
           >
-            <LinearGradient
-              colors={
-                !validationState.isValid || (!canAddToBasket && !isEditing)
-                  ? ['#AAB8C2', '#AAB8C2']
-                  : [lightColors.primaryStart, lightColors.primaryEnd]
-              }
-              start={{ x: 0, y: 0.5 }}
-              end={{ x: 1, y: 0.5 }}
-              style={styles.confirmButtonGradient}
-            >
-              <Text style={styles.confirmButtonText}>
-                {isEditing ? `Update - ${formattedPrice}` : `Add to Cart - ${formattedPrice}`}
-              </Text>
-            </LinearGradient>
+            <Ionicons
+              name="remove"
+              size={20}
+              color={quantity === 1 ? '#B7BDC5' : lightColors.primary}
+            />
           </TouchableOpacity>
-          {isEditing && onDelete && (
-            <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-              <Text style={styles.deleteButtonText}>Remove from Cart</Text>
-            </TouchableOpacity>
-          )}
+  
+          <Text style={styles.quantityText}>{quantity}</Text>
+  
+          <TouchableOpacity onPress={() => handleQuantityChange(1)} style={styles.stepperBtn}>
+            <Ionicons name="add" size={20} color={lightColors.primary} />
+          </TouchableOpacity>
         </View>
+  
+        <TouchableOpacity
+          onPress={handleConfirm}
+          disabled={!validationState.isValid || (!canAddToBasket && !isEditing)}
+          style={[
+            styles.cta,
+            (!validationState.isValid || (!canAddToBasket && !isEditing)) && styles.ctaDisabled,
+          ]}
+        >
+          <Text style={styles.ctaText}>{isEditing ? 'Update' : 'Add To Order'}</Text>
+  
+          <View style={styles.pricePill}>
+            <Text style={styles.priceText}>{formattedPrice}</Text>
+            {/* If you have an original price, show it:
+            <Text style={styles.strike}>$13.00</Text>
+            */}
+          </View>
+        </TouchableOpacity>
       </SafeAreaView>
     </View>
   );
@@ -430,66 +455,85 @@ function ProductOptionsContent({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: lightColors.background, // Use solid background
-  },
-  modalContent: {
-    // height: screenHeight * 0.9, // This will be dynamic now
     backgroundColor: lightColors.background,
-    // borderTopLeftRadius: 20, // No longer needed as it's not a sheet
-    // borderTopRightRadius: 20,
-    // overflow: 'hidden', // Can interfere with shadows
-    padding: 20,
   },
-  imageBackground: {
-    height: screenHeight * 0.35, // Increased height
-    width: '100%',
-    justifyContent: 'space-between', // Align items vertically
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end', // Align close button to the right
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 20 : 40, // Adjust for status bar
-  },
-  closeButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  productInfoContainer: {
-    padding: 20,
-  },
-  productName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
-    marginBottom: 8,
-  },
-  productDescription: {
-    fontSize: 16,
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0, 0, 0, 0.75)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-    lineHeight: 22,
+
+  /* HERO */
+  heroCard: {
+    marginTop: 8,
+    marginHorizontal: 16,
+    borderRadius: 15,
+    overflow: 'hidden',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContentContainer: {
-    // padding: 20, // Moved to modalContent
-    paddingBottom: 250, // Increased padding for footer and delete button
+    paddingBottom: 24, // or 180/250 if you want extra space for the sticky footer
   },
+  heroImageWrap: { position: 'relative' },
+  heroImage: {
+    width: '100%',
+    aspectRatio: 1.25, // keeps a nice, consistent hero height
+    resizeMode: 'cover',
+  },
+  heroTopOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 96,
+  },
+  heroSafeTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 12,
+    paddingTop: Platform.OS === 'android' ? 12 : 0,
+    alignItems: 'flex-start',
+  },
+  closeFab: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: '#E5E7EB',
+  },
+
+  titleBlock: {
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 6,
+  },
+  productName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: lightColors.text,
+  },
+  productDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#667085',
+  },
+
+  /* CONTENT */
+  contentBlock: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
+  },
+
+  /* (kept for loading/errors in renderContent) */
   centeredContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -504,79 +548,80 @@ const styles = StyleSheet.create({
     color: lightColors.tabIconDefault,
     textAlign: 'center',
   },
+
+  /* STICKY FOOTER */
   footer: {
     position: 'absolute',
-    bottom: 0,
     left: 0,
     right: 0,
+    bottom: 0,
     backgroundColor: '#fff',
-    borderTopColor: 'transparent', // Removed border
-    paddingHorizontal: 20,
-    paddingTop: 10, // Reduced top padding
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20, // Safe area for iOS bottom
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 24 : 14,
+    paddingHorizontal: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#E8ECF1',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
-    elevation: 20,
+    shadowOffset: { width: 0, height: -3 },
+    elevation: 12,
   },
-  quantityControlContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  quantityControl: {
+
+  stepperWrap: {
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: lightColors.background,
-    borderRadius: 30,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    shadowRadius: 2,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 22,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginBottom: 12,
   },
-  quantityButton: {
-    padding: 12,
-  },
-  quantityText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: lightColors.text,
-    marginHorizontal: 16,
-  },
-  footerActions: {
-    width: '100%',
-  },
-  confirmButton: {
-    width: '100%', // Full width
-    borderRadius: 30,
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  confirmButtonGradient: {
-    paddingVertical: 18, // Increased padding for a taller button
+  stepperBtn: {
+    height: 32,
+    width: 32,
+    borderRadius: 16,
+    backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  confirmButtonText: {
-    color: '#fff',
-    fontSize: 18, // Slightly larger font
-    fontWeight: '600', // Semi-bold for modern look
+  stepperBtnDisabled: { opacity: 0.45 },
+
+  quantityText: {
+    marginHorizontal: 14,
+    fontSize: 16,
+    fontWeight: '700',
+    color: lightColors.text,
   },
-  deleteButton: {
+
+  cta: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 20, // Increased padding
-    paddingBottom: 8, // Increased padding
+    borderRadius: 28,
+    backgroundColor: lightColors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
   },
-  deleteButtonText: {
-    color: lightColors.error,
-    fontSize: 15,
-    fontWeight: '600',
+  ctaDisabled: { backgroundColor: '#AAB8C2' },
+  ctaText: { color: '#fff', fontSize: 16, fontWeight: '700', flex: 1 },
+
+  pricePill: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    alignItems: 'center',
+    minWidth: 84,
+  },
+  priceText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  strike: {
+    color: '#fff',
+    opacity: 0.7,
+    textDecorationLine: 'line-through',
+    fontSize: 12,
+    marginTop: 2,
   },
 });

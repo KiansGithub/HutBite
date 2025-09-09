@@ -254,119 +254,101 @@ export function findProductPriceByOptions(
 
 
 export const calculateItemPrice = (
-    product: IBaseProduct, 
+    product: IBaseProduct,
     selections?: {
-        options?: IOptionSelections; 
-        toppings?: IToppingSelection[];
+      options?: IOptionSelections;
+      toppings?: IToppingSelection[];
     },
-    selectedToppings?: IToppingSelection[],
+    selectedToppings?: IToppingSelection[],          // kept for signature compatibility
     availableToppings?: ITopping[],
-): PriceCalculationResult => {
+  ): PriceCalculationResult => {
     console.log("Calculating price for: ", {
-        product: product.Name, 
-        selections, 
-        selectedToppings, 
-        availableToppings,
+      product: product.Name,
+      selections,
+      selectedToppings,
+      availableToppings,
     });
-
-
-    let basePrice = getProductPrice(product) ?? product.DePrice; 
-    let optionsPrice = 0; 
+  
+    let basePrice = getProductPrice(product) ?? product.DePrice;
+    let optionsPrice = 0;
     let toppingsPrice = 0;
-
-
+  
+    // If options are selected, use them to resolve the base price
     if (selections?.options && Object.keys(selections.options).length > 0) {
-        // Use the findProductPriceByOptions function to get the correct base price 
-        basePrice = findProductPriceByOptions(product, selections.options);
+      basePrice = findProductPriceByOptions(product, selections.options);
     }
-
-
-    // Find the selected size ID from option
+  
+    // Resolve selected size (handles refs like "2-900-101")
     let selectedSizeId = selections?.options?.Size || selections?.options?.["Größe"];
-    if (typeof selectedSizeId === 'string' && selectedSizeId.includes('-')) {
-        selectedSizeId = selectedSizeId.split('-').pop() as string;
+    if (typeof selectedSizeId === "string" && selectedSizeId.includes("-")) {
+      selectedSizeId = selectedSizeId.split("-").pop() as string;
     }
-
-
-    // Calculate toppings price based on selected size 
+  
+    // --- Toppings price -------------------------------------------------------
     if (selections?.toppings && selections.toppings.length > 0 && availableToppings) {
-        console.log("Calculating price for selected toppings:", selections.toppings)
-
-
-        toppingsPrice = selections.toppings.reduce((total, topping) => {
-
-
-                // Find topping definition from product's toppings list 
-                const toppingDefinition = availableToppings?.find(t => t.ID === topping.id);
-
-
-                if (!toppingDefinition) {
-                    console.warn(`No topping definition found for ID ${topping.id}`);
-                    return total; 
-                }
-
-
-                console.log("Topping definition", toppingDefinition);
-
-
-                // Try to find a size-based price first 
-                let toppingPriceAmount: number | undefined; 
-
-
-                if (selectedSizeId && toppingDefinition.DeGroupedPrices?.DePrices) {
-                    const toppingPriceEntry = toppingDefinition.DeGroupedPrices.DePrices.find(price =>
-                        normalizeOptionListIDs(price.DeMixOption?.OptionListIDs).some(
-                            opt =>
-                                (opt.Key === "Size" || opt.Key === "Größe") &&
-                                opt.Value === selectedSizeId
-                        )
-                    );
-                    toppingPriceAmount = toppingPriceEntry?.Amount; 
-                }
-
-                // If no size-based price found, try to get price from DeGroupedPrices (similar to getProductPrice)
-                if (toppingPriceAmount === undefined && toppingDefinition.DeGroupedPrices?.DePrices?.length > 0) {
-                    const firstPrice = toppingDefinition.DeGroupedPrices.DePrices[0].Amount;
-                    console.log(`Extracted topping price from DeGroupedPrices: ${firstPrice}`);
-                    if (typeof firstPrice === 'number') {
-                        toppingPriceAmount = firstPrice;
-                    }
-                }
-
-                // Final fallback to DePrice if no grouped price is available 
-                if (toppingPriceAmount === undefined && toppingDefinition.DePrice !== undefined) {
-                    toppingPriceAmount = toppingDefinition.DePrice; 
-                    console.log(`No grouped price found, falling back to DePrice: ${toppingPriceAmount}`)
-                }
-
-
-                if (toppingPriceAmount === undefined) {
-                    console.warn(`No price found for topping ${topping.name}`);
-                    return total; 
-                }
-
-
-                // Find the original portion from the topping definition, not by counting array occurrences
-                const originalPortion = toppingDefinition.OrgPortion ?? 0;
-                const chargeablePortion = Math.max(0, topping.portions - originalPortion);
-                const portionPrice = toppingPriceAmount * chargeablePortion; 
-
-
-                console.log(`Topping ${topping.name}: ${chargeablePortion} x ${toppingPriceAmount} = ${portionPrice}`)
-
-
-                return total + portionPrice; 
-        }, 0);
-    } 
-
-
+      console.log("Calculating price for selected toppings:", selections.toppings);
+  
+      toppingsPrice = selections.toppings.reduce((total, topping) => {
+        // Catalog definition (has prices)
+        const toppingDefinition = availableToppings.find(t => t.ID === topping.id);
+        if (!toppingDefinition) {
+          console.warn(`No topping definition found for ID ${topping.id}`);
+          return total;
+        }
+  
+        // Resolve unit price for this topping, preferring size-specific
+        let toppingPriceAmount: number | undefined;
+  
+        if (selectedSizeId && toppingDefinition.DeGroupedPrices?.DePrices) {
+          const priceEntry = toppingDefinition.DeGroupedPrices.DePrices.find(price =>
+            normalizeOptionListIDs(price.DeMixOption?.OptionListIDs).some(
+              opt => (opt.Key === "Size" || opt.Key === "Größe") && opt.Value === selectedSizeId
+            )
+          );
+          toppingPriceAmount = priceEntry?.Amount;
+        }
+  
+        // Fallbacks
+        if (toppingPriceAmount === undefined && toppingDefinition.DeGroupedPrices?.DePrices?.length > 0) {
+          const firstPrice = toppingDefinition.DeGroupedPrices.DePrices[0].Amount;
+          if (typeof firstPrice === "number") toppingPriceAmount = firstPrice;
+        }
+        if (toppingPriceAmount === undefined && toppingDefinition.DePrice !== undefined) {
+          toppingPriceAmount = toppingDefinition.DePrice;
+        }
+        if (toppingPriceAmount === undefined) {
+          console.warn(`No price found for topping ${topping.name}`);
+          return total;
+        }
+  
+        // ✅ Included (free) portions: prefer product-level mapping, then catalog
+        const includedFromProduct =
+          product.Toppings?.find(pt => pt.ID === topping.id)?.OrgPortion;
+        const includedFromCatalog = toppingDefinition.OrgPortion;
+  
+        const originalPortion =
+          (includedFromProduct ?? includedFromCatalog ?? 0);
+  
+        // Bill only the extra above what's included
+        const chargeablePortion = Math.max(0, topping.portions - originalPortion);
+        const portionPrice = toppingPriceAmount * chargeablePortion;
+  
+        console.log(
+          `Topping ${topping.name}: portions=${topping.portions}, included=${originalPortion}, ` +
+          `chargeable=${chargeablePortion} @ ${toppingPriceAmount} = ${portionPrice}`
+        );
+  
+        return total + portionPrice;
+      }, 0);
+    }
+  
     return {
-        basePrice, 
-        optionsPrice, 
-        toppingsPrice, 
-        total: basePrice + optionsPrice + toppingsPrice
+      basePrice,
+      optionsPrice,
+      toppingsPrice,
+      total: basePrice + optionsPrice + toppingsPrice,
     };
-};
+  };
 
 
 /**
