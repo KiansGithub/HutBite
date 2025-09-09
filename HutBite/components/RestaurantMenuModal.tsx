@@ -3,10 +3,7 @@ import {
   View,
   StyleSheet,
   Modal,
-  ScrollView,
   TouchableOpacity,
-  Image,
-  Dimensions,
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
@@ -14,13 +11,17 @@ import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
-import { supabase } from '@/lib/supabase';
 import { FeedContentItem } from '@/types/feedContent';
+import { getStoreProfile, getWebSettings, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
+import { STORE_CONFIG } from '@/constants/api';
+import type { IStoreProfile, IWebSettings, MenuCategory, IBaseProduct } from '@/types/store';
+import { RestaurantCategoryHeader } from './RestaurantCategoryHeader';
+import { RestaurantCategoryContent } from './RestaurantCategoryContent';
+import { RestaurantProductOptionsModal } from './RestaurantProductOptionsModal';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
-type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const colors = Colors.light;
 
 interface RestaurantMenuModalProps {
   visible: boolean;
@@ -35,51 +36,140 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
   restaurant,
   initialMenuItem,
 }) => {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  console.log('🚀 [RestaurantMenuModal] Component rendered with props:', { visible, restaurantId: restaurant?.id, restaurantName: restaurant?.name });
+  
   const [loading, setLoading] = useState(true);
   const [basketItems, setBasketItems] = useState<Record<string, number>>({});
+  const [storeProfile, setStoreProfile] = useState<IStoreProfile | null>(null);
+  const [webSettings, setWebSettings] = useState<IWebSettings | null>(null);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [products, setProducts] = useState<IBaseProduct[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<IBaseProduct | null>(null);
+  const [optionsModalVisible, setOptionsModalVisible] = useState(false);
 
   useEffect(() => {
+    console.log('🔄 [RestaurantMenuModal] useEffect triggered:', { visible, restaurantId: restaurant?.id });
     if (visible && restaurant) {
-      fetchMenuItems();
+      console.log('✅ [RestaurantMenuModal] Conditions met, calling loadMenuData');
+      try {
+        loadMenuData();
+      } catch (error) {
+        console.error('💥 [RestaurantMenuModal] Synchronous error calling loadMenuData:', error);
+      }
+    } else {
+      console.log('❌ [RestaurantMenuModal] Conditions not met:', { visible, hasRestaurant: !!restaurant });
     }
   }, [visible, restaurant?.id]);
 
-  const fetchMenuItems = async () => {
-    if (!restaurant) return;
+  const loadMenuData = async () => {
+    console.log('🎯 [RestaurantMenuModal] loadMenuData function called');
+    if (!restaurant) {
+      console.log('❌ [RestaurantMenuModal] No restaurant provided to loadMenuData');
+      return;
+    }
     
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('menu_items')
-        .select('*')
-        .eq('restaurant_id', restaurant.id)
-        .order('created_at', { ascending: false });
+      setError(null);
 
-      if (error) throw error;
-      setMenuItems(data || []);
+      // Use DEVDATA store for testing
+      const storeId = STORE_CONFIG.TEST_STORE_ID;
+      console.log('🍽️ [RestaurantMenuModal] Starting to load menu data for storeId:', storeId);
+      
+      // Step 1: Get store profile
+      console.log('📋 [RestaurantMenuModal] Step 1: Fetching store profile...');
+      const profile = await getStoreProfile(storeId);
+      console.log('📋 [RestaurantMenuModal] Store profile result:', profile);
+      if (!profile) throw new Error('Failed to fetch store profile');
+      setStoreProfile(profile);
+      console.log('✅ [RestaurantMenuModal] Store profile set successfully');
+
+      // Step 2: Get web settings
+      console.log('⚙️ [RestaurantMenuModal] Step 2: Fetching web settings for URL:', profile.StoreURL);
+      const settings = await getWebSettings(profile.StoreURL);
+      console.log('⚙️ [RestaurantMenuModal] Web settings result:', settings);
+      if (!settings) throw new Error('Failed to fetch web settings');
+      setWebSettings(settings);
+      console.log('✅ [RestaurantMenuModal] Web settings set successfully');
+
+      // Step 3: Get menu categories
+      console.log('📂 [RestaurantMenuModal] Step 3: Fetching menu categories...');
+      const menuCategories = await getMenuCategories(profile.StoreURL, storeId);
+      console.log('📂 [RestaurantMenuModal] Menu categories result:', menuCategories);
+      console.log('📂 [RestaurantMenuModal] Menu categories count:', menuCategories?.length || 0);
+      if (!menuCategories || menuCategories.length === 0) {
+        throw new Error('No menu categories available');
+      }
+      setCategories(menuCategories);
+      console.log('✅ [RestaurantMenuModal] Menu categories set successfully');
+
+      // Step 4: Load all product categories
+      console.log('🎯 [RestaurantMenuModal] Step 4: Loading all product categories...');
+      const productCategories = menuCategories.filter(cat => cat.CatType === 1);
+      console.log('🎯 [RestaurantMenuModal] Product categories found:', productCategories.length);
+      
+      if (productCategories.length > 0) {
+        const allProducts: IBaseProduct[] = [];
+        
+        for (const category of productCategories) {
+          console.log('📂 [RestaurantMenuModal] Loading category:', category.Name);
+          const categoryGroups = await getGroupsByCategory(profile.StoreURL, storeId, category.ID);
+          
+          categoryGroups.forEach((group) => {
+            if (group.DeProducts) {
+              // Add category ID to each product for filtering
+              const productsWithCategory = group.DeProducts.map(product => ({
+                ...product,
+                CategoryID: category.ID,
+                CategoryName: category.Name
+              }));
+              allProducts.push(...productsWithCategory);
+            }
+          });
+        }
+        
+        console.log('🍕 [RestaurantMenuModal] Total products from all categories:', allProducts.length);
+        setProducts(allProducts);
+        
+        // Set first category as active by default
+        if (productCategories.length > 0) {
+          setActiveCategory(productCategories[0].ID);
+        }
+      } else {
+        console.log('⚠️ [RestaurantMenuModal] No product categories found');
+      }
+
+      console.log('🎉 [RestaurantMenuModal] Menu data loading completed successfully');
     } catch (error) {
-      console.error('Error fetching menu items:', error);
+      console.error('💥 [RestaurantMenuModal] Error loading menu data:', error);
+      console.error('💥 [RestaurantMenuModal] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      setError(error instanceof Error ? error.message : 'Failed to load menu');
     } finally {
+      console.log('🏁 [RestaurantMenuModal] Setting loading to false');
       setLoading(false);
     }
   };
 
-  const addToBasket = (itemId: string) => {
+  const addToBasket = (productId: string) => {
     setBasketItems(prev => ({
       ...prev,
-      [itemId]: (prev[itemId] || 0) + 1
+      [productId]: (prev[productId] || 0) + 1
     }));
   };
 
-  const removeFromBasket = (itemId: string) => {
+  const removeFromBasket = (productId: string) => {
     setBasketItems(prev => {
-      const newCount = (prev[itemId] || 0) - 1;
+      const newCount = (prev[productId] || 0) - 1;
       if (newCount <= 0) {
-        const { [itemId]: removed, ...rest } = prev;
+        const { [productId]: removed, ...rest } = prev;
         return rest;
       }
-      return { ...prev, [itemId]: newCount };
+      return { ...prev, [productId]: newCount };
     });
   };
 
@@ -87,142 +177,167 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
     return Object.values(basketItems).reduce((sum, count) => sum + count, 0);
   };
 
-  const renderMenuItem = (item: MenuItem) => {
-    const quantity = basketItems[item.id] || 0;
-    
-    return (
-      <View key={item.id} style={styles.menuItem}>
-        <View style={styles.menuItemContent}>
-          <View style={styles.menuItemInfo}>
-            <Text style={styles.menuItemTitle}>{item.title || 'Menu Item'}</Text>
-            {item.description && (
-              <Text style={styles.menuItemDescription} numberOfLines={2}>
-                {item.description}
-              </Text>
-            )}
-            <Text style={styles.menuItemPrice}>
-              ${item.price ? item.price.toFixed(2) : '0.00'}
-            </Text>
-          </View>
-          
-          {item.thumb_url && (
-            <Image 
-              source={{ uri: item.thumb_url }} 
-              style={styles.menuItemImage}
-              resizeMode="cover"
-            />
-          )}
-        </View>
-        
-        <View style={styles.quantityControls}>
-          {quantity > 0 ? (
-            <View style={styles.quantityRow}>
-              <TouchableOpacity 
-                style={styles.quantityButton}
-                onPress={() => removeFromBasket(item.id)}
-              >
-                <Ionicons name="remove" size={20} color="#fff" />
-              </TouchableOpacity>
-              
-              <Text style={styles.quantityText}>{quantity}</Text>
-              
-              <TouchableOpacity 
-                style={styles.quantityButton}
-                onPress={() => addToBasket(item.id)}
-              >
-                <Ionicons name="add" size={20} color="#fff" />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => addToBasket(item.id)}
-            >
-              <Ionicons name="add" size={24} color="#fff" />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-    );
+  const buildImageUrl = (imgUrl?: string) => {
+    if (!imgUrl || !webSettings?.urlForImages) return null;
+    return `${webSettings.urlForImages}${imgUrl}`;
   };
 
+  const handleProductPress = (product: IBaseProduct) => {
+    if (product.Modifiable && product.DeGroupedPrices) {
+      setSelectedProduct(product);
+      setOptionsModalVisible(true);
+    } else {
+      addToBasket(product.ID);
+    }
+  };
+
+  const handleOptionsConfirm = (selections: any) => {
+    if (selectedProduct) {
+      // Add the configured product to basket
+      for (let i = 0; i < selections.quantity; i++) {
+        addToBasket(selectedProduct.ID);
+      }
+    }
+    setOptionsModalVisible(false);
+    setSelectedProduct(null);
+  };
+
+  const handleCategoryPress = (categoryId: string) => {
+    setActiveCategory(categoryId);
+  };
+
+  const productCategories = categories.filter(cat => cat.CatType === 1);
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={24} color="#333" />
-          </TouchableOpacity>
-          
-          <View style={styles.headerContent}>
-            <Text style={styles.restaurantName}>{restaurant?.name || 'Restaurant'}</Text>
-            <Text style={styles.restaurantStatus}>Open</Text>
-          </View>
-          
-          <View style={styles.headerRight}>
-            <TouchableOpacity style={styles.infoButton}>
-              <Ionicons name="information-circle-outline" size={24} color="#333" />
+    <>
+      <Modal
+        visible={visible}
+        animationType="slide"
+        presentationStyle="fullScreen"
+        onRequestClose={onClose}
+      >
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+          {/* Header */}
+          <View style={[styles.header, { 
+            backgroundColor: colors.background, 
+            borderBottomColor: colors.tabIconDefault + '20' 
+          }]}>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color={colors.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.shareButton}>
-              <Ionicons name="share-outline" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Delivery Info */}
-        <View style={styles.deliveryInfo}>
-          <View style={styles.deliveryItem}>
-            <Text style={styles.deliveryValue}>$0.00</Text>
-            <Text style={styles.deliveryLabel}>Delivery Fee</Text>
-          </View>
-          <View style={styles.deliveryItem}>
-            <Text style={styles.deliveryValue}>$10</Text>
-            <Text style={styles.deliveryLabel}>Minimum Order</Text>
-          </View>
-        </View>
-
-        {/* Menu Section */}
-        <View style={styles.menuSection}>
-          <Text style={styles.menuTitle}>MENU</Text>
-          <Text style={styles.menuSubtitle}>Available Today at 10:00 AM</Text>
-        </View>
-
-        {/* Menu Items */}
-        <ScrollView style={styles.menuList} showsVerticalScrollIndicator={false}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={Colors.light.primary} />
+            
+            <View style={styles.headerContent}>
+              <Text style={[styles.restaurantName, { color: colors.text }]}>
+                {storeProfile?.StoreName || restaurant?.name || 'Restaurant'}
+              </Text>
+              <Text style={[styles.restaurantStatus, { 
+                color: colors.text, 
+                backgroundColor: colors.tabIconDefault + '20' 
+              }]}>
+                Open
+              </Text>
             </View>
-          ) : (
-            menuItems.map(renderMenuItem)
+            
+            <View style={styles.headerRight}>
+              <TouchableOpacity style={styles.infoButton}>
+                <Ionicons name="information-circle-outline" size={24} color={colors.text} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.shareButton}>
+                <Ionicons name="share-outline" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Delivery Info */}
+          <View style={[styles.deliveryInfo, { backgroundColor: colors.tabIconDefault + '10' }]}>
+            <View style={styles.deliveryItem}>
+              <Text style={[styles.deliveryValue, { color: colors.text }]}>$0.00</Text>
+              <Text style={[styles.deliveryLabel, { color: colors.text }]}>Delivery Fee</Text>
+            </View>
+            <View style={styles.deliveryItem}>
+              <Text style={[styles.deliveryValue, { color: colors.text }]}>
+                ${webSettings?.minDlvValue ? webSettings.minDlvValue.toFixed(2) : '10.00'}
+              </Text>
+              <Text style={[styles.deliveryLabel, { color: colors.text }]}>Minimum Order</Text>
+            </View>
+          </View>
+
+          {/* Menu Section */}
+          <View style={[styles.menuSection, { backgroundColor: colors.background }]}>
+            <Text style={[styles.menuTitle, { color: colors.text }]}>MENU</Text>
+            <Text style={[styles.menuSubtitle, { color: colors.text }]}>Available Today at 10:00 AM</Text>
+          </View>
+
+          {/* Category Header */}
+          {!loading && !error && productCategories.length > 0 && (
+            <RestaurantCategoryHeader
+              categories={productCategories}
+              selectedCategoryId={activeCategory}
+              onCategoryPress={handleCategoryPress}
+            />
           )}
-        </ScrollView>
 
-        {/* Basket Footer */}
-        {getTotalItems() > 0 && (
-          <View style={styles.basketFooter}>
-            <View style={styles.basketInfo}>
-              <Ionicons name="basket" size={20} color="#fff" />
-              <Text style={styles.basketText}>{restaurant?.name || 'Restaurant'}</Text>
-              <Text style={styles.basketCount}>{getTotalItems()}</Text>
+          {/* Category Content */}
+          <RestaurantCategoryContent
+            loading={loading}
+            error={error}
+            onRetry={loadMenuData}
+            categories={productCategories}
+            products={products}
+            selectedCategoryId={activeCategory}
+            basketItems={basketItems}
+            onProductAdd={(productId) => {
+              const product = products.find(p => p.ID === productId);
+              if (product) {
+                // For products with options, open options modal
+                if (product.Modifiable && product.DeGroupedPrices) {
+                  handleProductPress(product);
+                } else {
+                  // For simple products, add directly to basket
+                  addToBasket(productId);
+                }
+              }
+            }}
+            onProductRemove={removeFromBasket}
+            onProductPress={handleProductPress}
+            buildImageUrl={buildImageUrl}
+          />
+
+          {/* Basket Footer */}
+          {getTotalItems() > 0 && (
+            <View style={[styles.basketFooter, { backgroundColor: colors.primary }]}>
+              <View style={styles.basketInfo}>
+                <Ionicons name="basket" size={20} color="#fff" />
+                <Text style={styles.basketText}>
+                  {storeProfile?.StoreName || restaurant?.name || 'Restaurant'}
+                </Text>
+                <Text style={styles.basketCount}>{getTotalItems()}</Text>
+              </View>
             </View>
-          </View>
-        )}
-      </SafeAreaView>
-    </Modal>
+          )}
+        </SafeAreaView>
+      </Modal>
+
+      {/* Product Options Modal */}
+      {selectedProduct && (
+        <RestaurantProductOptionsModal
+          visible={optionsModalVisible}
+          onDismiss={() => {
+            setOptionsModalVisible(false);
+            setSelectedProduct(null);
+          }}
+          product={selectedProduct}
+          onConfirm={handleOptionsConfirm}
+          imageUrl={buildImageUrl(selectedProduct.ImgUrl) || undefined}
+        />
+      )}
+    </>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
   },
   header: {
     flexDirection: 'row',
@@ -230,7 +345,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
   },
   closeButton: {
     padding: 8,
@@ -242,12 +356,9 @@ const styles = StyleSheet.create({
   restaurantName: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333',
   },
   restaurantStatus: {
     fontSize: 12,
-    color: '#666',
-    backgroundColor: '#f0f0f0',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 10,
@@ -267,7 +378,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 20,
-    backgroundColor: '#f9f9f9',
   },
   deliveryItem: {
     alignItems: 'center',
@@ -275,12 +385,11 @@ const styles = StyleSheet.create({
   deliveryValue: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#333',
   },
   deliveryLabel: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
+    opacity: 0.8,
   },
   menuSection: {
     paddingHorizontal: 16,
@@ -289,98 +398,13 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#333',
   },
   menuSubtitle: {
     fontSize: 12,
-    color: '#666',
     marginTop: 2,
-  },
-  menuList: {
-    flex: 1,
-    paddingHorizontal: 16,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  menuItem: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  menuItemContent: {
-    flexDirection: 'row',
-    padding: 16,
-  },
-  menuItemInfo: {
-    flex: 1,
-    paddingRight: 12,
-  },
-  menuItemTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 4,
-  },
-  menuItemDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-  menuItemPrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-  },
-  menuItemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  quantityControls: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    alignItems: 'flex-end',
-  },
-  quantityRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.light.primary,
-    borderRadius: 25,
-    paddingHorizontal: 4,
-  },
-  quantityButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  quantityText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    paddingHorizontal: 16,
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.light.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    opacity: 0.8,
   },
   basketFooter: {
-    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     marginHorizontal: 16,
