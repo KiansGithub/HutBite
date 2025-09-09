@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, useTheme } from 'react-native-paper';
-import { ThemedText } from '../ThemedText';
+import { Text } from '@/components/Themed';
 
 export interface BasketSummaryProps {
     /** Total number of items in the basket */
@@ -26,15 +26,15 @@ export function BasketSummary({
         <Card style={styles.container} testID={testID}>
             <Card.Content>
                 <View style={styles.row}>
-                    <ThemedText>Items</ThemedText>
-                    <ThemedText>{totalItems}</ThemedText>
+                    <Text>Items</Text>
+                    <Text>{totalItems}</Text>
                 </View>
 
                 <View style={styles.divider} />
 
                 <View style={styles.row}>
-                    <ThemedText type="defaultSemiBold">Total</ThemedText>
-                    <ThemedText type="defaultSemiBold">{totalPrice}</ThemedText>
+                    <Text style={{ fontWeight: 'bold' }}>Total</Text>
+                    <Text style={{ fontWeight: 'bold' }}>{totalPrice}</Text>
                 </View>
             </Card.Content>
         </Card>

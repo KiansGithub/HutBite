@@ -4,14 +4,11 @@ import { Card, IconButton, Dialog, Portal, Button } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { IBasketItem } from '@/types/basket';
 import { parsePriceString } from '@/utils/basketUtils';
-import { ThemedView } from '../ThemedView';
-import { ThemedText } from '../ThemedText';
 import type { BasketItemProps } from './types';
 import { buildImageUrl } from '@/utils/imageUtils';
-import { Colors } from '@/constants/Colors';
-import { translate } from '@/constants/translations';
-import { formatCurrency, CurrencyCode } from '@/utils/currency';
-import { useStore } from '@/store/StoreContext';
+import  Colors from '@/constants/Colors';
+import { useStore } from '@/contexts/StoreContext';
+import { Text } from '@/components/Themed';
 
 const colors = Colors.light; 
 
@@ -95,9 +92,9 @@ export function BasketItem({
 
     return (
         <>
-        <Card style={[styles.card, { backgroundColor: colors.surface }]} testID={testID}>
+        <Card style={[styles.card, { backgroundColor: colors.background }]} testID={testID}>
             <LinearGradient
-                colors={[colors.accent, 'transparent']}
+                colors={[colors.primary, 'transparent']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.cardAccent}
@@ -116,17 +113,17 @@ export function BasketItem({
            
             {/* Product Details */}
             <View style={styles.textContainer}>
-                <ThemedText type="defaultSemiBold" style={styles.itemName}>{item.product_name}</ThemedText>
+                <Text style={styles.itemName}>{item.product_name}</Text>
                 {regularOptionsText ? (
-                    <ThemedText style={styles.optionsText} numberOfLines={2}>
+                    <Text style={styles.optionsText} numberOfLines={2}>
                         {regularOptionsText}
-                    </ThemedText>
+                    </Text>
                 ): null}
             </View>
             <View style={styles.priceContainer}>
-                <ThemedText style={styles.price}>
-                    {formatCurrency(parsePriceString(item.price), { currency: currency as CurrencyCode, showSymbol: true})}
-                </ThemedText>
+                <Text style={styles.price}>
+                    {item.price}
+                </Text>
             </View>
             </View>
 
@@ -138,9 +135,9 @@ export function BasketItem({
                       style={styles.toppingsIcon}
                       disabled 
                     />
-                    <ThemedText style={styles.toppingsRowText} numberOfLines={3}>
+                    <Text style={styles.toppingsRowText} numberOfLines={3}>
                         {toppingsText}
-                    </ThemedText>
+                    </Text>
                     </View>
             ): null}
 
@@ -170,7 +167,7 @@ export function BasketItem({
                         disabled={quantity <= 1}
                         testID={`${testID}-decrease`}
                     />
-                    <ThemedText style={styles.quantity}>{quantity}</ThemedText>
+                    <Text style={styles.quantity}>{quantity}</Text>
                     <IconButton 
                         icon="plus"
                         size={20}
@@ -190,24 +187,24 @@ export function BasketItem({
                     style={{borderRadius: 0}}
                     testID={`${testID}-delete-dialog`}
                 >
-                    <Dialog.Title>{translate('removeItem')}</Dialog.Title>
+                    <Dialog.Title>Remove Item</Dialog.Title>
                     <Dialog.Content>
-                        <ThemedText>
-                            {translate('removeItemQuestion', { item: item.product_name })}
-                        </ThemedText>
+                        <Text>
+                            Are you sure you want to remove {item.product_name} from your basket?
+                        </Text>
                     </Dialog.Content>
                     <Dialog.Actions>
                         <Button 
                             onPress={handleCancelDelete}
                             testID={`${testID}-cancel-delete`}
                         >
-                            {translate('cancel')}
+                            Cancel
                         </Button>
                         <Button 
                             onPress={handleConfirmDelete}
                             testID={`${testID}-confirm-delete`}
                         >
-                            {translate('remove')}
+                            Remove
                         </Button>
                         
                     </Dialog.Actions>
@@ -254,7 +251,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     placeholderImage: {
-        backgroundColor: colors.surface,
+        backgroundColor: colors.background,
     },
     textContainer: {
         flex: 1, 
@@ -311,7 +308,7 @@ const styles = StyleSheet.create({
     },
     optionsText: {
         fontSize: 14,
-        color: colors.muted,
+        color: colors.text,
         marginTop: 4, 
     },
     toppingsRow: {

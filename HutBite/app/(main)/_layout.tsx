@@ -39,7 +39,7 @@ function TabLayout() {
                 },
                 headerRight: () => (
                     <View style={{ marginRight: 15 }}>
-                        <CartIcon onPress={handleCartPress} />
+                        <CartIcon />
                     </View>
                 ),
                 tabBarShowLabel: true,
@@ -133,6 +133,14 @@ function TabLayout() {
             />
             <Tabs.Screen
                 name="menu/[id]"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+            <Tabs.Screen
+                name="basket"
                 options={{
                     href: null, // Hide from tab bar
                     headerShown: false,

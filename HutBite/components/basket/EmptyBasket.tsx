@@ -1,9 +1,8 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Card, useTheme } from 'react-native-paper';
-import { ThemedText } from '../ThemedText';
 import { useRouter } from 'expo-router';
-import { translate } from '@/constants/translations';
+import { Text } from '@/components/Themed';
 
 export interface EmptyBasketProps {
     /** Optional test ID for testing purposes */
@@ -19,26 +18,26 @@ export function EmptyBasket({ testID = 'empty-basket'}: EmptyBasketProps) {
     const { colors } = theme; 
 
     const handleBrowseMenu = () => {
-        router.push('/(tabs)/menu');
+        router.push('/(main)/menu/[id]');
     };
 
     return (
         <View style={styles.container} testID={testID}>
             <Card style={styles.card}>
                 <Card.Content style={styles.cardContent}>
-                    <ThemedText type="title" style={styles.title}>
-                    {translate('yourBasketEmpty')}
-                    </ThemedText>
-                    <ThemedText style={styles.message}>
-                    {translate('basketEmptyMessage')} 
-                    </ThemedText>
+                    <Text style={styles.title}>
+                    Your basket is empty
+                    </Text>
+                    <Text style={styles.message}>
+                    Add some items to your basket to get started.
+                    </Text>
                     <Button 
                       mode="contained"
                       onPress={handleBrowseMenu}
                       style={styles.button}
                       testID="browse-menu-button"
                     >
-                        {translate('browseMenu')}
+                        Browse Menu
                     </Button>
                 </Card.Content>
             </Card>
