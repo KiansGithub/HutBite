@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { RadioButton, HelperText, Text, TouchableRipple } from 'react-native-paper';
+import { RadioButton, Text, TouchableRipple } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 
 import { IProcessedProductOptions, IOptionSelections, IFilteredOptionGroups } from '@/types/productOptions';
 import Colors from '@/constants/Colors';
@@ -37,19 +38,21 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({ options, filtere
               <Text style={styles.groupTitle}>{group.key}</Text>
               {group.isRequired && <Text style={styles.requiredText}>Required</Text>}
             </View>
-            <RadioButton.Group
-              onValueChange={(value) => onOptionSelect(group.key, value)}
-              value={selections[group.key]}
-            >
-              {displayOptions.map((option) => (
-                <TouchableRipple key={option.ID} onPress={() => onOptionSelect(group.key, option.ID)}>
-                  <View style={styles.optionContainer}>
-                    <Text style={styles.optionName}>{option.Name}</Text>
-                    <RadioButton.Android value={option.ID} color={lightColors.primary} />
-                  </View>
-                </TouchableRipple>
-              ))}
-            </RadioButton.Group>
+            <View>
+              {displayOptions.map((option) => {
+                const isSelected = selections[group.key] === option.ID;
+                return (
+                  <TouchableRipple key={option.ID} onPress={() => onOptionSelect(group.key, option.ID)}>
+                    <View style={[styles.optionContainer, isSelected && styles.optionSelected]}>
+                      <Text style={[styles.optionName, isSelected && styles.optionNameSelected]}>{option.Name}</Text>
+                      <View style={[styles.radioButtonContainer, isSelected && styles.radioButtonSelected]}>
+                        {isSelected && <Ionicons name="checkmark" size={18} color="#fff" />}
+                      </View>
+                    </View>
+                  </TouchableRipple>
+                );
+              })}
+            </View>
           </View>
         );
       })}
@@ -63,11 +66,6 @@ const styles = StyleSheet.create({
   },
   groupContainer: {
     marginBottom: 24,
-    backgroundColor: lightColors.card,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: lightColors.border,
   },
   groupHeader: {
     flexDirection: 'row',
@@ -76,7 +74,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   groupTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
     color: lightColors.text,
   },
@@ -94,13 +92,37 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: lightColors.border,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+    borderColor: lightColors.border,
+    borderRadius: 12,
+    marginBottom: 10,
+  },
+  optionSelected: {
+    backgroundColor: lightColors.primary,
+    borderColor: lightColors.primary,
   },
   optionName: {
     fontSize: 16,
     color: lightColors.text,
     flex: 1,
+  },
+  optionNameSelected: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  radioButtonContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: lightColors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioButtonSelected: {
+    backgroundColor: lightColors.primary,
+    borderColor: '#fff',
   },
 });

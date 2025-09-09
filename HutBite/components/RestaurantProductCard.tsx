@@ -11,28 +11,19 @@ const colors = Colors.light;
 interface RestaurantProductCardProps {
   product: IBaseProduct;
   quantity: number;
-  onAdd: () => void;
-  onRemove: () => void;
-  onPress?: () => void;
+  onPress: () => void;
   imageUrl?: string;
 }
 
 export function RestaurantProductCard({ 
   product, 
   quantity, 
-  onAdd, 
-  onRemove, 
   onPress,
   imageUrl 
 }: RestaurantProductCardProps) {
   
   const handleAddPress = () => {
-    // Check if product has options/customizations
-    if (product.Modifiable && product.DeGroupedPrices) {
-      onPress?.();
-    } else {
-      onAdd();
-    }
+    onPress();
   };
 
   return (
@@ -86,7 +77,7 @@ export function RestaurantProductCard({
           <View style={[styles.quantityRow, { backgroundColor: colors.primary }]}>
             <TouchableOpacity 
               style={styles.quantityButton}
-              onPress={onRemove}
+              onPress={onPress} // Decrement logic is handled in the parent
             >
               <Ionicons name="remove" size={20} color="#fff" />
             </TouchableOpacity>
@@ -95,7 +86,7 @@ export function RestaurantProductCard({
             
             <TouchableOpacity 
               style={styles.quantityButton}
-              onPress={onAdd}
+              onPress={onPress} // Increment logic is handled in the parent
             >
               <Ionicons name="add" size={20} color="#fff" />
             </TouchableOpacity>

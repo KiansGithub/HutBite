@@ -4,6 +4,7 @@ import { ActivityIndicator } from 'react-native-paper';
 import { Text } from '@/components/Themed';
 import { RestaurantProductList } from './RestaurantProductList';
 import { IBaseProduct, MenuCategory } from '@/types/store';
+import { IBasketItem } from '@/types/basket';
 import Colors from '@/constants/Colors';
 
 const colors = Colors.light;
@@ -15,9 +16,7 @@ interface RestaurantCategoryContentProps {
   categories: MenuCategory[];
   products: IBaseProduct[];
   selectedCategoryId: string | null;
-  basketItems: Record<string, number>;
-  onProductAdd: (productId: string) => void;
-  onProductRemove: (productId: string) => void;
+  basketItems: IBasketItem[];
   onProductPress?: (product: IBaseProduct) => void;
   buildImageUrl: (imgUrl?: string) => string | null;
 }
@@ -29,9 +28,7 @@ export function RestaurantCategoryContent({
   categories = [],
   products = [],
   selectedCategoryId,
-  basketItems,
-  onProductAdd,
-  onProductRemove,
+  basketItems = [],
   onProductPress,
   buildImageUrl
 }: RestaurantCategoryContentProps) {
@@ -94,8 +91,6 @@ export function RestaurantCategoryContent({
         <RestaurantProductList
           products={filteredProducts}
           basketItems={basketItems}
-          onProductAdd={onProductAdd}
-          onProductRemove={onProductRemove}
           onProductPress={onProductPress}
           buildImageUrl={buildImageUrl}
         />

@@ -4,38 +4,34 @@ import { Text } from '@/components/Themed';
 import { RestaurantProductCard } from './RestaurantProductCard';
 import { IBaseProduct } from '@/types/store';
 import Colors from '@/constants/Colors';
+import { IBasketItem } from '@/types/basket';
 
 const colors = Colors.light;
 
 interface RestaurantProductListProps {
   products: IBaseProduct[];
-  basketItems: Record<string, number>;
-  onProductAdd: (productId: string) => void;
-  onProductRemove: (productId: string) => void;
-  onProductPress?: (product: IBaseProduct) => void;
+  basketItems: IBasketItem[];
+  onProductPress: (product: IBaseProduct) => void;
   buildImageUrl: (imgUrl?: string) => string | null;
 }
 
 export function RestaurantProductList({ 
   products, 
-  basketItems, 
-  onProductAdd, 
-  onProductRemove, 
+  basketItems = [], 
   onProductPress,
   buildImageUrl 
 }: RestaurantProductListProps) {
 
-  const renderItem = ({ item, index }: { item: IBaseProduct; index: number }) => {
-    const quantity = basketItems[item.ID] || 0;
+  const renderItem = ({ item }: { item: IBaseProduct }) => {
+    const basketItem = basketItems.find(bi => bi.productId === item.ID);
+    const quantity = basketItem ? basketItem.quantity : 0;
     const imageUrl = buildImageUrl(item.ImgUrl);
     
     return (
       <RestaurantProductCard
         product={item}
         quantity={quantity}
-        onAdd={() => onProductAdd(item.ID)}
-        onRemove={() => onProductRemove(item.ID)}
-        onPress={() => onProductPress?.(item)}
+        onPress={() => onProductPress(item)}
         imageUrl={imageUrl || undefined}
       />
     );

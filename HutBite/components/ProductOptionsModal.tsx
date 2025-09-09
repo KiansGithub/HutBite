@@ -270,7 +270,9 @@ export function ProductOptionsModal({
           </SafeAreaView>
         </ImageBackground>
 
-        <View style={styles.contentSheet}>{renderContent()}</View>
+        <View style={styles.modalContent}>
+          {renderContent()}
+        </View>
 
         <SafeAreaView style={styles.footer}>
           <View style={styles.footerContent}>
@@ -319,10 +321,18 @@ export function ProductOptionsModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)', // Semi-transparent background
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    height: screenHeight * 0.9,
     backgroundColor: lightColors.background,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
   },
   imageBackground: {
-    height: screenHeight * 0.35,
+    height: screenHeight * 0.3,
     width: '100%',
     justifyContent: 'flex-start',
   },
@@ -331,10 +341,10 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end', // Align close button to the right
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingTop: Platform.OS === 'android' ? 16 : 0,
+    paddingTop: Platform.OS === 'android' ? 20 : 40, // Adjust for status bar
   },
   closeButton: {
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -346,24 +356,20 @@ const styles = StyleSheet.create({
   },
   contentSheet: {
     flex: 1,
-    backgroundColor: lightColors.background,
-    marginTop: -20, // Pulls the sheet up over the image
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContentContainer: {
     padding: 20,
-    paddingBottom: 150, // Space for the footer
+    paddingBottom: 220, // Increased padding for footer and delete button
   },
   centeredContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: lightColors.background,
   },
   infoText: {
     marginTop: 16,
@@ -393,12 +399,12 @@ const styles = StyleSheet.create({
     borderTopColor: lightColors.border,
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 0 : 16, // Handles notch
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16, // Safe area for iOS bottom
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 10,
+    shadowOffset: { width: 0, height: -3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 20,
   },
   footerContent: {
     flexDirection: 'row',
@@ -408,7 +414,7 @@ const styles = StyleSheet.create({
   quantityControl: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: lightColors.card,
+    backgroundColor: lightColors.background,
     borderRadius: 30,
   },
   quantityButton: {
@@ -425,6 +431,11 @@ const styles = StyleSheet.create({
     marginLeft: 16,
     borderRadius: 30,
     overflow: 'hidden',
+    elevation: 2, // Add elevation for Android shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   confirmButtonGradient: {
     paddingVertical: 16,
@@ -438,11 +449,12 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingTop: 16, // Increased padding
+    paddingBottom: 8, // Increased padding
   },
   deleteButtonText: {
-    color: lightColors.primary,
-    fontSize: 14,
-    fontWeight: '500',
+    color: lightColors.error,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
