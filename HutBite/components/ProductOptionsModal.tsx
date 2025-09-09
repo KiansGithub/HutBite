@@ -151,7 +151,6 @@ export function ProductOptionsModal({
           }
         }
       } catch (err) {
-        console.error('Error processing product data:', err);
         if (isMounted) {
           setError('Failed to load product details.');
         }
@@ -231,9 +230,6 @@ export function ProductOptionsModal({
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.productName}>{product.Name}</Text>
-        {product.Description && <Text style={styles.productDescription}>{product.Description}</Text>}
-
         {processedOptions.groups.length > 0 && (
           <ProductOptions
             options={processedOptions}
@@ -256,36 +252,52 @@ export function ProductOptionsModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={true} onRequestClose={onDismiss}>
+    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onDismiss}>
       <View style={styles.container}>
-        <ImageBackground source={{ uri: imageUrl }} style={styles.imageBackground}>
-          <LinearGradient
-            colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
-            style={styles.imageOverlay}
-          />
-          <SafeAreaView style={styles.header}>
-            <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
-              <Ionicons name="close" size={28} color="#fff" />
-            </TouchableOpacity>
-          </SafeAreaView>
-        </ImageBackground>
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 250 }}>
+          <ImageBackground source={{ uri: imageUrl }} style={styles.imageBackground}>
+            <LinearGradient
+              colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
+              style={styles.imageOverlay}
+            />
+            <SafeAreaView style={styles.header}>
+              <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
+                <Ionicons name="close" size={28} color="#fff" />
+              </TouchableOpacity>
+            </SafeAreaView>
+            <View style={styles.productInfoContainer}>
+              <Text style={styles.productName}>{product.Name}</Text>
+              {product.Description && (
+                <Text style={styles.productDescription}>{product.Description}</Text>
+              )}
+            </View>
+          </ImageBackground>
 
-        <View style={styles.modalContent}>
-          {renderContent()}
-        </View>
+          <View style={styles.modalContent}>{renderContent()}</View>
+        </ScrollView>
 
         <SafeAreaView style={styles.footer}>
-          <View style={styles.footerContent}>
+          <View style={styles.quantityControlContainer}>
             <View style={styles.quantityControl}>
-              <TouchableOpacity onPress={() => handleQuantityChange(-1)} style={styles.quantityButton}>
-                <Ionicons name="remove" size={24} color={lightColors.primary} />
+              <TouchableOpacity
+                onPress={() => handleQuantityChange(-1)}
+                style={styles.quantityButton}
+                disabled={quantity === 1}
+              >
+                <Ionicons
+                  name="remove"
+                  size={24}
+                  color={quantity === 1 ? lightColors.tabIconDefault : lightColors.primary}
+                />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{quantity}</Text>
               <TouchableOpacity onPress={() => handleQuantityChange(1)} style={styles.quantityButton}>
                 <Ionicons name="add" size={24} color={lightColors.primary} />
               </TouchableOpacity>
             </View>
+          </View>
 
+          <View style={styles.footerActions}>
             <TouchableOpacity
               onPress={handleConfirm}
               style={styles.confirmButton}
@@ -306,12 +318,12 @@ export function ProductOptionsModal({
                 </Text>
               </LinearGradient>
             </TouchableOpacity>
+            {isEditing && onDelete && (
+              <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+                <Text style={styles.deleteButtonText}>Remove from Cart</Text>
+              </TouchableOpacity>
+            )}
           </View>
-          {isEditing && onDelete && (
-            <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-              <Text style={styles.deleteButtonText}>Remove from Cart</Text>
-            </TouchableOpacity>
-          )}
         </SafeAreaView>
       </View>
     </Modal>
@@ -321,20 +333,20 @@ export function ProductOptionsModal({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)', // Semi-transparent background
-    justifyContent: 'flex-end',
+    backgroundColor: lightColors.background, // Use solid background
   },
   modalContent: {
-    height: screenHeight * 0.9,
+    // height: screenHeight * 0.9, // This will be dynamic now
     backgroundColor: lightColors.background,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
+    // borderTopLeftRadius: 20, // No longer needed as it's not a sheet
+    // borderTopRightRadius: 20,
+    // overflow: 'hidden', // Can interfere with shadows
+    padding: 20,
   },
   imageBackground: {
-    height: screenHeight * 0.3,
+    height: screenHeight * 0.35, // Increased height
     width: '100%',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between', // Align items vertically
   },
   imageOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -354,15 +366,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  contentSheet: {
-    flex: 1,
+  productInfoContainer: {
+    padding: 20,
+  },
+  productName: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
+    marginBottom: 8,
+  },
+  productDescription: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+    lineHeight: 22,
   },
   scrollContainer: {
     flex: 1,
   },
   scrollContentContainer: {
-    padding: 20,
-    paddingBottom: 220, // Increased padding for footer and delete button
+    // padding: 20, // Moved to modalContent
+    paddingBottom: 250, // Increased padding for footer and delete button
   },
   centeredContainer: {
     flex: 1,
@@ -370,6 +399,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     backgroundColor: lightColors.background,
+    marginBottom: 24,
   },
   infoText: {
     marginTop: 16,
@@ -377,45 +407,38 @@ const styles = StyleSheet.create({
     color: lightColors.tabIconDefault,
     textAlign: 'center',
   },
-  productName: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: lightColors.text,
-    marginBottom: 8,
-  },
-  productDescription: {
-    fontSize: 16,
-    color: lightColors.tabIconDefault,
-    marginBottom: 24,
-    lineHeight: 22,
-  },
   footer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: lightColors.border,
+    borderTopColor: 'transparent', // Removed border
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16, // Safe area for iOS bottom
+    paddingTop: 10, // Reduced top padding
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20, // Safe area for iOS bottom
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 20,
   },
-  footerContent: {
-    flexDirection: 'row',
+  quantityControlContainer: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   quantityControl: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: lightColors.background,
     borderRadius: 30,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
   },
   quantityButton: {
     padding: 12,
@@ -424,32 +447,34 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: lightColors.text,
-    marginHorizontal: 12,
+    marginHorizontal: 16,
+  },
+  footerActions: {
+    width: '100%',
   },
   confirmButton: {
-    flex: 1,
-    marginLeft: 16,
+    width: '100%', // Full width
     borderRadius: 30,
     overflow: 'hidden',
-    elevation: 2, // Add elevation for Android shadow
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
   confirmButtonGradient: {
-    paddingVertical: 16,
+    paddingVertical: 18, // Increased padding for a taller button
     justifyContent: 'center',
     alignItems: 'center',
   },
   confirmButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 18, // Slightly larger font
+    fontWeight: '600', // Semi-bold for modern look
   },
   deleteButton: {
     alignItems: 'center',
-    paddingTop: 16, // Increased padding
+    paddingTop: 20, // Increased padding
     paddingBottom: 8, // Increased padding
   },
   deleteButtonText: {

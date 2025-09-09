@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
-import { getStoreProfile, getWebSettings, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
+import { getStoreProfile, getWebSettings, getMenuCategories, getGroupsByCategory, getToppings } from '@/services/apiService';
 import { STORE_CONFIG } from '@/constants/api';
 import type { IStoreProfile, IWebSettings, MenuCategory, IBaseProduct } from '@/types/store';
 import { RestaurantCategoryHeader } from './RestaurantCategoryHeader';
@@ -20,6 +20,7 @@ import { RestaurantCategoryContent } from './RestaurantCategoryContent';
 import { ProductOptionsModal } from './ProductOptionsModal';
 import { IBasketItem } from '@/types/basket';
 import { useBasket } from '@/contexts/BasketContext';
+import { useStore } from '@/contexts/StoreContext';
 import {
   calculateItemPrice,
   formatOptionsForBasket,
@@ -56,6 +57,7 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
 
   const { basketItems, addItem, removeItem } = useBasket();
+  const { setStoreState } = useStore();
   const [isProductOptionsOpen, setIsProductOptionsOpen] = useState(false);
 
   useEffect(() => {
@@ -114,8 +116,14 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
       setCategories(menuCategories);
       console.log(' [RestaurantMenuModal] Menu categories set successfully');
 
-      // Step 4: Load all product categories
-      console.log(' [RestaurantMenuModal] Step 4: Loading all product categories...');
+      // Step 4: Fetch Toppings and store in context
+      console.log(' [RestaurantMenuModal] Step 4: Fetching toppings...');
+      const fetchedToppings = await getToppings(profile.StoreURL, storeId);
+      setStoreState((prev) => ({ ...prev, toppingGroups: fetchedToppings }));
+      console.log(' [RestaurantMenuModal] Toppings fetched and stored in context:', fetchedToppings.length);
+
+      // Step 5: Load all product categories
+      console.log(' [RestaurantMenuModal] Step 5: Loading all product categories...');
       const productCategories = menuCategories.filter(cat => cat.CatType === 1);
       console.log(' [RestaurantMenuModal] Product categories found:', productCategories.length);
       

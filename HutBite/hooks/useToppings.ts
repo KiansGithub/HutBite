@@ -70,7 +70,7 @@ export const useToppings = (): UseToppingsReturn => {
                 throw new Error(`Topping group ${groupId} not found`);
             }
 
-            return group.DeProducts.map((topping: any) => ({
+            const processedToppings = group.DeProducts.map((topping: any) => ({
                 ...topping,
                 displayGroup: group.Name || 'Other',
                 prices: topping.DeGroupPrices?.DePrices.map((price: any) => {
@@ -86,6 +86,8 @@ export const useToppings = (): UseToppingsReturn => {
                     };
                 }) || []
             })) as ITopping[];
+
+            return processedToppings;
         } catch (err) {
             setError(err instanceof Error ? err : new Error('Failed to get toppings for group'));
             return [];

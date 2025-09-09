@@ -51,32 +51,44 @@ export const ProductToppings: React.FC<ProductToppingsProps> = ({
     onToppingsChange(selections);
   }, [selections, onToppingsChange]);
 
-  const handlePortionChange = useCallback(
-    (toppingId: string, newPortions: number) => {
-      const topping = toppings.find((t) => t.ID === toppingId);
-      if (!topping) return;
+  const handlePortionChange = useCallback((id: string, newPortions: number) => {
+    setSelections((prev) => {
+      const topping = toppings.find(t => t.ID === id);
+      if (!topping) return prev; 
 
-      setSelections((prev) => {
-        const existingIndex = prev.findIndex((s) => s.id === toppingId);
+      const toppingGroup = groupedToppings.find(group => group.toppings.some(t => t.ID === id));
 
-        if (newPortions === 0) {
-          if (existingIndex > -1) {
-            return prev.filter((s) => s.id !== toppingId);
-          }
-          return prev;
+      if (newPortions === 0) {
+        return prev.filter(s => s.id !== id);
+      }
+
+      if (toppingGroup?.groupInfo.isOneChoice) {
+        if (newPortions > 1) {
+          newPortions = 1;
         }
 
-        if (existingIndex > -1) {
-          const updatedSelections = [...prev];
-          updatedSelections[existingIndex] = { ...updatedSelections[existingIndex], portions: newPortions };
-          return updatedSelections;
+        const otherToppingsInGroup = toppingGroup.toppings 
+          .filter(t => t.ID !== id)
+          .map(t => t.ID);
+        
+        const filteredPrev = prev.filter(s => !otherToppingsInGroup.includes(s.id));
+
+        const existing = filteredPrev.find(s => s.id === id);
+        if (!existing) {
+          return [...filteredPrev, { id, name: topping.Name, portions: newPortions }];
         } else {
-          return [...prev, { id: toppingId, name: topping.Name, portions: newPortions }];
+          return filteredPrev.map(s => s.id === id ? { ...s, portions: newPortions } : s);
         }
-      });
-    },
-    [toppings]
-  );
+      } else {
+        const existing = prev.find((s) => s.id === id);
+        if (!existing) {
+          return [...prev, { id, name: topping.Name, portions: newPortions }];
+        } else {
+          return prev.map((s) => s.id === id ? {...s, portions: newPortions } : s);
+        }
+      }
+    });
+  }, [toppings, groupedToppings]);
 
   if (!toppings || toppings.length === 0) {
     return null;
