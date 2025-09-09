@@ -47,9 +47,15 @@ export function useProductOptions({
     );
     const [lastOperation, setLastOperation] = useState<(() => void) | null>(null);
 
-    // Update selections when initialSelections changes (important for edit mode)
+    // This effect handles the initialization of selections.
+    // It correctly applies initialSelections for editing or defaultSelections for new items.
     useEffect(() => {
-        if (initialSelections && Object.keys(initialSelections).length > 0) {
+        const isEditing = initialSelections && Object.keys(initialSelections).length > 0;
+        const hasDefaults = options.defaultSelections && Object.keys(options.defaultSelections).length > 0;
+        const selectionsAreEmpty = Object.keys(selections).length === 0;
+
+        if (isEditing) {
+            // If in edit mode, apply the existing selections.
             setSelections(initialSelections);
 
             // Update filtered options based on initial selections 
@@ -59,23 +65,11 @@ export function useProductOptions({
                 );
                 setFilteredOptions(filtered);
             }
+        } else if (selectionsAreEmpty && hasDefaults) {
+            // If creating a new item and defaults are available, apply them.
+            setSelections(options.defaultSelections || {});
         }
-    }, [initialSelections, options.groups, options.validCombinations]);
-
-    useEffect(() => {
-        const noSelectionsYet = Object.keys(selections).length === 0; 
-        const hasDefaultSelections = 
-            options.defaultSelections &&
-            Object.keys(options.defaultSelections).length > 0; 
-        
-        // Also check if we have actual option groups (not just empty initial state)
-        const hasActualOptions = options.groups && options.groups.length > 0;
-        
-        if (noSelectionsYet && hasDefaultSelections && hasActualOptions) {
-            console.log('Applying default selections:', options.defaultSelections);
-            setSelections(options.defaultSelections!);
-        }
-    }, [options.defaultSelections, options.groups, selections]);
+    }, [initialSelections, options.defaultSelections, selections]);
 
     // Memoized validation state 
     const validationState = useMemo(() => {

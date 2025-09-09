@@ -50,6 +50,24 @@ interface ProductOptionsModalProps {
   onDelete?: (itemId: string) => void;
 }
 
+interface ProductOptionsContentProps {
+  product: IBaseProduct;
+  onDismiss: () => void;
+  onConfirm: (selections: {
+    options: IOptionSelections;
+    toppings?: IToppingSelection[];
+    availableToppings?: ITopping[];
+    isEditing?: boolean;
+    itemId?: string;
+    quantity: number;
+  }) => void;
+  existingItem?: IBasketItem;
+  onDelete?: (itemId: string) => void;
+  processedOptions: any; // Consider defining a more specific type for processed options
+  toppings: ITopping[];
+  hasToppings: boolean;
+}
+
 export function ProductOptionsModal({
   visible,
   onDismiss,
@@ -65,11 +83,9 @@ export function ProductOptionsModal({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(Number(existingItem?.quantity) || 1);
 
   const [processedOptions, setProcessedOptions] = useState<any>({ groups: [] });
 
-  const [toppingSelections, setToppingSelections] = useState<IToppingSelection[]>([]);
   const [toppings, setToppings] = useState<ITopping[]>([]);
 
   const hasToppings = useMemo(
@@ -80,63 +96,9 @@ export function ProductOptionsModal({
 
   const isEditing = !!existingItem;
 
-  const { selections, validationState, filteredOptions, handleOptionSelect, loading: optionsLoading } = useProductOptions({
-    options: processedOptions,
-    initialSelections: existingItem?.options.reduce((acc, opt) => {
-      if (opt.option_list_name !== 'Topping') {
-        acc[opt.option_list_name] = opt.ref;
-      }
-      return acc;
-    }, {} as IOptionSelections),
-  });
-
-  const { formattedPrice, currentPrice } = useRealTimePricing({
-    product,
-    selections,
-    toppingSelections,
-    availableToppings: toppings,
-    quantity,
-  });
-
-  useEffect(() => {
-    if (visible) {
-      setQuantity(Number(existingItem?.quantity) || 1);
-    } else {
-      // Reset state on dismiss
-      setTimeout(() => {
-        setToppingSelections([]);
-        setQuantity(1);
-      }, 300); // Delay to allow animation to finish
-    }
-  }, [visible, existingItem]);
-
-  useEffect(() => {
-    if (existingItem && visible) {
-      const extractedToppings: IToppingSelection[] = existingItem.options
-        .filter((option) => option.option_list_name === 'Topping')
-        .map((topping) => ({
-          id: topping.ref.split('-').pop() || topping.ref,
-          name: topping.label,
-          portions: topping.quantity,
-        }));
-      setToppingSelections(extractedToppings);
-    }
-  }, [existingItem, visible]);
-
-  useEffect(() => {
-    if (visible && !existingItem && product.Toppings) {
-      // Process initial toppings to respect OrgPortion values
-      const initialToppingSelections = processToppingSelections(product.Toppings, toppings);
-      setToppingSelections(initialToppingSelections);
-    }
-  }, [visible, product.Toppings, toppings, existingItem]);
-
-  const handleDelete = () => {
-    if (existingItem?.id) {
-      onDelete?.(existingItem.id);
-      onDismiss();
-    }
-  };
+  const optionsReady = useMemo(() => {
+    return !loading && processedOptions.groups.length > 0;
+  }, [loading, processedOptions]);
 
   useEffect(() => {
     let isMounted = true;
@@ -177,24 +139,146 @@ export function ProductOptionsModal({
     };
   }, [visible, product, getToppingsByGroup]);
 
+  const imageUrl = useMemo(() => {
+    const imagePath = product.ImgUrl;
+    return imagePath ? buildImageUrl(urlForImages, imagePath) : null;
+  }, [product, urlForImages]);
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.centeredContainer}>
+          <ActivityIndicator size="large" color={lightColors.primary} />
+          <Text style={styles.infoText}>Loading Options...</Text>
+        </View>
+      );
+    }
+
+    if (error) {
+      return (
+        <View style={styles.centeredContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color={lightColors.primary} />
+          <Text style={styles.infoText}>{error}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {processedOptions.groups.length > 0 && (
+          <ProductOptions
+            options={processedOptions}
+            selections={{}}
+            onOptionSelect={() => {}}
+          />
+        )}
+
+        {hasToppings && toppings.length > 0 && (
+          <ProductToppings
+            toppings={toppings}
+            onToppingsChange={() => {}}
+            initialSelections={[]}
+            maxAllowedToppings={9}
+          />
+        )}
+      </ScrollView>
+    );
+  };
+
+  return (
+    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onDismiss}>
+      {optionsReady ? (
+        <ProductOptionsContent
+          product={product}
+          onDismiss={onDismiss}
+          onConfirm={onConfirm}
+          existingItem={existingItem}
+          onDelete={onDelete}
+          processedOptions={processedOptions}
+          toppings={toppings}
+          hasToppings={hasToppings}
+        />
+      ) : (
+        <View style={styles.centeredContainer}>
+          <ActivityIndicator size="large" color={lightColors.primary} />
+          <Text style={styles.infoText}>Loading Options...</Text>
+        </View>
+      )}
+    </Modal>
+  );
+}
+
+function ProductOptionsContent({
+  product,
+  onDismiss,
+  onConfirm,
+  existingItem,
+  onDelete,
+  processedOptions,
+  toppings,
+  hasToppings
+}: ProductOptionsContentProps) {
+  const { getToppingsByGroup } = useToppings();
+  const { canAddToBasket: originalCanAddToBasket, isOpen, storeMessage} = useStoreStatus();
+  const canAddToBasket = true; // Temporarily set to true for testing
+  const { urlForImages } = useStore();
+
+  const [quantity, setQuantity] = useState(Number(existingItem?.quantity) || 1);
+  const [toppingSelections, setToppingSelections] = useState<IToppingSelection[]>([]);
+
+  const isEditing = !!existingItem;
+
+  const { selections, validationState, filteredOptions, handleOptionSelect, loading: optionsLoading } = useProductOptions({
+    options: processedOptions,
+    initialSelections: existingItem?.options.reduce((acc, opt) => {
+      if (opt.option_list_name !== 'Topping') {
+        acc[opt.option_list_name] = opt.ref;
+      }
+      return acc;
+    }, {} as IOptionSelections),
+  });
+
+  const { formattedPrice, currentPrice } = useRealTimePricing({
+    product,
+    selections,
+    toppingSelections,
+    availableToppings: toppings,
+    quantity,
+  });
+
+  useEffect(() => {
+    if (existingItem) {
+      const extractedToppings: IToppingSelection[] = existingItem.options
+        .filter((option) => option.option_list_name === 'Topping')
+        .map((topping) => ({
+          id: topping.ref.split('-').pop() || topping.ref,
+          name: topping.label,
+          portions: topping.quantity,
+        }));
+      setToppingSelections(extractedToppings);
+    } else if (product.Toppings) {
+      // Process initial toppings to respect OrgPortion values
+      const initialToppingSelections = processToppingSelections(product.Toppings, toppings);
+      setToppingSelections(initialToppingSelections);
+    }
+  }, [existingItem, product.Toppings, toppings]);
+
+  const handleDelete = () => {
+    if (existingItem?.id) {
+      onDelete?.(existingItem.id);
+      onDismiss();
+    }
+  };
+
   const handleToppingChange = useCallback((newToppings: IToppingSelection[]) => {
     setToppingSelections(newToppings);
   }, []);
 
   const handleConfirm = useCallback(() => {
-    console.log('=== PRODUCTOPTIONSMODAL HANDLECONFIRM DEBUG ===');
-    console.log('Current selections:', selections);
-    console.log('Validation state:', validationState);
-    console.log('Validation state isValid:', validationState.isValid);
-    console.log('Validation state missingRequired:', validationState.missingRequired);
-    console.log('Processed options requirements:', processedOptions.requirements);
-    console.log('Processed options groups:', processedOptions.groups);
-    console.log('Can add to basket:', canAddToBasket);
-    console.log('Store status - isOpen:', isOpen, 'canAddToBasket:', canAddToBasket, 'storeMessage:', storeMessage);
-    console.log('Is editing:', isEditing);
-    console.log('Button should be enabled:', validationState.isValid && (canAddToBasket || isEditing));
-    console.log('=== END PRODUCTOPTIONSMODAL DEBUG ===');
-    
     if (validationState.isValid) {
       onConfirm({
         options: selections,
@@ -218,11 +302,6 @@ export function ProductOptionsModal({
     quantity,
     onConfirm,
     onDismiss,
-    validationState,
-    processedOptions,
-    canAddToBasket,
-    isOpen,
-    storeMessage,
   ]);
 
   const handleQuantityChange = (amount: number) => {
@@ -235,20 +314,11 @@ export function ProductOptionsModal({
   }, [product, urlForImages]);
 
   const renderContent = () => {
-    if (loading || optionsLoading) {
+    if (optionsLoading) {
       return (
         <View style={styles.centeredContainer}>
           <ActivityIndicator size="large" color={lightColors.primary} />
           <Text style={styles.infoText}>Loading Options...</Text>
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <View style={styles.centeredContainer}>
-          <Ionicons name="alert-circle-outline" size={48} color={lightColors.primary} />
-          <Text style={styles.infoText}>{error}</Text>
         </View>
       );
     }
@@ -281,81 +351,79 @@ export function ProductOptionsModal({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onDismiss}>
-      <View style={styles.container}>
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 250 }}>
-          <ImageBackground source={{ uri: imageUrl || undefined }} style={styles.imageBackground}>
-            <LinearGradient
-              colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
-              style={styles.imageOverlay}
-            />
-            <SafeAreaView style={styles.header}>
-              <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
-                <Ionicons name="close" size={28} color="#fff" />
-              </TouchableOpacity>
-            </SafeAreaView>
-            <View style={styles.productInfoContainer}>
-              <Text style={styles.productName}>{product.Name}</Text>
-              {product.Description && (
-                <Text style={styles.productDescription}>{product.Description}</Text>
-              )}
-            </View>
-          </ImageBackground>
-
-          <View style={styles.modalContent}>{renderContent()}</View>
-        </ScrollView>
-
-        <SafeAreaView style={styles.footer}>
-          <View style={styles.quantityControlContainer}>
-            <View style={styles.quantityControl}>
-              <TouchableOpacity
-                onPress={() => handleQuantityChange(-1)}
-                style={styles.quantityButton}
-                disabled={quantity === 1}
-              >
-                <Ionicons
-                  name="remove"
-                  size={24}
-                  color={quantity === 1 ? lightColors.tabIconDefault : lightColors.primary}
-                />
-              </TouchableOpacity>
-              <Text style={styles.quantityText}>{quantity}</Text>
-              <TouchableOpacity onPress={() => handleQuantityChange(1)} style={styles.quantityButton}>
-                <Ionicons name="add" size={24} color={lightColors.primary} />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <View style={styles.footerActions}>
-            <TouchableOpacity
-              onPress={handleConfirm}
-              style={styles.confirmButton}
-              disabled={!validationState.isValid || (!canAddToBasket && !isEditing)}
-            >
-              <LinearGradient
-                colors={
-                  !validationState.isValid || (!canAddToBasket && !isEditing)
-                    ? ['#AAB8C2', '#AAB8C2']
-                    : [lightColors.primaryStart, lightColors.primaryEnd]
-                }
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
-                style={styles.confirmButtonGradient}
-              >
-                <Text style={styles.confirmButtonText}>
-                  {isEditing ? `Update - ${formattedPrice}` : `Add to Cart - ${formattedPrice}`}
-                </Text>
-              </LinearGradient>
+    <View style={styles.container}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 250 }}>
+        <ImageBackground source={{ uri: imageUrl || undefined }} style={styles.imageBackground}>
+          <LinearGradient
+            colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
+            style={styles.imageOverlay}
+          />
+          <SafeAreaView style={styles.header}>
+            <TouchableOpacity onPress={onDismiss} style={styles.closeButton}>
+              <Ionicons name="close" size={28} color="#fff" />
             </TouchableOpacity>
-            {isEditing && onDelete && (
-              <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-                <Text style={styles.deleteButtonText}>Remove from Cart</Text>
-              </TouchableOpacity>
+          </SafeAreaView>
+          <View style={styles.productInfoContainer}>
+            <Text style={styles.productName}>{product.Name}</Text>
+            {product.Description && (
+              <Text style={styles.productDescription}>{product.Description}</Text>
             )}
           </View>
-        </SafeAreaView>
-      </View>
-    </Modal>
+        </ImageBackground>
+
+        <View style={styles.modalContent}>{renderContent()}</View>
+      </ScrollView>
+
+      <SafeAreaView style={styles.footer}>
+        <View style={styles.quantityControlContainer}>
+          <View style={styles.quantityControl}>
+            <TouchableOpacity
+              onPress={() => handleQuantityChange(-1)}
+              style={styles.quantityButton}
+              disabled={quantity === 1}
+            >
+              <Ionicons
+                name="remove"
+                size={24}
+                color={quantity === 1 ? lightColors.tabIconDefault : lightColors.primary}
+              />
+            </TouchableOpacity>
+            <Text style={styles.quantityText}>{quantity}</Text>
+            <TouchableOpacity onPress={() => handleQuantityChange(1)} style={styles.quantityButton}>
+              <Ionicons name="add" size={24} color={lightColors.primary} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.footerActions}>
+          <TouchableOpacity
+            onPress={handleConfirm}
+            style={styles.confirmButton}
+            disabled={!validationState.isValid || (!canAddToBasket && !isEditing)}
+          >
+            <LinearGradient
+              colors={
+                !validationState.isValid || (!canAddToBasket && !isEditing)
+                  ? ['#AAB8C2', '#AAB8C2']
+                  : [lightColors.primaryStart, lightColors.primaryEnd]
+              }
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={styles.confirmButtonGradient}
+            >
+              <Text style={styles.confirmButtonText}>
+                {isEditing ? `Update - ${formattedPrice}` : `Add to Cart - ${formattedPrice}`}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          {isEditing && onDelete && (
+            <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+              <Text style={styles.deleteButtonText}>Remove from Cart</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 

@@ -82,17 +82,18 @@ export function processProductOptions(
         };
     }
 
-    const allOptions: IProductOption[] = [];
+    const allOptions: (IProductOption & { isRequired: boolean })[] = [];
     groupedPrices.DePrices.forEach(price => {
         if (price.DeMixOption?.OptionList) {
-            allOptions.push(...normalizeOptionList(price.DeMixOption.OptionList));
+            const isRequired = !!price.IsOptionMandetory;
+            normalizeOptionList(price.DeMixOption.OptionList).forEach(opt => {
+                allOptions.push({ ...opt, isRequired });
+            });
         }
     });
 
-    const isMandatory = groupedPrices.DePrices.some(price => price.IsOptionMandetory);
-
     // Group options by their categories 
-    const groups = groupOptionsByKey(allOptions, isMandatory);
+    const groups = groupOptionsByKey(allOptions);
     console.log('Processed product options:', groups);
 
     // Extract requirements 
@@ -103,7 +104,7 @@ export function processProductOptions(
     console.log('Option requirements:', requirements);
 
     // Generate default selections if available 
-    const defaultSelections = generateDefaultSelections(groups);
+    const defaultSelections = generateDefaultSelections(groups, requirements.mandatoryKeys);
     console.log('Default selections:', defaultSelections);
 
     return {
@@ -118,8 +119,7 @@ export function processProductOptions(
  * Groups product options by their category key 
  */
 export function groupOptionsByKey(
-    options: IProductOption[],
-    isRequired: boolean
+    options: (IProductOption & { isRequired: boolean })[]
 ): IProductOptionGroup[] {
     const groupMap = new Map<string, IProductOptionGroup>();
 
@@ -136,10 +136,14 @@ export function groupOptionsByKey(
             if (!exists) {
                 existing.options.push(option.Value);
             }
+            // If any option in the group is marked as required, the whole group is.
+            if (option.isRequired) {
+                existing.isRequired = true;
+            }
         } else {
             groupMap.set(option.Key, {
                 key: option.Key, 
-                isRequired, 
+                isRequired: option.isRequired, 
                 options: [option.Value]
             });
         }
@@ -157,7 +161,7 @@ export function validateOptionSelections(
 ): IOptionValidationState {
     try {
         // Validate inputs 
-        if (!selections || !requirements) {
+        if (selections === null || selections === undefined || !requirements) {
             throw new ValidationError('INVALID_INPUT', 'Invalid validation inputs');
         }
 
@@ -264,8 +268,17 @@ function extractOptionRequirements(groupedPrices: IGroupedPrices): {
 
     groupedPrices.DePrices.forEach((price) => {
         const optionList = normalizeOptionList(price.DeMixOption?.OptionList);
+        console.log("Processing price:", {
+            OPID: price.OPID,
+            IsOptionMandetory: price.IsOptionMandetory,
+            DeMixOptionName: price.DeMixOption?.Name,
+            optionListLength: optionList.length,
+            optionKeys: optionList.map(opt => opt.Key)
+        });
+        
         if (price.IsOptionMandetory) {
             optionList.forEach((option: IProductOption) => {
+                console.log(`Adding mandatory key: ${option.Key}`);
                 mandatoryKeys.add(option.Key);
             });
         }
@@ -348,9 +361,10 @@ function validateOptionCombinations(
  * For optional groups, no selection is made 
  * 
  * @param groups - Array of product option groups 
+ * @param mandatoryKeys - Array of mandatory keys
  * @returns Object mapping option keyss to their default selected values
  */
-export function generateDefaultSelections(groups: IProductOptionGroup[]): IOptionSelections {
+export function generateDefaultSelections(groups: IProductOptionGroup[], mandatoryKeys: string[] = []): IOptionSelections {
     // Return empty object for empty/null groups
     if (!groups?.length) {
         return {};
@@ -361,7 +375,7 @@ export function generateDefaultSelections(groups: IProductOptionGroup[]): IOptio
         if (!group.options?.length) return selections;
 
         // Only create default selections for required groups
-        if (group.isRequired) {
+        if (mandatoryKeys.includes(group.key)) {
             // Ensure unique options before selecting 
             const uniqueOptions = group.options.filter((opt, index, self) =>
                 self.findIndex(o => o.ID === opt.ID) === index 
