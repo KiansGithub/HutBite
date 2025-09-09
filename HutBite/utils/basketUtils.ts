@@ -324,11 +324,19 @@ export const calculateItemPrice = (
                     toppingPriceAmount = toppingPriceEntry?.Amount; 
                 }
 
+                // If no size-based price found, try to get price from DeGroupedPrices (similar to getProductPrice)
+                if (toppingPriceAmount === undefined && toppingDefinition.DeGroupedPrices?.DePrices?.length > 0) {
+                    const firstPrice = toppingDefinition.DeGroupedPrices.DePrices[0].Amount;
+                    console.log(`Extracted topping price from DeGroupedPrices: ${firstPrice}`);
+                    if (typeof firstPrice === 'number') {
+                        toppingPriceAmount = firstPrice;
+                    }
+                }
 
-                // Fallback to DePrice if no size or grouped price is available 
+                // Final fallback to DePrice if no grouped price is available 
                 if (toppingPriceAmount === undefined && toppingDefinition.DePrice !== undefined) {
                     toppingPriceAmount = toppingDefinition.DePrice; 
-                    console.log(`No size-based price found, falling back to DePrice: ${toppingPriceAmount}`)
+                    console.log(`No grouped price found, falling back to DePrice: ${toppingPriceAmount}`)
                 }
 
 
@@ -338,7 +346,8 @@ export const calculateItemPrice = (
                 }
 
 
-                const originalPortion = product.Toppings?.filter(t => t.ID === topping.id).length ?? 0; 
+                // Find the original portion from the topping definition, not by counting array occurrences
+                const originalPortion = toppingDefinition.OrgPortion ?? 0;
                 const chargeablePortion = Math.max(0, topping.portions - originalPortion);
                 const portionPrice = toppingPriceAmount * chargeablePortion; 
 
