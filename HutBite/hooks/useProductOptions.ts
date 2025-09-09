@@ -37,13 +37,9 @@ export function useProductOptions({
     onSelectionsChange
 }: UseProductOptionsProps): UseProductOptionsReturn {
     // State management 
-    const [selections, setSelections] = useState<IOptionSelections>(() => {
-        // Determine initial state based on editing mode vs new item
-        if (initialSelections && Object.keys(initialSelections).length > 0) {
-            return initialSelections;
-        }
-        return options.defaultSelections || {};
-    });
+    const [selections, setSelections] = useState<IOptionSelections>(
+        initialSelections || {}
+    );
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [filteredOptions, setFilteredOptions] = useState<IFilteredOptionGroups>(
@@ -51,39 +47,27 @@ export function useProductOptions({
     );
     const [lastOperation, setLastOperation] = useState<(() => void) | null>(null);
 
-    // This effect handles the initialization of selections.
-    // It correctly applies initialSelections for editing or defaultSelections for new items.
+    // Update selections if initialSelections change (e.g., for editing an item)
     useEffect(() => {
-        const isEditing = initialSelections && Object.keys(initialSelections).length > 0;
+        if (initialSelections && Object.keys(initialSelections).length > 0) {
+            setSelections(initialSelections);
+        }
+    }, [initialSelections]);
+
+    // Apply default selections only for new items when options are processed
+    useEffect(() => {
+        const isNewItem = !initialSelections || Object.keys(initialSelections).length === 0;
         const hasDefaults = options.defaultSelections && Object.keys(options.defaultSelections).length > 0;
 
-        if (isEditing) {
-            // If in edit mode, apply the existing selections.
-            setSelections(initialSelections);
-
-            // Update filtered options based on initial selections 
-            if(options.validCombinations) {
-                const filtered = filterOptionsBySelection(
-                    options.groups, initialSelections, options.validCombinations, ["Size", "Größe"]
-                );
-                setFilteredOptions(filtered);
-            }
-        } else if (hasDefaults && Object.keys(selections).length === 0) {
-            // If creating a new item and no selections exist yet, apply defaults.
-            setSelections(options.defaultSelections || {});
+        if (isNewItem && hasDefaults) {
+            setSelections(options.defaultSelections);
         }
-    }, [initialSelections, options.defaultSelections, options.groups, options.validCombinations]);
+    }, [options.defaultSelections, initialSelections]);
 
     // Memoized validation state 
     const validationState = useMemo(() => {
-        console.log('=== USEPRODUCTOPTIONS VALIDATION START ===');
-        console.log('Current selections:', selections);
-        console.log('Options requirements:', options.requirements);
-        console.log('Options groups:', options.groups);
-        
         try {
             const result = validateOptionSelections(selections, options.requirements);
-            console.log('Validation result from validateOptionSelections:', result);
             return result;
         } catch (err) {
             console.error('Validation error in useProductOptions:', err);
@@ -97,14 +81,11 @@ export function useProductOptions({
                 missingRequired: [],
                 invalidCombinations: []
             };
-        } finally {
-            console.log('=== USEPRODUCTOPTIONS VALIDATION END ===');
         }
     }, [selections, options.requirements]);
 
     // Notify parent of selection changes 
     useEffect(() => {
-        console.log('Selections updated:', selections);
         onSelectionsChange?.(selections, validationState.isValid);
     }, [selections, validationState.isValid, onSelectionsChange]);
 
@@ -145,7 +126,6 @@ export function useProductOptions({
 
     // Memoized handlers 
     const handleOptionSelect = useCallback((groupKey: string, value: string) => {
-        console.log('Option selected:', groupKey, value);
         const operation = () => {
             setLoading(true);
             setError(null);
@@ -170,7 +150,6 @@ export function useProductOptions({
     }, [resetIncompatibleSelections]);
 
     const handleOptionChange = useCallback((key: string, value: string) => {
-        console.log('Option changed:', key, value);
         const operation = () => {
             setLoading(true);
             setError(null);

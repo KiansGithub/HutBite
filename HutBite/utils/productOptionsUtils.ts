@@ -94,18 +94,12 @@ export function processProductOptions(
 
     // Group options by their categories 
     const groups = groupOptionsByKey(allOptions);
-    console.log('Processed product options:', groups);
 
     // Extract requirements 
     const { requirements, validCombinations } = extractOptionRequirements(groupedPrices);
 
-    console.log('Processed product options:', groups);
-    console.log('Valid combinations:', validCombinations);
-    console.log('Option requirements:', requirements);
-
     // Generate default selections if available 
     const defaultSelections = generateDefaultSelections(groups, requirements.mandatoryKeys);
-    console.log('Default selections:', defaultSelections);
 
     return {
         groups, 
@@ -268,65 +262,47 @@ function extractOptionRequirements(groupedPrices: IGroupedPrices): {
 
     groupedPrices.DePrices.forEach((price) => {
         const optionList = normalizeOptionList(price.DeMixOption?.OptionList);
-        console.log("Processing price:", {
-            OPID: price.OPID,
-            IsOptionMandetory: price.IsOptionMandetory,
-            DeMixOptionName: price.DeMixOption?.Name,
-            optionListLength: optionList.length,
-            optionKeys: optionList.map(opt => opt.Key)
-        });
         
         if (price.IsOptionMandetory) {
             optionList.forEach((option: IProductOption) => {
-                console.log(`Adding mandatory key: ${option.Key}`);
                 mandatoryKeys.add(option.Key);
             });
         }
 
-        console.log("Price OPID:", price.OPID, "DeMixOption:", price.DeMixOption?.Name);
+        if (price.DeMixOption?.OptionList) {
+            const optionList = normalizeOptionList(price.DeMixOption.OptionList);
 
-            // Extract valid combinations from each price option 
-    if (price.DeMixOption?.OptionList) {
-        const optionList = normalizeOptionList(price.DeMixOption.OptionList);
+            // For each option in this combination 
+            optionList.forEach((option: IProductOption) => {
+                const key = option.Key; 
+                const value = option.Value.ID; 
 
-        // For each option in this combination 
-        optionList.forEach((option: IProductOption) => {
-            const key = option.Key; 
-            const value = option.Value.ID; 
-
-            // Initialize if this key doesn't exist yet 
-            if(!validCombinations[key]) {
-                validCombinations[key] = {};
-            }
-
-            // For each other option in this combination 
-            optionList.forEach((otherOption: IProductOption) => {
-
-                
-                if (otherOption.Key !== key) {
-                    const otherKey = otherOption.Key; 
-                    const otherValue = otherOption.Value.ID; 
-
-                    // Extra detailed log:
-                    console.log(
-                    `Adding combo: (${key}=${value}) <-> (${otherKey}=${otherValue}) ` +
-                    `from price OPID=${price.OPID}`
-                    );
-
-                    // Initialize nested structure if needed 
-                    if (!validCombinations[key][value]) {
-                        validCombinations[key][value] = {};
-                    }
-                    if (!validCombinations[key][value][otherKey]) {
-                        validCombinations[key][value][otherKey] = new Set();
-                    }
-
-                    // Add this as a valid combination 
-                    validCombinations[key][value][otherKey].add(otherValue);
+                // Initialize if this key doesn't exist yet 
+                if(!validCombinations[key]) {
+                    validCombinations[key] = {};
                 }
-            }); 
-        });
-    }
+
+                // For each other option in this combination 
+                optionList.forEach((otherOption: IProductOption) => {
+
+                    if (otherOption.Key !== key) {
+                        const otherKey = otherOption.Key; 
+                        const otherValue = otherOption.Value.ID; 
+
+                        // Initialize nested structure if needed 
+                        if (!validCombinations[key][value]) {
+                            validCombinations[key][value] = {};
+                        }
+                        if (!validCombinations[key][value][otherKey]) {
+                            validCombinations[key][value][otherKey] = new Set();
+                        }
+
+                        // Add this as a valid combination 
+                        validCombinations[key][value][otherKey].add(otherValue);
+                    }
+                }); 
+            });
+        }
     });
 
     return {
@@ -405,11 +381,6 @@ export function getCompatibleOptions(
     validCombinations: IOptionCompatibilityMap, 
     allOptions: IProductOptionValue[]
 ): IProductOptionValue[] {
-    console.log(
-        "getCompatibleOptions: groupKey =", groupKey, 
-        "selections =", selections
-    );
-
     const noOverallCombos = 
       !validCombinations ||
       Object.keys(validCombinations).length === 0 ||
@@ -422,13 +393,11 @@ export function getCompatibleOptions(
 
     // If no valid combinations data or no selections, return all options 
     if (noOverallCombos || groupIsEmpty) {
-            console.log("Returning all because validCombinations or selections are empty")
             return allOptions; 
         }
     
     // If this is the first selection (no other selections exist)
     const otherSelections = Object.entries(selections).filter(([key]) => key !== groupKey);
-    console.log("otherSelections:", otherSelections);
 
     // Get all valid option IDs for this group based on other selections 
     const validOptionIds = new Set<string>();
