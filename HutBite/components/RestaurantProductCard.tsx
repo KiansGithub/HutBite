@@ -5,6 +5,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { IBaseProduct } from '@/types/store';
+import { useStore } from '@/contexts/StoreContext';
+import { buildImageUrl } from '@/utils/imageUtils';
+import { getProductPrice } from '@/utils/basketUtils';
 
 const colors = Colors.light;
 
@@ -12,15 +15,17 @@ interface RestaurantProductCardProps {
   product: IBaseProduct;
   quantity: number;
   onPress: () => void;
-  imageUrl?: string;
 }
 
 export function RestaurantProductCard({ 
   product, 
   quantity, 
-  onPress,
-  imageUrl 
+  onPress
 }: RestaurantProductCardProps) {
+  
+  const { urlForImages } = useStore();
+  
+  const imageUrl = product.ImgUrl ? buildImageUrl(urlForImages, product.ImgUrl) : null;
   
   const handleAddPress = () => {
     onPress();
@@ -50,7 +55,7 @@ export function RestaurantProductCard({
                 style={[styles.price, { color: colors.text }]}
                 numberOfLines={1}
               >
-                ${product.Price ? product.Price.toFixed(2) : '0.00'}
+                ${getProductPrice(product)?.toFixed(2) || '0.00'}
               </Text>
             </View>
 
@@ -117,7 +122,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   container: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'stretch',
     overflow: 'hidden',
     minHeight: 120,
@@ -125,8 +130,10 @@ const styles = StyleSheet.create({
   image: {
     width: 120,
     height: 120,
-    borderBottomLeftRadius: 16,
-    borderTopLeftRadius: 16,
+    borderBottomRightRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 0,
+    borderTopLeftRadius: 0,
   },
   content: {
     flex: 1,
@@ -174,8 +181,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 16,
-    right: 16,
+    bottom: 4,
+    right: 4,
     zIndex: 1,
   },
   quantityRow: {

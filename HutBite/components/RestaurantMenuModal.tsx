@@ -56,8 +56,8 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
   const [selectedProduct, setSelectedProduct] = useState<IBaseProduct | null>(null);
   const [optionsModalVisible, setOptionsModalVisible] = useState(false);
 
-  const { basketItems, addItem, removeItem } = useBasket();
-  const { setStoreState } = useStore();
+  const { items, addItem, removeItem } = useBasket();
+  const { setStoreState, toppingGroups } = useStore();
   const [isProductOptionsOpen, setIsProductOptionsOpen] = useState(false);
 
   useEffect(() => {
@@ -183,18 +183,8 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
       setOptionsModalVisible(true);
       setIsProductOptionsOpen(true);
     } else {
-      const newItem: IBasketItem = {
-        id: `${product.ID}-${Date.now()}`,
-        productId: product.ID,
-        name: product.Name,
-        quantity: 1,
-        options: [],
-        toppings: [],
-        basePrice: product.Price,
-        totalPrice: product.Price,
-        imageUrl: buildImageUrl(product.ImgUrl),
-      };
-      addItem(newItem);
+      // For simple products without options, add directly to basket
+      addItem(product, []);
     }
   };
 
@@ -202,31 +192,24 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
     if (selectedProduct) {
       const formattedOptions = formatOptionsForBasket(
         selections.options,
-        selectedProduct.DeGroupedPrices
+        selectedProduct,
+        selectedProduct.CatID
       );
+      
       const formattedToppings = formatToppingsForBasket(
+        selections.toppings || [],
+        toppingGroups
+      );
+
+      // Combine options and toppings into a single options array
+      const allOptions = [...formattedOptions, ...formattedToppings];
+
+      addItem(
+        selectedProduct,
+        allOptions,
         selections.toppings,
         selections.availableToppings
       );
-
-      const itemPrice = calculateItemPrice(
-        selectedProduct,
-        formattedOptions,
-        formattedToppings
-      );
-
-      const newItem: IBasketItem = {
-        id: selections.isEditing ? selections.itemId : `${selectedProduct.ID}-${Date.now()}`,
-        productId: selectedProduct.ID,
-        name: selectedProduct.Name,
-        quantity: selections.quantity,
-        options: formattedOptions,
-        toppings: formattedToppings,
-        basePrice: selectedProduct.Price,
-        totalPrice: itemPrice * selections.quantity,
-        imageUrl: buildImageUrl(selectedProduct.ImgUrl),
-      };
-      addItem(newItem, selections.isEditing);
     }
     setOptionsModalVisible(false);
     setSelectedProduct(null);
@@ -316,20 +299,20 @@ export const RestaurantMenuModal: React.FC<RestaurantMenuModalProps> = ({
             categories={productCategories}
             products={products}
             selectedCategoryId={activeCategory}
-            basketItems={basketItems || []}
+            basketItems={items || []}
             onProductPress={handleProductPress}
             buildImageUrl={buildImageUrl}
           />
 
           {/* Basket Footer */}
-          {basketItems && basketItems.length > 0 && (
+          {items && items.length > 0 && (
             <View style={[styles.basketFooter, { backgroundColor: colors.primary }]}>
               <View style={styles.basketInfo}>
                 <Ionicons name="basket" size={20} color="#fff" />
                 <Text style={styles.basketText}>
                   {storeProfile?.StoreName || restaurant?.name || 'Restaurant'}
                 </Text>
-                <Text style={styles.basketCount}>{basketItems.length}</Text>
+                <Text style={styles.basketCount}>{items.length}</Text>
               </View>
             </View>
           )}

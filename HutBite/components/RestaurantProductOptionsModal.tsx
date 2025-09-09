@@ -11,7 +11,7 @@ import { IToppingSelection, ITopping } from '@/types/toppings';
 import { ProductToppings } from './ProductToppings';
 import { useProductOptions } from '@/hooks/useProductOptions';
 import { IBasketItem } from '@/types/basket';
-import { useBasketContext } from '@/context/BasketContext';
+import { useBasketContext } from '@/contexts/BasketContext';
 import { useRealTimePricing } from '@/hooks/useRealTimePricing';
 import { useStoreStatus } from '@/hooks/useStoreStatus';
 

@@ -335,14 +335,17 @@ export function generateDefaultSelections(groups: IProductOptionGroup[]): IOptio
     return groups.reduce<IOptionSelections>((selections, group) => {
         if (!group.options?.length) return selections;
 
-        // Ensure unique options before selecting 
-        const uniqueOptions = group.options.filter((opt, index, self) =>
-            self.findIndex(o => o.ID === opt.ID) === index 
-    );
-    
-    if (uniqueOptions.length > 0) {
-        selections[group.key] = uniqueOptions[0].ID;
-    }
+        // Only create default selections for required groups
+        if (group.isRequired) {
+            // Ensure unique options before selecting 
+            const uniqueOptions = group.options.filter((opt, index, self) =>
+                self.findIndex(o => o.ID === opt.ID) === index 
+            );
+        
+            if (uniqueOptions.length > 0) {
+                selections[group.key] = uniqueOptions[0].ID;
+            }
+        }
         
         return selections; 
     }, {});

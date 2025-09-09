@@ -165,7 +165,31 @@ export function formatToppingsForBasket(
 
 
 /**
- * Find the correct price for a product based on selected optiosn 
+ * Get the product price from DePrice or DeGroupedPrices
+ * @param product - The product object
+ * @returns The product price or null if not found
+ */
+export const getProductPrice = (product: IBaseProduct): number | null => {
+    // Case 1: If DePrice is a single value, return it 
+    if (typeof product.DePrice === 'number' && product.DePrice !== 0) {
+        return product.DePrice; 
+    }
+
+    // Case 2: If DeProducts exist, find the first available price 
+    if (product.DeGroupedPrices && Array.isArray(product.DeGroupedPrices.DePrices) && product.DeGroupedPrices?.DePrices?.length > 0) {
+        const firstPrice = product.DeGroupedPrices?.DePrices[0].Amount;
+        console.log("Extracted Price from DeGroupedPrices:", firstPrice);
+        if (typeof firstPrice === 'number') {
+            return firstPrice;
+        }
+    }
+
+    // Default fallback: return null
+    return null;
+};
+
+/**
+ * Find the correct price for a product based on selected options 
  * @param product - The product object 
  * @param selectedOptions - Object containing selected option IDs keyed by option name 
  * @returns The matching price amount or default product price if no match found 
@@ -176,10 +200,10 @@ export function findProductPriceByOptions(
 ): number {
     // If no options selected or product has no grouped prices, return default price 
     if (!selectedOptions || !product.DeGroupedPrices?.DePrices || !product.DeGroupedPrices.DePrices.length) {
-        return product.DePrice; 
+        return getProductPrice(product) ?? product.DePrice; 
     }
     
-    // ✅ Remove Toppings from selected options before matching product prices
+    // Remove Toppings from selected options before matching product prices
     const filteredOptions = Object.fromEntries(
         Object.entries(selectedOptions).filter(([key]) => key !== "Topping")
     );
@@ -210,7 +234,7 @@ export function findProductPriceByOptions(
         );
 
 
-        // ✅ Check only Crust and Size match
+        // Check only Crust and Size match
         return Object.entries(selectedOptionsString).every(([key, value]) => {
             return normalizeOptionListIDs(price.DeMixOption?.OptionListIDs).some(
                 opt => opt.Key === key && opt.Value === value
@@ -225,7 +249,7 @@ export function findProductPriceByOptions(
 
 
     console.log(`No matching price found for product ${product.ID} with options`, normalizedSelectedOptions);
-    return product.DePrice; 
+    return getProductPrice(product) ?? product.DePrice; 
 }
 
 
@@ -238,7 +262,7 @@ export const calculateItemPrice = (
     selectedToppings?: IToppingSelection[],
     availableToppings?: ITopping[],
 ): PriceCalculationResult => {
-    console.log("💰 Calculating price for: ", {
+    console.log("Calculating price for: ", {
         product: product.Name, 
         selections, 
         selectedToppings, 
@@ -246,7 +270,7 @@ export const calculateItemPrice = (
     });
 
 
-    let basePrice = product.DePrice; 
+    let basePrice = getProductPrice(product) ?? product.DePrice; 
     let optionsPrice = 0; 
     let toppingsPrice = 0;
 
@@ -257,7 +281,7 @@ export const calculateItemPrice = (
     }
 
 
-    // ✅ Find the selected size ID from option
+    // Find the selected size ID from option
     let selectedSizeId = selections?.options?.Size || selections?.options?.["Größe"];
     if (typeof selectedSizeId === 'string' && selectedSizeId.includes('-')) {
         selectedSizeId = selectedSizeId.split('-').pop() as string;
@@ -266,7 +290,7 @@ export const calculateItemPrice = (
 
     // Calculate toppings price based on selected size 
     if (selections?.toppings && selections.toppings.length > 0 && availableToppings) {
-        console.log("🍕 Calculating price for selected toppings:", selections.toppings)
+        console.log("Calculating price for selected toppings:", selections.toppings)
 
 
         toppingsPrice = selections.toppings.reduce((total, topping) => {
@@ -304,7 +328,7 @@ export const calculateItemPrice = (
                 // Fallback to DePrice if no size or grouped price is available 
                 if (toppingPriceAmount === undefined && toppingDefinition.DePrice !== undefined) {
                     toppingPriceAmount = toppingDefinition.DePrice; 
-                    console.log(`⚠️ No size-based price found, falling back to DePrice: ${toppingPriceAmount}`)
+                    console.log(`No size-based price found, falling back to DePrice: ${toppingPriceAmount}`)
                 }
 
 
@@ -319,7 +343,7 @@ export const calculateItemPrice = (
                 const portionPrice = toppingPriceAmount * chargeablePortion; 
 
 
-                console.log(`💵 Topping ${topping.name}: ${chargeablePortion} x ${toppingPriceAmount} = ${portionPrice}`)
+                console.log(`Topping ${topping.name}: ${chargeablePortion} x ${toppingPriceAmount} = ${portionPrice}`)
 
 
                 return total + portionPrice; 
@@ -374,5 +398,5 @@ export function generateSimpleId(): string {
 }
 
 
-// Export all utiltiy functions 
+// Export all utility functions 
 export { PriceCalculationResult };

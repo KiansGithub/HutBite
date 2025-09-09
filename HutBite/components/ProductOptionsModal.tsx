@@ -64,7 +64,7 @@ export function ProductOptionsModal({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quantity, setQuantity] = useState(existingItem?.quantity || 1);
+  const [quantity, setQuantity] = useState(Number(existingItem?.quantity) || 1);
 
   const [processedOptions, setProcessedOptions] = useState<any>({ groups: [] });
 
@@ -99,7 +99,7 @@ export function ProductOptionsModal({
 
   useEffect(() => {
     if (visible) {
-      setQuantity(existingItem?.quantity || 1);
+      setQuantity(Number(existingItem?.quantity) || 1);
     } else {
       // Reset state on dismiss
       setTimeout(() => {
@@ -201,7 +201,7 @@ export function ProductOptionsModal({
   };
 
   const imageUrl = useMemo(() => {
-    const imagePath = product.ImgUrl || product.ImageUrl || product.ImageURL;
+    const imagePath = product.ImgUrl;
     return imagePath ? buildImageUrl(urlForImages, imagePath) : null;
   }, [product, urlForImages]);
 
@@ -255,7 +255,7 @@ export function ProductOptionsModal({
     <Modal visible={visible} animationType="slide" transparent={false} onRequestClose={onDismiss}>
       <View style={styles.container}>
         <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 250 }}>
-          <ImageBackground source={{ uri: imageUrl }} style={styles.imageBackground}>
+          <ImageBackground source={{ uri: imageUrl || undefined }} style={styles.imageBackground}>
             <LinearGradient
               colors={['rgba(0,0,0,0.6)', 'transparent', 'rgba(0,0,0,0.8)']}
               style={styles.imageOverlay}

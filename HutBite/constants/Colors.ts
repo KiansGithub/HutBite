@@ -16,6 +16,7 @@ export default {
     primaryEnd: primary,
     card: '#F9FAFB', // Off-white for cards
     border: '#E5E7EB', // Light grey for borders
+    error: '#EF4444', // Red for error states
   },
   dark: {
     text: '#111827', // Darker grey for text
@@ -28,5 +29,6 @@ export default {
     primaryEnd: primary,
     card: '#F9FAFB', // Off-white for cards
     border: '#E5E7EB', // Light grey for borders
+    error: '#EF4444', // Red for error states
   },
 };
