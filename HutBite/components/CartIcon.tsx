@@ -1,17 +1,21 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import { useBasket } from '@/contexts/BasketContext';
 
 interface CartIconProps {
-  onPress: () => void;
 }
 
-export const CartIcon: React.FC<CartIconProps> = ({ onPress }) => {
+export const CartIcon: React.FC<CartIconProps> = () => {
   const { itemCount } = useBasket();
 
+  const handlePress = () => {
+    router.push('/(main)/basket');
+  };
+
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <Pressable onPress={handlePress} style={styles.container}>
       <Ionicons name="cart" size={28} color="black" />
       {itemCount > 0 && (
         <View style={styles.badge}>
