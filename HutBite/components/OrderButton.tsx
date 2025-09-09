@@ -1,6 +1,7 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Text } from '@/components/Themed';
+import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
@@ -10,35 +11,64 @@ type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 interface OrderButtonProps {
     restaurant: Restaurant, 
     feedItem: FeedContentItem, 
-    onOrderPress: () => void; 
+    onOrderPress: () => void;
+    onMenuPress?: () => void;
 }
 
 export const OrderButton: React.FC<OrderButtonProps> = ({
     restaurant, 
     feedItem, 
-    onOrderPress, 
+    onOrderPress,
+    onMenuPress,
 }) => {
     const handlePress = () => {
         onOrderPress();
     };
 
+    const handleMenuPress = () => {
+        onMenuPress?.();
+    };
+
     const buttonText = restaurant.receives_orders ? 'Add to Basket' : 'View Restaurant';
 
     return (
-        <TouchableOpacity 
-          style={styles.orderButton}
-          onPress={handlePress}
-        >
-            <Text style={styles.orderButtonText}>
-                {buttonText}
-            </Text>
-        </TouchableOpacity>
+        <View style={styles.buttonContainer}>
+            {restaurant.receives_orders && onMenuPress && (
+                <TouchableOpacity 
+                    style={styles.menuButton}
+                    onPress={handleMenuPress}
+                >
+                    <Ionicons 
+                        name="restaurant-outline" 
+                        size={20} 
+                        color="#fff" 
+                    />
+                </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity 
+                style={[
+                    styles.orderButton,
+                    restaurant.receives_orders && onMenuPress ? styles.orderButtonWithMenu : null
+                ]}
+                onPress={handlePress}
+            >
+                <Text style={styles.orderButtonText}>
+                    {buttonText}
+                </Text>
+            </TouchableOpacity>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    buttonContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
     orderButton: {
-        alignSelf: 'stretch',
+        flex: 1,
         backgroundColor: Colors.light.primary, 
         borderRadius: 30, 
         paddingVertical: 14, 
@@ -49,9 +79,26 @@ const styles = StyleSheet.create({
         shadowRadius: 6, 
         elevation: 3, 
     },
+    orderButtonWithMenu: {
+        // Slightly reduce flex when menu button is present
+        flex: 0.85,
+    },
     orderButtonText: {
         color: '#fff',
         fontSize: 18, 
         fontWeight: '700'
+    },
+    menuButton: {
+        backgroundColor: Colors.light.primary,
+        borderRadius: 30,
+        width: 48,
+        height: 48,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 3,
     },
 });

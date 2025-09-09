@@ -63,6 +63,9 @@ export interface Database {
           price: number
           video_url: string | null
           thumb_url: string | null;
+          cat_id: string | null;
+          grp_id: string | null;
+          pro_id: string | null;
         }
         Insert: {
           id?: string
@@ -73,6 +76,9 @@ export interface Database {
           price: number
           video_url?: string | null
           thumb_url?: string | null; 
+          cat_id?: string | null;
+          grp_id?: string | null;
+          pro_id?: string | null;
         }
         Update: {
           id?: string
@@ -83,6 +89,9 @@ export interface Database {
           price?: number
           video_url?: string | null
           thumb_url?: string | null; 
+          cat_id?: string | null;
+          grp_id?: string | null;
+          pro_id?: string | null;
         }
       }
       user_likes: {

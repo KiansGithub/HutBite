@@ -45,7 +45,6 @@ type Restaurant = {
   id: string;
   name: string;
   description?: string;
-  image_url?: string;
   order_links?: Record<string, string> | null;
   phone?: string | null;
   address?: string;
@@ -81,7 +80,6 @@ export default function RestaurantScreen() {
     fetchRestaurantData();
   }, [id]);
 
-  const hasImage = !!restaurant?.image_url;
   const headerHeight = 56 + insets.top;
   const headerSideWidth = 96; // reserve space left/right so centered title never overlaps buttons
 
@@ -225,28 +223,15 @@ export default function RestaurantScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Spacer so content doesn't slide under header when no image */}
-        {!hasImage && <View style={{ height: headerHeight }} />}
-
-        {/* Cover image */}
-        {hasImage && (
-          <>
-            <Image
-              source={{ uri: restaurant.image_url! }}
-              style={styles.heroImage}
-              resizeMode="cover"
-            />
-            {/* Pull up the card slightly over the image */}
-            <View style={{ height: 0 }} />
-          </>
-        )}
+        <View style={{ height: headerHeight }} />
 
         {/* Title block (kept for description/address; visual title is in header) */}
         <View
           style={[
             styles.contentCard,
             {
-              marginTop: hasImage ? -24 : 0,
-              paddingTop: hasImage ? 20 : 12,
+              marginTop: 0,
+              paddingTop: 12,
             },
           ]}
         >
@@ -404,11 +389,6 @@ const styles = StyleSheet.create({
   },
 
   scroll: { flex: 1 },
-
-  heroImage: {
-    width: '100%',
-    height: SCREEN_W * 0.9,
-  },
 
   content: { paddingBottom: 100 },
 

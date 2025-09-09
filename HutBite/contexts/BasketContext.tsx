@@ -75,37 +75,6 @@ export function BasketProvider({ children }: BasketProviderProps) {
         clearBasket, setLoading, setError, editItem
     }= useBasketHook();
 
-    // Wrap addItem function to also show toast message 
-    const addItemWithToast = (
-        itemOrProduct: IBasketItem | IBaseProduct, 
-        options: Array<{
-            option_list_name: string; 
-            ref: string; 
-            label: string; 
-            price: string; 
-            quantity: number; 
-        }>,
-        toppings?: IToppingSelection[],
-        availableToppings?: ITopping[]
-    ) => {
-        addItem(itemOrProduct, options, toppings, availableToppings);
-    }
-
-    // Wrap editItem function to also show toast message 
-    const editItemWithToast = (
-        id: string, 
-        options: Array<{
-            option_list_name: string; 
-            ref: string; 
-            label: string; 
-            price: string; 
-            quantity: number; 
-        }>,
-        toppings?: IToppingSelection[]
-    ) => {
-        editItem(id, options, toppings);
-    }
-
     // Function to get formatted basket data for oder submission 
     const getFormattedBasketData = () => {
         return items.map((item: any) => ({
@@ -115,7 +84,7 @@ export function BasketProvider({ children }: BasketProviderProps) {
         }));
     };
 
-    const basketValues: BasketContextValue = { items, isLoading, error, total, itemCount, currentStoreId, editItem: editItemWithToast, addItem: addItemWithToast, removeItem, updateQuantity, 
+    const basketValues: BasketContextValue = { items, isLoading, error, total, itemCount, currentStoreId, editItem, addItem, removeItem, updateQuantity, 
         clearBasket, setLoading, setError , resetBasket: clearBasket, getFormattedBasketData
     };
 

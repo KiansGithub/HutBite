@@ -15,6 +15,10 @@ export type FeedContentItem = {
     created_at: string; 
     user_id?: string; 
     suggested_restaurant_name?: string | null; 
+    cat_id?: string | null;
+    grp_id?: string | null;
+    pro_id?: string | null;
+    options?: any; // For backward compatibility
 };
 
 export type RestaurantFeedData = Record<string, FeedContentItem[]>;

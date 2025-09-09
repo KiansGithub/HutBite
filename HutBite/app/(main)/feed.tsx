@@ -15,6 +15,7 @@ import { useRestaurantData, RestaurantWithDistance } from '@/hooks/useRestaurant
 import { FeedContentItem } from '@/types/feedContent';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
+import { RestaurantMenuModal } from '@/components/RestaurantMenuModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
@@ -25,6 +26,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useTabTheme } from '@/contexts/TabThemeContext';
 import { useBasket } from '@/contexts/BasketContext';
 import SignInNudge from '@/components/SignInNudge';
+import { findProductByIds, productHasOptions } from '@/utils/productUtils';
+import { supabase } from '@/lib/supabase';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
@@ -51,7 +54,7 @@ export default function FeedScreen() {
   const { location, loading: locationLoading } = useLocation();
   const { restaurants: allRestaurants, feedContent, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching, setSearchType } = useSearch(allRestaurants, []);
-  const { addItemToBasket } = useBasket();
+  const { addItem } = useBasket();
 
   // Track previous search state to detect when search is cleared
   const prevIsSearching = useRef(isSearching);
@@ -116,36 +119,83 @@ export default function FeedScreen() {
     setSearchType('restaurants');
   }, [setSearchType]);
 
-  const handleOrderPress = useCallback((
-    restaurant: RestaurantWithDistance,
-    menuItemId: string
-  ) => {
-    // If the restaurant receives orders through our system, use the new flow
-    if (restaurant.receives_orders) {
-      const restaurantFeedItems = feedContent[restaurant.id] || [];
-      const selectedItem = restaurantFeedItems.find(item => item.id === menuItemId);
+  const [menuModalVisible, setMenuModalVisible] = useState(false);
+  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantWithDistance | null>(null);
 
+  const handleOrderPress = useCallback(async (restaurant: RestaurantWithDistance, selectedItem: FeedContentItem) => {
+    if (restaurant.receives_orders) {
       if (!selectedItem) {
-        console.error('Could not find the selected menu item.');
+        console.warn('No selected item found');
         return;
       }
 
-      addItemToBasket(
-        {
-          id: selectedItem.id,
-          name: selectedItem.name,
-          price: selectedItem.price || 0,
-          quantity: 1,
-        },
-        restaurant.id
-      );
+      // If we have product identifiers, try to find the actual product
+      if (selectedItem.cat_id && selectedItem.grp_id && selectedItem.pro_id) {
+        try {
+          // Load the menu data for this restaurant
+          const { data: menuData } = await supabase
+            .from('restaurant_menus')
+            .select('menu_data')
+            .eq('restaurant_id', restaurant.id)
+            .single();
 
-      router.push(`/menu/${restaurant.id}`);
+          if (menuData?.menu_data) {
+            // Find the product using the identifiers
+            const product = findProductByIds(
+              menuData.menu_data, 
+              selectedItem.cat_id, 
+              selectedItem.grp_id, 
+              selectedItem.pro_id
+            );
+
+            if (product) {
+              // Check if product has options
+              if (productHasOptions(product)) {
+                // Product has options, show menu modal
+                setSelectedRestaurant(restaurant);
+                setMenuModalVisible(true);
+                return;
+              } else {
+                // Product has no options, add directly to basket
+                addItem(product, []);
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error loading menu data:', error);
+        }
+      }
+
+      // Fallback: if no product identifiers or menu data not found, 
+      // check if the feed item itself indicates options
+      if (selectedItem.options && selectedItem.options.length > 0) {
+        setSelectedRestaurant(restaurant);
+        setMenuModalVisible(true);
+      } else {
+        addItem(
+          {
+            id: selectedItem.id,
+            name: selectedItem.name,
+            price: selectedItem.price || 0,
+            quantity: 1,
+          },
+          [] // Pass empty options array instead of restaurant.id
+        );
+      }
     } else {
       // When a restaurant doesn't receive orders, navigate to its page
       router.push(`/restaurant/${restaurant.id}`);
     }
-  }, [feedContent, addItemToBasket]);
+  }, [feedContent, addItem]);
+
+  const handleMenuPress = useCallback((restaurantId: string) => {
+    const restaurant = restaurants.find((r) => r.id === restaurantId);
+    if (restaurant) {
+      setSelectedRestaurant(restaurant);
+      setMenuModalVisible(true);
+    }
+  }, [restaurants]);
 
   const renderRestaurant = useCallback(
     ({ item, index }: { item: RestaurantWithDistance; index: number }) => {
@@ -172,7 +222,8 @@ export default function FeedScreen() {
           rowMode={rowMode}
           isVisible={isCurrent && isScreenFocused}
           onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
-          onOrderPress={(menuItemId) => handleOrderPress(item, menuItemId)}
+          onOrderPress={(menuItemId) => handleOrderPress(item, feedItems.find(item => item.id === menuItemId))}
+          onMenuPress={handleMenuPress}
           distance={item.distance}
           isDescriptionExpanded={isCurrent ? isDescriptionExpanded : false}
           setIsDescriptionExpanded={setIsDescriptionExpanded}
@@ -268,6 +319,14 @@ export default function FeedScreen() {
       )}
 
       <SignInNudge topOverlayHeight={88} />
+
+      {selectedRestaurant && (
+        <RestaurantMenuModal
+          visible={menuModalVisible}
+          restaurant={selectedRestaurant}
+          onClose={() => setMenuModalVisible(false)}
+        />
+      )}
     </View>
   );
 }
