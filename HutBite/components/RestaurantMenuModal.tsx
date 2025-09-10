@@ -129,13 +129,13 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
         isOpen: true,
         status: 1
       };
-      try {
-        const storeStatus = await getStoreStatus(profile.StoreURL);
-        if (storeStatus !== null) {
-          storeInfo.isOpen = !storeStatus;
-          storeInfo.status = storeStatus ? 0 : 1;
-        }
-      } catch {}
+      // try {
+      //   const storeStatus = await getStoreStatus(profile.StoreURL);
+      //   if (storeStatus !== null) {
+      //     storeInfo.isOpen = !storeStatus;
+      //     storeInfo.status = storeStatus ? 0 : 1;
+      //   }
+      // } catch {}
 
       setStoreState((prev) => ({ 
             ...prev, 

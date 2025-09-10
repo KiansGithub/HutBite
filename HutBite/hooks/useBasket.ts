@@ -62,8 +62,12 @@ function transformProductToBasketItem(
     }, {} as IOptionSelections);
 
     // Use calculated price 
-    const calculatedPrice = calculateItemPrice(product, { options: optionsObject, toppings: toppingSelections}, toppingSelections, availableToppings
-);
+    const calculatedPrice = calculateItemPrice(
+        product, 
+        { options: optionsObject, toppings: toppingSelections }, 
+        toppingSelections, 
+        availableToppings
+    );
 
     const imageUrl = buildImageUrl(urlForImages, product.ImgUrl);
 
