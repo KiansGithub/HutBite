@@ -17,6 +17,7 @@ import { FeedContentItem } from '@/types/feedContent';
 import { useLikes } from '@/hooks/useLikes';
 import { GoogleRating } from './GoogleRating';
 import { RowMode } from '@/types/video';
+import { APP_CONFIG } from '@/constants/config';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 type MenuItem = Database['public']['Tables']['menu_items']['Row'] & { id: string };

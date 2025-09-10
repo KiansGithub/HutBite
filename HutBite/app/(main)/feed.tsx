@@ -34,7 +34,7 @@ import { getStoreProfile, getMenuCategories, getGroupsByCategory } from '@/servi
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
 
-const dynamicStyles = (themeColors) => StyleSheet.create({
+const dynamicStyles = (themeColors: any) => StyleSheet.create({
   container: { backgroundColor: themeColors.background },
   locationText: { color: themeColors.primary },
   locationBanner: { backgroundColor: themeColors.primary },

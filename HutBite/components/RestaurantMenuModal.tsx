@@ -35,6 +35,7 @@ import {
   formatToppingsForBasket,
 } from '@/utils/basketUtils';
 import { processProductOptions } from '@/utils/productOptionsUtils'; // ⬅️ we compute processed options here
+import { findProductByIds, productHasOptions } from '@/utils/productUtils';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -74,6 +75,29 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
       loadMenuData();
     }
   }, [visible, restaurant?.id]);
+
+  // New effect to handle initialMenuItem
+  useEffect(() => {
+    if (visible && initialMenuItem && products.length > 0 && !loading) {
+      // Find the product from the loaded menu
+      if (initialMenuItem.cat_id && initialMenuItem.grp_id && initialMenuItem.pro_id) {
+        const product = products.find(p =>
+          p.ID === initialMenuItem.pro_id &&
+          p.CategoryID === initialMenuItem.cat_id
+        );
+ 
+        if (product && productHasOptions(product)) {
+          // Auto-navigate to options for this product
+          setActiveProduct(product);
+          setRoute('options');
+        } else if (product) {
+          // Product has no options, add directly and close modal
+          addItem(product, []);
+          onClose();
+        }
+      }
+    }
+  }, [visible, initialMenuItem, products, loading, addItem, onClose]);
 
   const loadMenuData = async () => {
     if (!restaurant) return;
