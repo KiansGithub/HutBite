@@ -1,58 +1,78 @@
+// components/basket/BasketSummary.tsx
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Card, useTheme } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '@/components/Themed';
+import Colors from '@/constants/Colors';
 
 export interface BasketSummaryProps {
-    /** Total number of items in the basket */
-    totalItems: number; 
-    /** Total price of all items in the basket */
-    totalPrice: string; 
-    /** Optional test ID for testing purposes */
-    testID?: string; 
+  totalItems: number;
+  totalPrice: string;
+  testID?: string;
 }
 
 /**
- * Component to display a summary of the basket contents
+ * Purple gradient summary pill to match the menu header
  */
 export function BasketSummary({
-    totalItems, 
-    totalPrice, 
-    testID = 'basket-summary'
+  totalItems,
+  totalPrice,
+  testID = 'basket-summary',
 }: BasketSummaryProps) {
-    const theme = useTheme();
+  return (
+    <LinearGradient
+      testID={testID}
+      colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
+      <View style={styles.row}>
+        <Text style={styles.label}>Items</Text>
+        <Text style={styles.value}>{totalItems}</Text>
+      </View>
 
-    return (
-        <Card style={styles.container} testID={testID}>
-            <Card.Content>
-                <View style={styles.row}>
-                    <Text>Items</Text>
-                    <Text>{totalItems}</Text>
-                </View>
+      <View style={styles.divider} />
 
-                <View style={styles.divider} />
-
-                <View style={styles.row}>
-                    <Text style={{ fontWeight: 'bold' }}>Total</Text>
-                    <Text style={{ fontWeight: 'bold' }}>{totalPrice}</Text>
-                </View>
-            </Card.Content>
-        </Card>
-    );
+      <View style={styles.row}>
+        <Text style={[styles.label, styles.bold]}>Total</Text>
+        <Text style={[styles.value, styles.bold]}>{totalPrice}</Text>
+      </View>
+    </LinearGradient>
+  );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        marginVertical: 16,
-    },
-    row: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 8, 
-    },
-    divider: {
-        borderBottomWidth: 1, 
-        borderBottomColor: '#e0e0e0',
-        marginVertical: 8, 
-    },
+  container: {
+    marginTop: 8,
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    marginVertical: 8,
+  },
+  label: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.95,
+  },
+  value: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  bold: { fontWeight: '800' },
 });

@@ -26,10 +26,8 @@ const config: ExpoConfig = {
         "hutbite needs your location to show restaurants that deliver to you.",
       NSLocationAlwaysAndWhenInUseUsageDescription:
         "hutbite uses your location in the background to keep delivery areas up to date.",
-      NSPhotoLibraryUsageDescription:
-        "hutbite needs access to your photos to let you choose images.",
-      NSPhotoLibraryAddUsageDescription:
-        "hutbite needs permission to save images to your photo library.", 
+        NSPhotoLibraryUsageDescription:
+        "HutBite needs access to your photos and videos so you can upload food reviews and restaurant content—for example, choosing a video of you eating your meal to post. Uploaded content will be reviewed by our team before it appears publicly.",
       ITSAppUsesNonExemptEncryption: false
     },
     config: {

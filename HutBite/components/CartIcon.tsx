@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useBasket } from '@/contexts/BasketContext';
+import { APP_CONFIG } from '@/constants/config';
 
 interface CartIconProps {
 }
@@ -11,7 +12,10 @@ export const CartIcon: React.FC<CartIconProps> = () => {
   const { itemCount } = useBasket();
 
   const handlePress = () => {
-    router.push('/(main)/basket');
+    if (APP_CONFIG.ORDERING_ENABLED) {
+      router.push('/(main)/basket');
+    }
+    // Do nothing if ordering is disabled
   };
 
   return (

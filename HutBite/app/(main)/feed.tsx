@@ -138,111 +138,29 @@ export default function FeedScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantWithDistance | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<FeedContentItem | undefined>(undefined);
 
-  const handleOrderPress = useCallback(async (restaurant: RestaurantWithDistance, selectedItem: FeedContentItem) => {
-    // When ordering is disabled, always navigate to restaurant page
-    if (!APP_CONFIG.ORDERING_ENABLED) {
-      router.push(`/restaurant/${restaurant.id}`);
-      return;
-    }
+  // Replace the whole function with this:
+const handleOrderPress = useCallback((
+  restaurant: RestaurantWithDistance,
+  _selectedItem: FeedContentItem // underscore to avoid unused var warning
+) => {
+  if (!APP_CONFIG.ORDERING_ENABLED) {
+    router.push(`/restaurant/${restaurant.id}`);
+    return;
+  }
 
-    if (restaurant.receives_orders) {
-      if (!selectedItem) {
-        console.warn('No selected item found');
-        return;
-      }
-
-      // If we have product identifiers, try to find the actual product
-      if (selectedItem.cat_id && selectedItem.grp_id && selectedItem.pro_id) {
-        try {
-          // Load the menu data for this restaurant
-          const { data: menuData } = await supabase
-            .from('restaurant_menus')
-            .select('menu_data')
-            .eq('restaurant_id', restaurant.id)
-            .single();
-
-            let product = null;
-
-          if (menuData?.menu_data) {
-            // Find the product using the identifiers
-            product = findProductByIds(
-              menuData.menu_data,
-              selectedItem.cat_id,
-              selectedItem.grp_id,
-              selectedItem.pro_id
-            );
-          }
-
-            // If not found in Supabase, try loading from API
-          if (!product) {
-            try {
-              const storeId = STORE_CONFIG.TEST_STORE_ID;
-              const profile = await getStoreProfile(storeId);
- 
-              if (profile) {
-                const menuCategories = await getMenuCategories(profile.StoreURL, storeId);
-                const targetCategory = menuCategories.find(cat => cat.ID === selectedItem.cat_id);
- 
-                if (targetCategory) {
-                  const categoryGroups = await getGroupsByCategory(profile.StoreURL, storeId, targetCategory.ID);
-                  const targetGroup = categoryGroups.find(grp => grp.ID === selectedItem.grp_id);
- 
-                  if (targetGroup?.DeProducts) {
-                    product = targetGroup.DeProducts.find(p => p.ID === selectedItem.pro_id);
-                  }
-                }
-              }
-            } catch (apiError) {
-              console.error('Error loading menu from API:', apiError);
-            }
-          }
- 
-          if (product) {
-            // Check if product has options
-            if (productHasOptions(product)) {
-              // Product has options, show menu modal with this specific item
-              setSelectedRestaurant(restaurant);
-              setSelectedMenuItem(selectedItem);
-              setMenuModalVisible(true);
-              return;
-            } else {
-              // Product has no options, add directly to basket
-              addItem(product, []);
-              return;
-            }
-          }
-        } catch (error) {
-          console.error('Error loading menu data:', error);
-        }
-      }
-
-      // Fallback: if no product identifiers or menu data not found, 
-      // check if the feed item itself indicates options
-      if (selectedItem.options && selectedItem.options.length > 0) {
-        setSelectedRestaurant(restaurant);
-        setSelectedMenuItem(selectedItem);
-        setMenuModalVisible(true);
-      } else {
-        // Create a basic product object from the feed item
-        const basicProduct = {
-          ID: selectedItem.pro_id || selectedItem.id,
-          Name: selectedItem.name,
-          DePrice: selectedItem.price || 0,
-          CatID: selectedItem.cat_id,
-          GrpID: selectedItem.grp_id,
-        };
-        addItem(basicProduct, []);
-      }
-    } else {
-      // When a restaurant doesn't receive orders, navigate to its page
-      router.push(`/restaurant/${restaurant.id}`);
-    }
-  }, [feedContent, addItem]);
-
+  if (restaurant.receives_orders) {
+    setSelectedRestaurant(restaurant);
+    setSelectedMenuItem(undefined);   // ← clear any auto-add intent
+    setMenuModalVisible(true);        // ← open menu to browse
+  } else {
+    router.push(`/restaurant/${restaurant.id}`);
+  }
+}, []);
   const handleMenuPress = useCallback((restaurantId: string) => {
     const restaurant = restaurants.find((r) => r.id === restaurantId);
     if (restaurant) {
       setSelectedRestaurant(restaurant);
+      setSelectedMenuItem(undefined);   // ← important
       setMenuModalVisible(true);
     }
   }, [restaurants]);

@@ -17,11 +17,14 @@ import { EmptyBasket } from '@/components/basket/EmptyBasket';
 import { BasketSummary } from '@/components/basket/BasketSummary';
 import { CTAButton } from '@/components/CTAButton';
 import { useColorScheme } from '@/components/useColorScheme';
+import { StatusBar } from 'expo-status-bar';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const colors = Colors.light;
 
 export default function BasketScreen() {
   const insets = useSafeAreaInsets();
+  const topPad = (insets.top || 0) + 6;
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme];
   const {
@@ -69,16 +72,33 @@ export default function BasketScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={themeColors.text} />
+<View style={[styles.container, { backgroundColor: themeColors.background }]}>
+    {/* Gradient Header like the menu modal */}
+    <StatusBar style="light" translucent backgroundColor="transparent" />
+    <LinearGradient
+      colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.gradientTop, { paddingTop: (insets.top || 0) + 6 }]}
+    >
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.headerIcon}>
+          <Ionicons name="chevron-back" size={22} color="#111" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: themeColors.text }]}>Basket</Text>
-        <TouchableOpacity onPress={clearBasket} style={styles.clearButton}>
-          <Text style={[styles.clearButtonText, { color: themeColors.primary }]}>Clear</Text>
+
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>Basket</Text>
+          <Text style={styles.headerPill}>
+            {itemCount} item{itemCount === 1 ? '' : 's'}
+          </Text>
+        </View>
+
+        <TouchableOpacity onPress={clearBasket} style={styles.headerIcon}>
+          <Ionicons name="trash-outline" size={20} color="#111" />
         </TouchableOpacity>
       </View>
+    </LinearGradient>
+
 
       <ScrollView
         style={styles.scrollView}
@@ -131,12 +151,6 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: -8,
   },
-  headerTitle: {
-    flex: 1,
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
   headerRight: {
     width: 40,
   },
@@ -165,4 +179,59 @@ const styles = StyleSheet.create({
   checkoutButton: {
     marginTop: 0,
   },
-});
+  summaryStrip: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 92,           // sit just above the footer CTA (adjust if needed)
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    // subtle purple pill
+    backgroundColor: 'rgba(113, 89, 193, 0.95)', // close to your primary, tweak if needed
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  summaryText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  gradientTop: {
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    overflow: 'hidden',
+    paddingBottom: 10,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+  },
+  headerIcon: {
+    height: 36,
+    width: 36,
+    borderRadius: 18,
+    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(17,17,17,0.08)',
+  },
+  headerCenter: { flex: 1, alignItems: 'center', gap: 4 },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  headerPill: {
+    color: '#fff',
+    fontSize: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    overflow: 'hidden',
+}
+})
