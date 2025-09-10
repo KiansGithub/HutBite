@@ -22,6 +22,10 @@ export const OrderSummary = () => {
         <Text>Courier Tip</Text>
         <Text>$0.00</Text>
       </View>
+      <View style={[styles.row, styles.totalRow]}>
+        <Text style={styles.totalText}>Total</Text>
+        <Text style={styles.totalText}>$0.00</Text>
+      </View>
     </View>
   );
 };

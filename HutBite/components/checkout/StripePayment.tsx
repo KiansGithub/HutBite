@@ -221,7 +221,7 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
               style={styles.payButton}
               testID="pay-button"
             >
-                {loading ? 'Processing' : 'Pay with Card'}
+                {loading ? 'Processing' : 'Pay'}
             </Button>
         </View>
     );

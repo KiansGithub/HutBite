@@ -206,48 +206,7 @@ export default function CheckoutScreen() {
       </KeyboardAvoidingView>
 
       {/* Payment Section */}
-      <LinearGradient
-        colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
-        style={[styles.paymentSection, { paddingBottom: insets.bottom + 16 }]}
-      >
-        {/* Total */}
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalAmount}>{total}</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Payment Method Selection */}
-        {/* <View style={styles.paymentOptions}>
-          <Button
-            mode={paymentMethod === 'stripe' ? 'contained' : 'outlined'}
-            onPress={() => setPaymentMethod('stripe')}
-            style={[
-              styles.paymentMethodButton,
-              paymentMethod === 'stripe' ? styles.activePaymentMethod : styles.inactivePaymentMethod
-            ]}
-            labelStyle={styles.paymentMethodLabel}
-            icon="credit-card"
-          >
-            Card
-          </Button>
-
-          <Button
-            mode={paymentMethod === 'cash' ? 'contained' : 'outlined'}
-            onPress={() => setPaymentMethod('cash')}
-            style={[
-              styles.paymentMethodButton,
-              styles.paymentMethodButtonRight,
-              paymentMethod === 'cash' ? styles.activePaymentMethod : styles.inactivePaymentMethod
-            ]}
-            labelStyle={styles.paymentMethodLabel}
-            icon="cash"
-          >
-            Cash
-          </Button>
-        </View> */}
-
+      <View style={[styles.paymentContainer, { paddingBottom: insets.bottom + 16 }]}>
         {/* Error Display */}
         {paymentError && (
           <View style={styles.errorContainer}>
@@ -261,8 +220,6 @@ export default function CheckoutScreen() {
             </Button>
           </View>
         )}
-
-        <View style={styles.divider} />
 
         {isStripeReady ? (
           <StripePayment
@@ -289,7 +246,7 @@ export default function CheckoutScreen() {
             <Text style={styles.paymentMethodLabel}>Loading...</Text>
           </View>
         )}
-      </LinearGradient>
+      </View>
     </View>
   );
 
@@ -380,12 +337,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.light.text,
   },
+  paymentContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    backgroundColor: Colors.light.background, // Or a transparent background
+  },
   paymentSection: {
     marginHorizontal: 16,
     marginBottom: 16,
-    padding: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
   },
   totalRow: {
     flexDirection: 'row',
@@ -436,12 +398,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   errorText: {
-    color: '#fff',
+    color: Colors.light.error,
     textAlign: 'center',
     marginBottom: 8,
   },
   retryButton: {
-    borderColor: '#fff',
+    borderColor: Colors.light.primary,
   },
   emptyContainer: {
     flex: 1,
