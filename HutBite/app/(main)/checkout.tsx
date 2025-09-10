@@ -11,6 +11,11 @@ import { useStore } from '@/contexts/StoreContext';
 import { ContactInfo } from '@/components/checkout/ContactInfo';
 import { AddressForm } from '@/components/checkout/AddressForm';
 import { StripePayment } from '@/components/checkout/StripePayment';
+import { CartSummary } from '@/components/checkout/CartSummary';
+import { DeliveryDetails } from '@/components/checkout/DeliveryDetails';
+import { PromoCodeInput } from '@/components/checkout/PromoCodeInput';
+import { TipSelector } from '@/components/checkout/TipSelector';
+import { OrderSummary } from '@/components/checkout/OrderSummary';
 import Colors from '@/constants/Colors';
 import { OrderType } from '@/types/store';
 import { StripeProvider } from '@stripe/stripe-react-native';
@@ -60,7 +65,6 @@ export default function CheckoutScreen() {
   // Form validation state
   const [errors, setErrors] = useState<FormErrors>({});
   const [isPhoneValid, setIsPhoneValid] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('stripe');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
 
@@ -193,44 +197,11 @@ export default function CheckoutScreen() {
           contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 200 }]}
           showsVerticalScrollIndicator={false}
         >
-          {/* Order Type */}
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text style={styles.sectionTitle}>Order Type</Text>
-              <Text style={styles.orderTypeText}>
-                {orderType === 'DELIVERY' ? '🚚 Delivery' : '🏪 Collection'}
-              </Text>
-            </Card.Content>
-          </Card>
-
-          {/* Contact Information */}
-          <ContactInfo
-            firstName={customerDetails.firstName}
-            lastName={customerDetails.lastName}
-            email={customerDetails.email}
-            errors={errors}
-            onFirstNameChange={(text) => updateCustomerDetails('firstName', text)}
-            onLastNameChange={(text) => updateCustomerDetails('lastName', text)}
-            onEmailChange={(text) => updateCustomerDetails('email', text)}
-          />
-
-          {/* Address Form (for delivery) or Phone (for collection) */}
-          <AddressForm
-            address={customerDetails.address}
-            city={customerDetails.city}
-            postalCode={customerDetails.postalCode}
-            instructions={customerDetails.instructions}
-            phone={customerDetails.phone}
-            errors={errors}
-            onAddressChange={(text) => updateCustomerDetails('address', text)}
-            onCityChange={(text) => updateCustomerDetails('city', text)}
-            onPostalCodeChange={(text) => updateCustomerDetails('postalCode', text)}
-            onInstructionsChange={(text) => updateCustomerDetails('instructions', text)}
-            onPhoneChange={(text) => updateCustomerDetails('phone', text)}
-            onPhoneValidityChange={setIsPhoneValid}
-            isLoading={false}
-            disabled={isSubmitting}
-          />
+          <CartSummary />
+          <DeliveryDetails />
+          <PromoCodeInput />
+          <TipSelector />
+          <OrderSummary />
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -248,7 +219,7 @@ export default function CheckoutScreen() {
         <View style={styles.divider} />
 
         {/* Payment Method Selection */}
-        <View style={styles.paymentOptions}>
+        {/* <View style={styles.paymentOptions}>
           <Button
             mode={paymentMethod === 'stripe' ? 'contained' : 'outlined'}
             onPress={() => setPaymentMethod('stripe')}
@@ -275,7 +246,7 @@ export default function CheckoutScreen() {
           >
             Cash
           </Button>
-        </View>
+        </View> */}
 
         {/* Error Display */}
         {paymentError && (
@@ -323,7 +294,7 @@ export default function CheckoutScreen() {
   );
 
   // Wrap in StripeProvider if we have an API key
-  if (stripeApiKey && paymentMethod === 'stripe') {
+  if (isStripeReady) {
     return (
       <StripeProvider publishableKey={stripeApiKey}>
         <CheckoutContent />

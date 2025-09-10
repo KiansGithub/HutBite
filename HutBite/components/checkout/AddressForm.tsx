@@ -1,9 +1,11 @@
 import React, { useCallback, useRef } from 'react';
-import { StyleSheet, View, ActivityIndicator, Keyboard } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Keyboard, Text } from 'react-native';
 import { TextInput, useTheme, Card } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
-import PhoneInput from 'react-native-phone-number-input';
+import RNPhoneInput from 'react-native-phone-number-input';
 import { parsePhoneNumber } from 'awesome-phonenumber';
+
+const PhoneInput = RNPhoneInput as unknown as React.ComponentType<any>;
 
 interface AddressFormProps {
    address: string;
@@ -55,7 +57,7 @@ export const AddressForm: React.FC<AddressFormProps> =({
    wrapInCard = true,
 }) => {
    const theme = useTheme();
-   const phoneInput = useRef<PhoneInput>(null);
+   const phoneInput = useRef<any>(null);
 
    const pn = parsePhoneNumber(phone, { regionCode: 'DE' });
    const countryCode = (pn.valid && pn.regionCode ? pn.regionCode.toUpperCase() : 'DE') as any;
@@ -163,11 +165,11 @@ export const AddressForm: React.FC<AddressFormProps> =({
         value={nationalNumber}
         defaultCode={countryCode}
         layout="first"
-        onChangeText={(text) => {
+        onChangeText={(text: string) => {
           const checkValid = phoneInput.current?.isValidNumber(text);
           onPhoneValidityChange(checkValid ?? false);
         }}
-        onChangeFormattedText={(text) => {
+        onChangeFormattedText={(text: string) => {
           console.log('Formatted phone number:', text);
           onPhoneChange(text);
             // The component now receives the unformatted number and formats it internally

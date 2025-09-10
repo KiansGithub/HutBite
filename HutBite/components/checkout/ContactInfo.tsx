@@ -1,105 +1,102 @@
+// components/checkout/ContactInfo.tsx
 import React from 'react';
-import { StyleSheet, View, ActivityIndicator } from 'react-native';
-import { TextInput, useTheme, Card, Text } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Card, HelperText, TextInput, useTheme } from 'react-native-paper';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface ContactInfoProps {
-    firstName: string; 
-    lastName: string; 
-    email: string; 
-    errors: {
-        firstName?: string; 
-        lastName?: string;
-        email?: string; 
-    };
-    onFirstNameChange: (text: string) => void;
-    onLastNameChange: (text: string) => void;
-    isLoading?: boolean; 
-    onEmailChange: (text: string) => void; 
-    testID?: string; 
+  firstName: string;
+  lastName: string;
+  email: string;
+  errors: { firstName?: string; lastName?: string; email?: string };
+  onFirstNameChange: (t: string) => void;
+  onLastNameChange: (t: string) => void;
+  onEmailChange: (t: string) => void;
+  disabled?: boolean;
+  wrapInCard?: boolean;
+  testID?: string;
 }
 
 export const ContactInfo: React.FC<ContactInfoProps> = ({
-    firstName, 
-    lastName, 
-    email, 
-    errors, 
-    onFirstNameChange, 
-    onLastNameChange, 
-    isLoading = false,
-    onEmailChange, 
-    testID = 'contact-info',
+  firstName,
+  lastName,
+  email,
+  errors,
+  onFirstNameChange,
+  onLastNameChange,
+  onEmailChange,
+  disabled = false,
+  wrapInCard = true,
+  testID = 'contact-info',
 }) => {
-    const theme = useTheme();
-    return (
-        isLoading ? <View style={styles.loadingContainer}><ActivityIndicator size="large" color={theme.colors.primary} /></View>
-        :
-        <View style={[styles.container, { backgroundColor: theme.colors.surface}]} testID={testID}>
+  const theme = useTheme();
 
-            <Card style={[styles.card, { backgroundColor: theme.colors.surface}]} elevation={2}>
-                <Card.Content>
+  const Content = (
+    <View style={styles.sectionBody}>
+      <View style={styles.row}>
+        <TextInput
+          mode="outlined"
+          label="First name"
+          value={firstName}
+          onChangeText={onFirstNameChange}
+          style={[styles.input, styles.half]}
+          disabled={disabled}
+          error={!!errors.firstName}
+          left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} color={theme.colors.primary} />} />}
+        />
+        <TextInput
+          mode="outlined"
+          label="Last name"
+          value={lastName}
+          onChangeText={onLastNameChange}
+          style={[styles.input, styles.half, styles.leftGap]}
+          disabled={disabled}
+          error={!!errors.lastName}
+          left={<TextInput.Icon icon={() => <MaterialIcons name="person-outline" size={20} color={theme.colors.primary} />} />}
+        />
+      </View>
+      <HelperText type="error" visible={!!errors.firstName || !!errors.lastName} style={styles.helper}>
+        {errors.firstName || errors.lastName}
+      </HelperText>
 
-            <TextInput 
-              dense
-              mode="outlined"
-              placeholder="First Name"
-              value={firstName}
-              onChangeText={onFirstNameChange}
-              style={styles.input}
-              error={!!errors.firstName}
-              testID="first-name-input"
-            />
-            {errors.firstName && (
-                <Text style={styles.errorText} testID="first-name-error">
-                    {errors.firstName}
-                </Text>
-            )}
+      <TextInput
+        mode="outlined"
+        label="Email"
+        value={email}
+        onChangeText={onEmailChange}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={styles.input}
+        disabled={disabled}
+        error={!!errors.email}
+        left={<TextInput.Icon icon={() => <MaterialIcons name="mail-outline" size={20} color={theme.colors.primary} />} />}
+      />
+      <HelperText type="error" visible={!!errors.email} style={styles.helper}>
+        {errors.email}
+      </HelperText>
+    </View>
+  );
 
-            <TextInput 
-              dense
-              mode="outlined"
-              placeholder="Last Name"
-              value={lastName}
-              onChangeText={onLastNameChange}
-              style={styles.input}
-              error={!!errors.lastName}
-              testID="last-name-input"
-            />
-            {errors.lastName && (
-                <Text style={styles.errorText} testID="last-name-error">
-                    {errors.lastName}
-                </Text>
-            )}
+  if (!wrapInCard) return <View testID={testID}>{Content}</View>;
 
-            <TextInput 
-              dense
-              mode="outlined"
-              placeholder="Email"
-              value={email}
-              onChangeText={onEmailChange}
-              style={styles.input}
-              keyboardType="email-address"
-              error={!!errors.email}
-              testID="email-input"
-              autoCapitalize="none"
-            />
-            {errors.email && (
-                <Text style={styles.errorText} testID="email-error">
-                    {errors.email}
-                </Text>
-            )}
-            </Card.Content>
-            </Card>
-        </View>
-    );
+  return (
+    <Card testID={testID} style={styles.card} mode="elevated">
+      <Card.Title title="Contact details" titleVariant="titleMedium" />
+      <Card.Content>{Content}</Card.Content>
+    </Card>
+  );
 };
 
+const SPACING = 12;
+const RADIUS = 12;
+
 const styles = StyleSheet.create({
-    container: { marginBottom: 24 },
-    sectionTitle: { marginBottom: 12 },
-    card: {
-        borderRadius: 12, 
-    },
-    loadingContainer: { justifyContent: 'center', alignItems: 'center', padding: 20 },
-    input: { marginBottom: 12, fontSize: 14 },
-    errorText: { color: 'red', marginBottom: 8, marginTop: -8 },
-})
+  card: { borderRadius: RADIUS, marginBottom: SPACING },
+  sectionBody: { marginTop: 4 },
+  row: { flexDirection: 'row' },
+  input: { marginBottom: SPACING },
+  half: { flex: 1 },
+  leftGap: { marginLeft: SPACING },
+  helper: { marginTop: -6, marginBottom: SPACING },
+});

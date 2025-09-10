@@ -1,71 +1,102 @@
+// components/checkout/ContactInfo.tsx
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Card, useTheme } from 'react-native-paper';
-import { ThemedText } from '@/components/ThemedText';
-import { translate } from '@/constants/translations';
+import { Card, HelperText, TextInput, useTheme } from 'react-native-paper';
 import { MaterialIcons } from '@expo/vector-icons';
 
-interface StoreInfo {
-    name: string; 
-    address: string; 
-    openingHours?: string; 
-    phone?: string; 
+interface ContactInfoProps {
+  firstName: string;
+  lastName: string;
+  email: string;
+  errors: { firstName?: string; lastName?: string; email?: string };
+  onFirstNameChange: (t: string) => void;
+  onLastNameChange: (t: string) => void;
+  onEmailChange: (t: string) => void;
+  disabled?: boolean;
+  wrapInCard?: boolean;
+  testID?: string;
 }
 
-interface CollectionInfoProps {
-    storeInfo: StoreInfo; 
-    testID?: string; 
-}
-
-export const CollectionInfo: React.FC<CollectionInfoProps> = ({
-    storeInfo, 
-    testID = 'collection-info',
+export const ContactInfo: React.FC<ContactInfoProps> = ({
+  firstName,
+  lastName,
+  email,
+  errors,
+  onFirstNameChange,
+  onLastNameChange,
+  onEmailChange,
+  disabled = false,
+  wrapInCard = true,
+  testID = 'contact-info',
 }) => {
-    const theme = useTheme();
+  const theme = useTheme();
 
-    const InfoRow = ({ icon, text, testID }: { icon: string; text: string; testID?: string }) => (
-        <View style={styles.infoRow}>
-            <MaterialIcons name={icon as any} size={20} color={theme.colors.primary} style={styles.icon} />
-            <ThemedText style={styles.infoText} testID={testID}>{text}</ThemedText>
-        </View>
-    );
-    return (
-    <View style={styles.container} testID={testID}>
+  const Content = (
+    <View style={styles.sectionBody}>
+      <View style={styles.row}>
+        <TextInput
+          mode="outlined"
+          label="First name"
+          value={firstName}
+          onChangeText={onFirstNameChange}
+          style={[styles.input, styles.half]}
+          disabled={disabled}
+          error={!!errors.firstName}
+          left={<TextInput.Icon icon={() => <MaterialIcons name="person" size={20} color={theme.colors.primary} />} />}
+        />
+        <TextInput
+          mode="outlined"
+          label="Last name"
+          value={lastName}
+          onChangeText={onLastNameChange}
+          style={[styles.input, styles.half, styles.leftGap]}
+          disabled={disabled}
+          error={!!errors.lastName}
+          left={<TextInput.Icon icon={() => <MaterialIcons name="person-outline" size={20} color={theme.colors.primary} />} />}
+        />
+      </View>
+      <HelperText type="error" visible={!!errors.firstName || !!errors.lastName} style={styles.helper}>
+        {errors.firstName || errors.lastName}
+      </HelperText>
 
-        <Card style={[styles.storeInfoCard, { backgroundColor: theme.colors.surface}]} testID="store-info-card">
-            <Card.Content>
-                {storeInfo.name && (
-                    <InfoRow icon="storefront" text={storeInfo.name} testID="store-name" />
-                )}
-
-                {storeInfo.address && (
-                    <InfoRow icon="location-on" text={storeInfo.address} testID="store-address" />
-                )}
-
-                {storeInfo.openingHours && (
-                    <InfoRow icon="access-time" text={storeInfo.openingHours} testID="store-hours" />
-                )}
-
-                {storeInfo.phone && (
-                    <InfoRow icon="call" text={storeInfo.phone} testID="store-phone" />
-                )}
-            </Card.Content>
-        </Card>
+      <TextInput
+        mode="outlined"
+        label="Email"
+        value={email}
+        onChangeText={onEmailChange}
+        keyboardType="email-address"
+        autoCapitalize="none"
+        autoCorrect={false}
+        style={styles.input}
+        disabled={disabled}
+        error={!!errors.email}
+        left={<TextInput.Icon icon={() => <MaterialIcons name="mail-outline" size={20} color={theme.colors.primary} />} />}
+      />
+      <HelperText type="error" visible={!!errors.email} style={styles.helper}>
+        {errors.email}
+      </HelperText>
     </View>
-    );
+  );
+
+  if (!wrapInCard) return <View testID={testID}>{Content}</View>;
+
+  return (
+    <Card testID={testID} style={styles.card} mode="elevated">
+      <Card.Title title="Contact details" titleVariant="titleMedium" />
+      <Card.Content>{Content}</Card.Content>
+    </Card>
+  );
 };
 
-const styles = StyleSheet.create({
-    container: { marginBottom: 24 },
-    sectionTitle: { marginBottom: 12 },
-    storeInfoCard: { marginTop: 8, borderRadius: 12 },
-    infoRow: { marginTop: 8 },
-    icon: {
-        marginRight: 10
-    },
-    infoText: {
-        fontSize: 16,
-        flexShrink: 1,
-    },
+const SPACING = 12;
+const RADIUS = 12;
 
-})
+const styles = StyleSheet.create({
+  card: { borderRadius: RADIUS, marginBottom: SPACING },
+  sectionBody: { marginTop: 4 },
+  row: { flexDirection: 'row' },
+  input: { marginBottom: SPACING },
+  half: { flex: 1 },
+  leftGap: { marginLeft: SPACING },
+  helper: { marginTop: -6, marginBottom: SPACING },
+});

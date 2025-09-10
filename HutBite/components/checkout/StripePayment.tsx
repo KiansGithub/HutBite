@@ -66,11 +66,6 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
     // Define the return URL for Stripe Payment Flow 
     // Check if running in expo go 
     const isRunningInExpo = Constants.executionEnvironment === 'storeClient';
-
-    // For Expo Go, use the Expo URL scheme 
-    const appScheme = isRunningInExpo 
-        ? `exp`
-        : (Constants.manifest?.scheme || 'hutbite');
     
     const returnUrl = Linking.createURL('payment-result');
     console.log('Return URL for Stripe:', returnUrl);
