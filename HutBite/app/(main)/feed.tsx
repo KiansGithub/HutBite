@@ -28,6 +28,8 @@ import { useBasket } from '@/contexts/BasketContext';
 import SignInNudge from '@/components/SignInNudge';
 import { findProductByIds, productHasOptions } from '@/utils/productUtils';
 import { supabase } from '@/lib/supabase';
+import { STORE_CONFIG } from '@/constants/api';
+import { getStoreProfile, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
@@ -96,6 +98,7 @@ export default function FeedScreen() {
         // On blur: ensure menu modal is closed so it doesn't overlay other screens
         setMenuModalVisible(false);
         setSelectedRestaurant(null);
+        setSelectedMenuItem(undefined);
       };
     }, [])
   );
@@ -132,6 +135,7 @@ export default function FeedScreen() {
 
   const [menuModalVisible, setMenuModalVisible] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantWithDistance | null>(null);
+  const [selectedMenuItem, setSelectedMenuItem] = useState<FeedContentItem | undefined>(undefined);
 
   const handleOrderPress = useCallback(async (restaurant: RestaurantWithDistance, selectedItem: FeedContentItem) => {
     if (restaurant.receives_orders) {
@@ -150,27 +154,54 @@ export default function FeedScreen() {
             .eq('restaurant_id', restaurant.id)
             .single();
 
+            let product = null;
+
           if (menuData?.menu_data) {
             // Find the product using the identifiers
-            const product = findProductByIds(
-              menuData.menu_data, 
-              selectedItem.cat_id, 
-              selectedItem.grp_id, 
+            product = findProductByIds(
+              menuData.menu_data,
+              selectedItem.cat_id,
+              selectedItem.grp_id,
               selectedItem.pro_id
             );
+          }
 
-            if (product) {
-              // Check if product has options
-              if (productHasOptions(product)) {
-                // Product has options, show menu modal
-                setSelectedRestaurant(restaurant);
-                setMenuModalVisible(true);
-                return;
-              } else {
-                // Product has no options, add directly to basket
-                addItem(product, []);
-                return;
+            // If not found in Supabase, try loading from API
+          if (!product) {
+            try {
+              const storeId = STORE_CONFIG.TEST_STORE_ID;
+              const profile = await getStoreProfile(storeId);
+ 
+              if (profile) {
+                const menuCategories = await getMenuCategories(profile.StoreURL, storeId);
+                const targetCategory = menuCategories.find(cat => cat.ID === selectedItem.cat_id);
+ 
+                if (targetCategory) {
+                  const categoryGroups = await getGroupsByCategory(profile.StoreURL, storeId, targetCategory.ID);
+                  const targetGroup = categoryGroups.find(grp => grp.ID === selectedItem.grp_id);
+ 
+                  if (targetGroup?.DeProducts) {
+                    product = targetGroup.DeProducts.find(p => p.ID === selectedItem.pro_id);
+                  }
+                }
               }
+            } catch (apiError) {
+              console.error('Error loading menu from API:', apiError);
+            }
+          }
+ 
+          if (product) {
+            // Check if product has options
+            if (productHasOptions(product)) {
+              // Product has options, show menu modal with this specific item
+              setSelectedRestaurant(restaurant);
+              setSelectedMenuItem(selectedItem);
+              setMenuModalVisible(true);
+              return;
+            } else {
+              // Product has no options, add directly to basket
+              addItem(product, []);
+              return;
             }
           }
         } catch (error) {
@@ -182,17 +213,18 @@ export default function FeedScreen() {
       // check if the feed item itself indicates options
       if (selectedItem.options && selectedItem.options.length > 0) {
         setSelectedRestaurant(restaurant);
+        setSelectedMenuItem(selectedItem);
         setMenuModalVisible(true);
       } else {
-        addItem(
-          {
-            id: selectedItem.id,
-            name: selectedItem.name,
-            price: selectedItem.price || 0,
-            quantity: 1,
-          },
-          [] // Pass empty options array instead of restaurant.id
-        );
+        // Create a basic product object from the feed item
+        const basicProduct = {
+          ID: selectedItem.pro_id || selectedItem.id,
+          Name: selectedItem.name,
+          DePrice: selectedItem.price || 0,
+          CatID: selectedItem.cat_id,
+          GrpID: selectedItem.grp_id,
+        };
+        addItem(basicProduct, []);
       }
     } else {
       // When a restaurant doesn't receive orders, navigate to its page
@@ -335,7 +367,11 @@ export default function FeedScreen() {
         <RestaurantMenuModal
           visible={menuModalVisible}
           restaurant={selectedRestaurant}
-          onClose={() => setMenuModalVisible(false)}
+          initialMenuItem={selectedMenuItem}
+          onClose={() => {
+            setMenuModalVisible(false);
+            setSelectedMenuItem(undefined);
+          }}
         />
       )}
     </View>
