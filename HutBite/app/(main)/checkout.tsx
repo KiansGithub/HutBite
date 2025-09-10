@@ -43,6 +43,7 @@ export default function CheckoutScreen() {
   const { storeInfo, urlForImages, stripeStoreUrl, stripeApiKey } = useStore();
   const params = useLocalSearchParams<{ orderType?: OrderType }>();
   const orderType = (params.orderType || 'DELIVERY') as OrderType;
+  const isStripeReady = Boolean(stripeApiKey);
 
   // Customer details state
   const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
@@ -292,6 +293,7 @@ export default function CheckoutScreen() {
 
         <View style={styles.divider} />
 
+        {isStripeReady ? (
           <StripePayment
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
@@ -311,6 +313,11 @@ export default function CheckoutScreen() {
             orderType={orderType}
             disabled={isSubmitting || items.length === 0}
           />
+        ) : (
+          <View style={styles.paymentSection}>
+            <Text style={styles.paymentMethodLabel}>Loading...</Text>
+          </View>
+        )}
       </LinearGradient>
     </View>
   );

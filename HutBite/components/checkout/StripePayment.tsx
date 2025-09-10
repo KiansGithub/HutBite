@@ -29,7 +29,7 @@ interface StripePaymentProps {
     disabled?: boolean; 
 }
 
-export const StripePayment: React.FC<StripePaymentProps> =({
+export const StripePayment: React.FC<StripePaymentProps> = ({
     onPaymentSuccess, 
     onPaymentError, 
     onValidateBeforePayment,
@@ -63,7 +63,7 @@ export const StripePayment: React.FC<StripePaymentProps> =({
         return Math.round(float * factor);
     };
     
-    // Define thereturn URL for Stripe Payment Flow 
+    // Define the return URL for Stripe Payment Flow 
     // Check if running in expo go 
     const isRunningInExpo = Constants.executionEnvironment === 'storeClient';
 
@@ -150,8 +150,6 @@ export const StripePayment: React.FC<StripePaymentProps> =({
             if (!paymentSheetInitialized) {
                 await initializePaymentSheet();
             }
-
-            const { error } = await presentPaymentSheet();
 
             const presentResult = await presentPaymentSheet();
             if (presentResult?.error) {
