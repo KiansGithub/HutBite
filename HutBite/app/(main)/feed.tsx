@@ -30,6 +30,7 @@ import { findProductByIds, productHasOptions } from '@/utils/productUtils';
 import { supabase } from '@/lib/supabase';
 import { STORE_CONFIG } from '@/constants/api';
 import { getStoreProfile, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
+import { APP_CONFIG } from '@/constants/config';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
@@ -138,6 +139,12 @@ export default function FeedScreen() {
   const [selectedMenuItem, setSelectedMenuItem] = useState<FeedContentItem | undefined>(undefined);
 
   const handleOrderPress = useCallback(async (restaurant: RestaurantWithDistance, selectedItem: FeedContentItem) => {
+    // When ordering is disabled, always navigate to restaurant page
+    if (!APP_CONFIG.ORDERING_ENABLED) {
+      router.push(`/restaurant/${restaurant.id}`);
+      return;
+    }
+
     if (restaurant.receives_orders) {
       if (!selectedItem) {
         console.warn('No selected item found');

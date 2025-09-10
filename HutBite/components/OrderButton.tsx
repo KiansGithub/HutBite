@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
+import { APP_CONFIG } from '@/constants/config';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
@@ -22,6 +23,12 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
     onMenuPress,
 }) => {
     const handlePress = () => {
+        if (!APP_CONFIG.ORDERING_ENABLED) {
+            // When ordering is disabled, always navigate to restaurant page
+            // This assumes onMenuPress navigates to restaurant page
+            onMenuPress?.();
+            return;
+        }
         onOrderPress();
     };
 
@@ -29,11 +36,13 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
         onMenuPress?.();
     };
 
-    const buttonText = restaurant.receives_orders ? 'Add to Basket' : 'View Restaurant';
+    const buttonText = (APP_CONFIG.ORDERING_ENABLED && restaurant.receives_orders)
+        ? 'Add to Basket'
+        : 'View Restaurant';
 
     return (
         <View style={styles.buttonContainer}>
-            {restaurant.receives_orders && onMenuPress && (
+            {APP_CONFIG.ORDERING_ENABLED && restaurant.receives_orders && onMenuPress && (
                 <TouchableOpacity 
                     style={styles.menuButton}
                     onPress={handleMenuPress}
@@ -49,7 +58,7 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
             <TouchableOpacity 
                 style={[
                     styles.orderButton,
-                    restaurant.receives_orders && onMenuPress ? styles.orderButtonWithMenu : null
+                    APP_CONFIG.ORDERING_ENABLED && restaurant.receives_orders && onMenuPress ? styles.orderButtonWithMenu : null
                 ]}
                 onPress={handlePress}
             >
