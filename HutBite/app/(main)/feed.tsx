@@ -89,6 +89,17 @@ export default function FeedScreen() {
     }, [])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      // On focus do nothing special here
+      return () => {
+        // On blur: ensure menu modal is closed so it doesn't overlay other screens
+        setMenuModalVisible(false);
+        setSelectedRestaurant(null);
+      };
+    }, [])
+  );
+
   /* one stable object – create it once with useRef */
   const viewabilityConfig = useRef({
     itemVisiblePercentThreshold: 5, // 5 % for percent fields

@@ -51,12 +51,6 @@ export function RestaurantProductCard({
               >
                 {product.Name}
               </Text>
-              <Text 
-                style={[styles.price, { color: colors.text }]}
-                numberOfLines={1}
-              >
-                ${getProductPrice(product)?.toFixed(2) || '0.00'}
-              </Text>
             </View>
 
             {product.Description && (
@@ -74,6 +68,13 @@ export function RestaurantProductCard({
               </View>
             )}
           </View>
+
+          <Text 
+                style={[styles.price, { color: colors.text }]}
+                numberOfLines={1}
+              >
+                ${getProductPrice(product)?.toFixed(2) || '0.00'}
+              </Text>
         </View>
       </TouchableOpacity>
       
@@ -143,23 +144,23 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     alignItems: 'flex-start',
     marginBottom: 8,
     paddingRight: 50, // Make room for add button
   },
   name: {
-    flex: 1,
-    marginRight: 8,
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 4,
   },
   price: {
-    fontSize: 16,
+    position: 'absolute',
+    bottom: 8,
+    left: 16,
+    fontSize: 14,
     fontWeight: 'bold',
-    minWidth: 60,
-    textAlign: 'right',
+    opacity: 0.9,
   },
   description: {
     fontSize: 14,

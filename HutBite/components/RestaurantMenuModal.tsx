@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, router } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
@@ -309,7 +310,10 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
 
             {/* Basket Footer */}
             {items && items.length > 0 && (
-              <View style={[styles.basketFooter, { backgroundColor: colors.primary }]}>
+              <TouchableOpacity
+                style={[styles.basketFooter, { backgroundColor: colors.primary }]}
+                onPress={() => router.push('/(main)/basket')}
+              >
                 <View style={styles.basketInfo}>
                   <Ionicons name="basket" size={20} color="#fff" />
                   <Text style={styles.basketText}>
@@ -317,7 +321,7 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
                   </Text>
                   <Text style={styles.basketCount}>{items.length}</Text>
                 </View>
-              </View>
+              </TouchableOpacity>
             )}
           </>
         )}
