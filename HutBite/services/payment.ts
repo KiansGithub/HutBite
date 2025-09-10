@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { PaymentIntentRequest, PaymentIntentResponse, OrderSubmissionRequest } from '@/types/payment';
 
 /**
@@ -21,32 +20,39 @@ export const createPaymentIntent = async (
         }
 
         // Make the API call to create a payment intent 
-        const response = await axios.post(
+        const response = await fetch(
             `${stripeStoreUrl}/api/create-paymentintent`,
-            paymentDetails, 
             {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                body: JSON.stringify(paymentDetails),
             }
         );
 
-        if(!response.data.clientSecret) {
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText || 'Failed to create payment intent'}`);
+        }
+
+        const data = await response.json();
+
+        if(!data.clientSecret) {
             throw new Error('Missing required fields from server response.');
         }
         
-        console.log('returning clietn secret: ', response.data.clientSecret);
+        console.log('returning client secret: ', data.clientSecret);
         return {
-            clientSecret: response.data.clientSecret, 
+            clientSecret: data.clientSecret, 
         };
     } catch (error) {
         // Format and rethrow the error 
         console.error('Error creating payment intent:', error);
 
-        if (axios.isAxiosError(error)) {
-            // Handle Axios errors 
-            const errorMessage = error.response?.data?.message || error.message || 'Failed to create payment intent';
-            throw new Error(errorMessage);
+        if (error instanceof TypeError && error.message.includes('fetch')) {
+            // Handle network errors 
+            throw new Error('Network error. Please check your connection and try again.');
         }
 
         // Handle other errors 

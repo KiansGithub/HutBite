@@ -1,9 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
-import { TextInput, useTheme, Card } from 'react-native-paper';
-import { useCustomerContext } from '@/context/CustomerContext';
-import { ThemedText } from '@/components/ThemedText';
-import { translate } from '@/constants/translations';
+import { TextInput, useTheme, Card, Text } from 'react-native-paper';
 
 interface ContactInfoProps {
     firstName: string; 
@@ -44,7 +41,7 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
             <TextInput 
               dense
               mode="outlined"
-              placeholder={translate('firstName')}
+              placeholder="First Name"
               value={firstName}
               onChangeText={onFirstNameChange}
               style={styles.input}
@@ -52,15 +49,15 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
               testID="first-name-input"
             />
             {errors.firstName && (
-                <ThemedText style={styles.errorText} testID="first-name-error">
+                <Text style={styles.errorText} testID="first-name-error">
                     {errors.firstName}
-                </ThemedText>
+                </Text>
             )}
 
             <TextInput 
               dense
               mode="outlined"
-              placeholder={translate('lastName')}
+              placeholder="Last Name"
               value={lastName}
               onChangeText={onLastNameChange}
               style={styles.input}
@@ -68,15 +65,15 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
               testID="last-name-input"
             />
             {errors.lastName && (
-                <ThemedText style={styles.errorText} testID="last-name-error">
+                <Text style={styles.errorText} testID="last-name-error">
                     {errors.lastName}
-                </ThemedText>
+                </Text>
             )}
 
             <TextInput 
               dense
               mode="outlined"
-              placeholder={translate('email')}
+              placeholder="Email"
               value={email}
               onChangeText={onEmailChange}
               style={styles.input}
@@ -86,9 +83,9 @@ export const ContactInfo: React.FC<ContactInfoProps> = ({
               autoCapitalize="none"
             />
             {errors.email && (
-                <ThemedText style={styles.errorText} testID="email-error">
+                <Text style={styles.errorText} testID="email-error">
                     {errors.email}
-                </ThemedText>
+                </Text>
             )}
             </Card.Content>
             </Card>

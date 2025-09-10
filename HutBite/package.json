@@ -27,6 +27,7 @@
     "@react-navigation/native": "^7.1.6",
     "@supabase/supabase-js": "^2.50.0",
     "@testing-library/react-native": "^13.2.2",
+    "awesome-phonenumber": "^7.5.0",
     "base64-arraybuffer": "^1.0.2",
     "expo": "~53.0.22",
     "expo-apple-authentication": "~7.2.4",
@@ -59,6 +60,7 @@
     "react-native-get-random-values": "~1.11.0",
     "react-native-maps": "1.20.1",
     "react-native-paper": "^5.14.5",
+    "react-native-phone-number-input": "^2.1.0",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
@@ -66,7 +68,8 @@
     "react-native-uuid": "^2.0.3",
     "react-native-web": "~0.20.0",
     "xml2js": "^0.6.2",
-    "zustand": "^5.0.5"
+    "zustand": "^5.0.5",
+    "@stripe/stripe-react-native": "0.45.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

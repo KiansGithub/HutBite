@@ -52,8 +52,11 @@ export default function BasketScreen() {
   };
 
   const handleCheckout = () => {
-    // Implement checkout logic
-    console.log('Proceed to checkout');
+    // Navigate to checkout screen with order type
+    router.push({
+      pathname: '(main)/checkout',
+      params: { orderType: 'DELIVERY' } // You can make this dynamic based on user selection
+    });
   };
 
   if (items.length === 0) {

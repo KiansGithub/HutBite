@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { StyleSheet, View, ActivityIndicator, Platform } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Platform, Text } from 'react-native';
 import { Button, useTheme } from 'react-native-paper';
 import { useStripe } from '@stripe/stripe-react-native';
-import { useBasketContext } from '@/context/BasketContext';
+import { useBasket } from '@/contexts/BasketContext';
 import { submitOrder, formatOrderData } from '@/services/orderService';
-import { ThemedText } from '@/components/ThemedText';
-import { translate } from '@/constants/translations';
 import { createPaymentIntent } from '@/services/payment';
 import Constants from 'expo-constants';
 import { OrderType } from '@/types/store';
@@ -42,7 +40,7 @@ export const StripePayment: React.FC<StripePaymentProps> =({
 }) => {
     const [orderSubmitting, setOrderSubmitting] = useState(false);
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
-    const { total, items } = useBasketContext();
+    const { total, items } = useBasket();
     const theme = useTheme();
 
     const [loading, setLoading] = useState(false);
@@ -56,7 +54,7 @@ export const StripePayment: React.FC<StripePaymentProps> =({
     // For Expo Go, use the Expo URL scheme 
     const appScheme = isRunningInExpo 
         ? `exp`
-        : (Constants.manifest?.scheme || 'tgf');
+        : (Constants.manifest?.scheme || 'hutbite');
     
     const returnUrl = Platform.OS === 'ios'
         ? `${appScheme}://payment-result`
@@ -209,9 +207,9 @@ export const StripePayment: React.FC<StripePaymentProps> =({
     return (
         <View style={styles.container} testID="stripe-payment">
             {errorMessage && (
-                <ThemedText style={styles.errorText} testID="payment-error">
+                <Text style={styles.errorText} testID="payment-error">
                     {errorMessage}
-                </ThemedText>
+                </Text>
             )}
 
             <Button 
@@ -222,7 +220,7 @@ export const StripePayment: React.FC<StripePaymentProps> =({
               style={styles.payButton}
               testID="pay-button"
             >
-                {loading ? translate('processing') : translate('payWithCard')}
+                {loading ? 'Processing' : 'Pay with Card'}
             </Button>
         </View>
     );

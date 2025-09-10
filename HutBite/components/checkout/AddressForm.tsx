@@ -1,8 +1,6 @@
 import React, { useCallback, useRef } from 'react';
 import { StyleSheet, View, ActivityIndicator, Keyboard } from 'react-native';
 import { TextInput, useTheme, Card } from 'react-native-paper';
-import { ThemedText } from '@/components/ThemedText';
-import { translate } from '@/constants/translations';
 import { MaterialIcons } from '@expo/vector-icons';
 import PhoneInput from 'react-native-phone-number-input';
 import { parsePhoneNumber } from 'awesome-phonenumber';
@@ -91,7 +89,7 @@ export const AddressForm: React.FC<AddressFormProps> =({
        <TextInput
          dense
          mode="outlined"
-         placeholder={translate('streetAddress')}
+         placeholder="Street Address"
          value={address}
          onChangeText={onAddressChange}
          style={styles.input}
@@ -101,14 +99,14 @@ export const AddressForm: React.FC<AddressFormProps> =({
          left={<TextInput.Icon icon={() => <MaterialIcons name="home" size={20} color={theme.colors.primary} />} />}
        />
        {errors.address && (
-         <ThemedText style={styles.errorText}>{errors.address}</ThemedText>
+         <Text style={styles.errorText}>{errors.address}</Text>
        )}
 
        <View style={styles.row}>
          <TextInput
            dense
            mode="outlined"
-           placeholder={translate('city')}
+           placeholder="City"
            value={city}
            onChangeText={onCityChange}
            style={[styles.input, styles.halfInput]}
@@ -121,7 +119,7 @@ export const AddressForm: React.FC<AddressFormProps> =({
          <TextInput
            dense
            mode="outlined"
-           placeholder={translate('postalCode')}
+           placeholder="Postal Code"
            value={postalCode}
            onChangeText={onPostalCodeChange}
            style={[styles.input, styles.halfInput, styles.postCodeInput]}
@@ -133,13 +131,13 @@ export const AddressForm: React.FC<AddressFormProps> =({
          />
        </View>
        {errors.postalCode && (
-         <ThemedText style={styles.errorText}>{errors.postalCode}</ThemedText>
+         <Text style={styles.errorText}>{errors.postalCode}</Text>
        )}
 
        <TextInput
          dense
          mode="outlined"
-         placeholder={translate('deliveryInstructions')}
+         placeholder="Delivery Instructions"
          value={instructions}
          onChangeText={onInstructionsChange}
          style={styles.input}
@@ -181,7 +179,7 @@ export const AddressForm: React.FC<AddressFormProps> =({
         containerStyle={[styles.input, { width: '100%', backgroundColor: theme.colors.surface, height: 50 }]}
         textContainerStyle={{ paddingVertical: 0, backgroundColor: theme.colors.surface  }}
         textInputProps={{ 
-          placeholder: translate('phoneNumber'),
+          placeholder: 'Phone Number',
           placeholderTextColor: theme.colors.onSurfaceVariant,
           style: { color: theme.colors.onSurface, fontSize: 16 },
           returnKeyType: 'done',
@@ -190,7 +188,7 @@ export const AddressForm: React.FC<AddressFormProps> =({
         }}
       />
       {errors.phone && (
-        <ThemedText style={styles.errorText}>{errors.phone}</ThemedText>
+        <Text style={styles.errorText}>{errors.phone}</Text>
       )}
 
      </>
