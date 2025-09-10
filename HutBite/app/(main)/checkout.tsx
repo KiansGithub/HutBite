@@ -1,147 +1,47 @@
-import React, { useState, useEffect } from 'react';
+// app/(main)/checkout.tsx
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, ScrollView, KeyboardAvoidingView, Platform, StatusBar, TouchableOpacity } from 'react-native';
-import { Button, Card, useTheme } from 'react-native-paper';
+import { Button, useTheme } from 'react-native-paper';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
+
 import { useBasket } from '@/contexts/BasketContext';
 import { useStore } from '@/contexts/StoreContext';
-import { ContactInfo } from '@/components/checkout/ContactInfo';
-import { AddressForm } from '@/components/checkout/AddressForm';
-import { StripePayment } from '@/components/checkout/StripePayment';
+import { CheckoutProvider, useCheckout } from '@/contexts/CheckoutContext';
+
 import { CartSummary } from '@/components/checkout/CartSummary';
 import { DeliveryDetails } from '@/components/checkout/DeliveryDetails';
 import { PromoCodeInput } from '@/components/checkout/PromoCodeInput';
 import { TipSelector } from '@/components/checkout/TipSelector';
 import { OrderSummary } from '@/components/checkout/OrderSummary';
+import { StripePayment } from '@/components/checkout/StripePayment';
+
 import Colors from '@/constants/Colors';
 import { OrderType } from '@/types/store';
 import { StripeProvider } from '@stripe/stripe-react-native';
-import { CheckoutProvider } from '@/contexts/CheckoutContext';
 
-interface CustomerDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address: string;
-  city: string;
-  postalCode: string;
-  instructions: string;
-}
-
-interface FormErrors {
-  firstName?: string;
-  lastName?: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  city?: string;
-  postalCode?: string;
-}
-
-export default function CheckoutScreen() {
+function CheckoutInner() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { total, items, itemCount } = useBasket();
-  const { storeInfo, urlForImages, stripeStoreUrl, stripeApiKey } = useStore();
+  const { stripeStoreUrl, stripeApiKey } = useStore();
+
+  const { orderType, setOrderType, validate, getCheckoutPayload } = useCheckout();
   const params = useLocalSearchParams<{ orderType?: OrderType }>();
-  const orderType = (params.orderType || 'DELIVERY') as OrderType;
-  const isStripeReady = Boolean(stripeApiKey);
 
-  // Customer details state
-  const [customerDetails, setCustomerDetails] = useState<CustomerDetails>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    postalCode: '',
-    instructions: '',
-  });
-
-  // Form validation state
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [isPhoneValid, setIsPhoneValid] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validation function
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+  // Apply route param orderType into context on mount/param change
+  useEffect(() => {
+    const incoming = (params.orderType || orderType || 'DELIVERY') as OrderType;
+    if (incoming !== orderType) setOrderType(incoming);
+  }, [params.orderType]);
 
-    if (!customerDetails.firstName.trim()) {
-      newErrors.firstName = 'First name is required';
-    }
-
-    if (!customerDetails.lastName.trim()) {
-      newErrors.lastName = 'Last name is required';
-    }
-
-    if (!customerDetails.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(customerDetails.email)) {
-      newErrors.email = 'Please enter a valid email';
-    }
-
-    if (!customerDetails.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-    } else if (!isPhoneValid) {
-      newErrors.phone = 'Please enter a valid phone number';
-    }
-
-    if (orderType === 'DELIVERY') {
-      if (!customerDetails.address.trim()) {
-        newErrors.address = 'Address is required for delivery';
-      }
-      if (!customerDetails.city.trim()) {
-        newErrors.city = 'City is required for delivery';
-      }
-      if (!customerDetails.postalCode.trim()) {
-        newErrors.postalCode = 'Postal code is required for delivery';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  // Update customer details
-  const updateCustomerDetails = (field: keyof CustomerDetails, value: string) => {
-    setCustomerDetails(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
-    if (errors[field as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
-    }
-  };
-
-  // Payment success handler
-  const handlePaymentSuccess = () => {
-    setPaymentError(null);
-    setIsSubmitting(false);
-    router.replace('/payment-success');
-  };
-
-  // Payment error handler
-  const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error);
-    setPaymentError(error);
-    setIsSubmitting(false);
-  };
-
-  // Validate before payment
-  const validateBeforePayment = (): boolean => {
-    const isValid = validateForm();
-    if (isValid) {
-      setPaymentError(null);
-    }
-    return isValid;
-  };
-
-  // Check if we have required data
+  // Empty basket screen
   if (!items || items.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: Colors.light.background }]}>
@@ -162,15 +62,37 @@ export default function CheckoutScreen() {
     );
   }
 
-  const CheckoutContent = () => (
+  // Stripe handlers
+  const handlePaymentSuccess = () => {
+    setPaymentError(null);
+    setIsSubmitting(false);
+    router.replace('/payment-success');
+  };
+
+  const handlePaymentError = (err: string) => {
+    setPaymentError(err);
+    setIsSubmitting(false);
+  };
+
+  const onValidateBeforePayment = (): boolean => {
+    const { ok, errors } = validate();
+    if (!ok) {
+      const first = Object.values(errors)[0];
+      setPaymentError(first || 'Please fix the highlighted fields.');
+    } else {
+      setPaymentError(null);
+    }
+    return ok;
+  };
+
+  return (
     <View style={[styles.container, { backgroundColor: Colors.light.background }]}>
       <StatusBar backgroundColor="transparent" translucent />
 
       {/* Header */}
       <LinearGradient
         colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
         style={[styles.gradientHeader, { paddingTop: insets.top + 6 }]}
       >
         <View style={styles.headerRow}>
@@ -189,10 +111,7 @@ export default function CheckoutScreen() {
         </View>
       </LinearGradient>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={styles.content}
           contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 200 }]}
@@ -208,35 +127,34 @@ export default function CheckoutScreen() {
 
       {/* Payment Section */}
       <View style={[styles.paymentContainer, { paddingBottom: insets.bottom + 16 }]}>
-        {/* Error Display */}
         {paymentError && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{paymentError}</Text>
-            <Button
-              mode="outlined"
-              onPress={() => setPaymentError(null)}
-              style={styles.retryButton}
-            >
+            <Button mode="outlined" onPress={() => setPaymentError(null)} style={styles.retryButton}>
               Try Again
             </Button>
           </View>
         )}
 
-        {isStripeReady ? (
+        {stripeApiKey ? (
           <StripePayment
             onPaymentSuccess={handlePaymentSuccess}
             onPaymentError={handlePaymentError}
-            onValidateBeforePayment={validateBeforePayment}
-            customerDetails={{
-              email: customerDetails.email,
-              name: `${customerDetails.firstName} ${customerDetails.lastName}`,
-              firstName: customerDetails.firstName,
-              lastName: customerDetails.lastName,
-              phone: customerDetails.phone,
-              address: customerDetails.address,
-              city: customerDetails.city,
-              postalCode: customerDetails.postalCode,
-            }}
+            onValidateBeforePayment={onValidateBeforePayment}
+            // If your Stripe/BE accepts metadata/payload, derive it here:
+            customerDetails={(() => {
+              const payload = getCheckoutPayload();
+              return {
+                email: payload.contact.email,
+                name: `${payload.contact.firstName} ${payload.contact.lastName}`.trim(),
+                firstName: payload.contact.firstName,
+                lastName: payload.contact.lastName,
+                phone: payload.contact.phone,
+                address: payload.addressDetails.address,
+                city: payload.addressDetails.city,
+                postalCode: payload.addressDetails.postalCode,
+              };
+            })()}
             stripeApiKey={stripeApiKey}
             stripeStoreUrl={stripeStoreUrl}
             orderType={orderType}
@@ -244,187 +162,64 @@ export default function CheckoutScreen() {
           />
         ) : (
           <View style={styles.paymentSection}>
-            <Text style={styles.paymentMethodLabel}>Loading...</Text>
+            <Text style={styles.paymentMethodLabel}>Loading…</Text>
           </View>
         )}
       </View>
     </View>
   );
+}
 
-  // Wrap in StripeProvider if we have an API key
-  if (isStripeReady) {
+export default function CheckoutScreen() {
+  const { stripeApiKey } = useStore();
+  // Wrap with CheckoutProvider (and StripeProvider if key exists)
+  if (stripeApiKey) {
     return (
       <StripeProvider publishableKey={stripeApiKey}>
         <CheckoutProvider>
-          <CheckoutContent />
+          <CheckoutInner />
         </CheckoutProvider>
       </StripeProvider>
     );
   }
-
   return (
     <CheckoutProvider>
-      <CheckoutContent />
+      <CheckoutInner />
     </CheckoutProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.border,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingBottom: 12,
+    borderBottomWidth: 1, borderBottomColor: Colors.light.border,
   },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerRight: {
-    width: 40,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: '#fff',
-    opacity: 0.8,
-  },
-  gradientHeader: {
-    borderBottomLeftRadius: 18,
-    borderBottomRightRadius: 18,
-    overflow: 'hidden',
-    paddingBottom: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-  },
+  backButton: { padding: 8, marginLeft: -8 },
+  headerRight: { width: 40 },
+  headerTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  headerSubtitle: { fontSize: 12, color: '#fff', opacity: 0.8 },
+  gradientHeader: { borderBottomLeftRadius: 18, borderBottomRightRadius: 18, overflow: 'hidden', paddingBottom: 16 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
   headerIcon: {
-    height: 36,
-    width: 36,
-    borderRadius: 18,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(17,17,17,0.08)',
+    height: 36, width: 36, borderRadius: 18,
+    backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(17,17,17,0.08)',
   },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-  },
-  content: {
-    flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
-  },
-  card: {
-    marginBottom: 16,
-    borderRadius: 12,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: Colors.light.text,
-  },
-  orderTypeText: {
-    fontSize: 14,
-    color: Colors.light.text,
-  },
+  headerCenter: { flex: 1, alignItems: 'center', gap: 4 },
+  content: { flex: 1 },
+  contentContainer: { padding: 16 },
   paymentContainer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 16,
-    backgroundColor: Colors.light.background, // Or a transparent background
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    paddingHorizontal: 16, backgroundColor: Colors.light.background,
   },
-  paymentSection: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  totalLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#fff',
-  },
-  totalAmount: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    marginBottom: 16,
-  },
-  paymentOptions: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  paymentMethodButton: {
-    flex: 1,
-    height: 44,
-    justifyContent: 'center',
-    borderRadius: 12,
-  },
-  paymentMethodButtonRight: {
-    marginLeft: 12,
-  },
-  activePaymentMethod: {
-    backgroundColor: '#fff',
-  },
-  inactivePaymentMethod: {
-    backgroundColor: 'transparent',
-    borderColor: 'rgba(255,255,255,0.5)',
-  },
-  paymentMethodLabel: {
-    fontWeight: '600',
-  },
-  errorContainer: {
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  errorText: {
-    color: Colors.light.error,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  retryButton: {
-    borderColor: Colors.light.primary,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32,
-  },
-  emptyText: {
-    fontSize: 18,
-    marginBottom: 24,
-    textAlign: 'center',
-    color: Colors.light.text,
-  },
-  backToMenuButton: {
-    marginTop: 16,
-  },
+  paymentSection: { marginHorizontal: 16, marginBottom: 16 },
+  paymentMethodLabel: { fontWeight: '600' },
+  errorContainer: { alignItems: 'center', marginBottom: 16 },
+  errorText: { color: Colors.light.error, textAlign: 'center', marginBottom: 8 },
+  retryButton: { borderColor: Colors.light.primary },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  emptyText: { fontSize: 18, marginBottom: 24, textAlign: 'center', color: Colors.light.text },
+  backToMenuButton: { marginTop: 16 },
 });

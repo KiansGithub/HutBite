@@ -1,100 +1,49 @@
-import React from 'react';
+// components/checkout/OrderSummary.tsx
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from '@/components/Themed';
-import { useBasket } from '@/contexts/BasketContext';
-
-// Mock data as requested by the user
-const mockCartItems = [
-  {
-    id: '1',
-    name: 'L.E.S',
-    description: 'Poppy Bagel',
-    quantity: 1,
-    price: 13.51,
-  },
-  {
-    id: '2',
-    name: 'Everything Bagel',
-    description: 'Sliced',
-    quantity: 1,
-    price: 2.3,
-  },
-];
+import { useCheckout } from '@/contexts/CheckoutContext';
+import type { OrderType } from '@/types/store';
 
 export const CartSummary = () => {
-  // const { items } = useBasket(); // Will use mock data for now
-  const items = mockCartItems;
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  const { totals, orderType } = useCheckout(); // <-- live values
+  // totals has: subtotal, delivery, service, tip, total (strings)
+  // and *_Num numeric versions if needed
+
+  // Optionally hide rows that are zero (e.g., delivery on COLLECTION, no tip yet)
+  const showDelivery = orderType === ('DELIVERY' as OrderType) && totals.deliveryNum > 0;
+  const showService  = totals.serviceNum > 0;
+  const showTip      = totals.tipNum > 0;
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Cart Summary</Text>
-        <Text style={styles.itemCount}>• {itemCount} items</Text>
+      <Text style={styles.title}>Summary</Text>
+
+      <Row label="Subtotal" value={totals.subtotal} />
+
+      {showDelivery && <Row label="Delivery Fee" value={totals.delivery} />}
+      {showService && <Row label="Fees & Estimated Tax" value={totals.service} />}
+      {showTip && <Row label="Courier Tip" value={totals.tip} />}
+
+      <View style={[styles.row, styles.totalRow]}>
+        <Text style={styles.totalText}>Total</Text>
+        <Text style={styles.totalText}>{totals.total}</Text>
       </View>
-      {items.map((item) => (
-        <View key={item.id} style={styles.itemContainer}>
-          <Text style={styles.quantity}>{item.quantity}×</Text>
-          <View style={styles.itemDetails}>
-            <Text style={styles.itemName}>{item.name}</Text>
-            <Text style={styles.itemDescription}>{item.description}</Text>
-          </View>
-          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-        </View>
-      ))}
     </View>
   );
 };
 
+const Row = ({ label, value }: { label: string; value: string }) => (
+  <View style={styles.row}>
+    <Text>{label}</Text>
+    <Text>{value}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 8, // Adjusted padding
-    backgroundColor: '#fff',
-    borderBottomWidth: 8,
-    borderBottomColor: '#f0f0f0',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111',
-  },
-  itemCount: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 8,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  quantity: {
-    fontSize: 16,
-    color: '#666',
-    marginRight: 12,
-  },
-  itemDetails: {
-    flex: 1,
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111',
-  },
-  itemDescription: {
-    fontSize: 14,
-    color: '#666',
-  },
-  itemPrice: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111',
-  },
+  container: { padding: 16 },
+  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
+  totalRow: { borderTopWidth: 1, borderColor: '#ccc', paddingTop: 10, marginTop: 10 },
+  totalText: { fontWeight: 'bold', fontSize: 16 },
 });
