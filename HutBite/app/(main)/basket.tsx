@@ -51,12 +51,13 @@ export default function BasketScreen() {
     console.log('Edit item:', item);
   };
 
-  const handleCheckout = () => {
-    // Navigate to checkout screen with order type
-    router.navigate('(main)/checkout', {
-      orderType: 'DELIVERY' // You can make this dynamic based on user selection
-    });
-  };
+  // BasketScreen
+const handleCheckout = () => {
+  router.push({
+    pathname: '/(main)/checkout',
+    params: { orderType: 'DELIVERY' },
+  });
+};
 
   if (items.length === 0) {
     return (
