@@ -53,9 +53,8 @@ export default function BasketScreen() {
 
   const handleCheckout = () => {
     // Navigate to checkout screen with order type
-    router.push({
-      pathname: '(main)/checkout',
-      params: { orderType: 'DELIVERY' } // You can make this dynamic based on user selection
+    router.navigate('(main)/checkout', {
+      orderType: 'DELIVERY' // You can make this dynamic based on user selection
     });
   };
 

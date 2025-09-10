@@ -3,6 +3,8 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
+import { router } from 'expo-router';
+import { useCheckout } from '@/contexts/CheckoutContext';
 
 interface DetailRowProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -24,6 +26,16 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, title, subtitle, onPress, i
 );
 
 export const DeliveryDetails = () => {
+  const { addressDetails, buildingDetails, deliveryInstructions, phoneNumber } = useCheckout();
+
+  const addressSubtitle = addressDetails.address
+    ? `${addressDetails.address}, ${addressDetails.city}, ${addressDetails.postalCode}`
+    : 'New York, NY, United States';
+
+  const buildingSubtitle = buildingDetails.apt || buildingDetails.buildingName
+    ? `${buildingDetails.buildingType || ''} ${buildingDetails.apt || ''} ${buildingDetails.buildingName || ''}`.trim()
+    : 'e.g. building type, unit #';
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Delivery Details</Text>
@@ -31,31 +43,31 @@ export const DeliveryDetails = () => {
       <View style={styles.detailsContainer}>
         <DetailRow
           icon="location-outline"
-          title="Washington Square"
-          subtitle="New York, NY, United States"
-          onPress={() => {}}
+          title={addressDetails.address || 'Washington Square'}
+          subtitle={addressSubtitle}
+          onPress={() => router.navigate('/(main)/edit-address')}
         />
         <View style={styles.separator} />
         <DetailRow
           icon="home-outline"
           title="Building details*"
-          subtitle="e.g. building type, unit #"
-          onPress={() => {}}
-          isTitleRed
+          subtitle={buildingSubtitle}
+          onPress={() => router.navigate('/(main)/edit-building-details')}
+          isTitleRed={!buildingDetails.apt && !buildingDetails.buildingName}
         />
         <View style={styles.separator} />
         <DetailRow
           icon="trail-sign-outline"
           title="Hand it to me"
-          subtitle="e.g. ring the bell after dropoff"
-          onPress={() => {}}
+          subtitle={deliveryInstructions || 'e.g. ring the bell after dropoff'}
+          onPress={() => router.navigate('/(main)/edit-delivery-instructions')}
         />
         <View style={styles.separator} />
         <DetailRow
           icon="call-outline"
-          title="(702) 665-9987"
+          title={phoneNumber || '(702) 665-9987'}
           subtitle="Phone Number"
-          onPress={() => {}}
+          onPress={() => router.navigate('/(main)/edit-phone-number')}
         />
       </View>
     </View>
@@ -97,7 +109,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   redTitle: {
-    color: 'red',
+    color: Colors.light.error,
   },
   subtitle: {
     fontSize: 14,

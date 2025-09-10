@@ -7,6 +7,7 @@ import Colors from '@/constants/Colors';
 import { TabThemeProvider, useTabTheme } from '@/contexts/TabThemeContext';
 import { StoreProvider } from '@/contexts/StoreContext';
 import { BasketProvider, useBasket } from '@/contexts/BasketContext';
+import { CheckoutProvider } from '@/contexts/CheckoutContext';
 import { BlurView } from 'expo-blur';
 import { CartIcon } from '@/components/CartIcon';
 import { useAuthGate } from '@/hooks/useAuthGate';
@@ -158,6 +159,38 @@ function TabLayout() {
                     tabBarStyle: { display: 'none' },
                 }}
             />
+            <Tabs.Screen
+                name="edit-address"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+            <Tabs.Screen
+                name="edit-building-details"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+            <Tabs.Screen
+                name="edit-delivery-instructions"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+            <Tabs.Screen
+                name="edit-phone-number"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
         </Tabs>
     );
 }
@@ -176,7 +209,9 @@ export default function MainLayout() {
     return (
         <StoreProvider>
             <BasketProvider>
-                <LayoutWithProviders />
+                <CheckoutProvider>
+                    <LayoutWithProviders />
+                </CheckoutProvider>
             </BasketProvider>
         </StoreProvider>
     );

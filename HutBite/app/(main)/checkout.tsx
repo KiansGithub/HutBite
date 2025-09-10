@@ -19,6 +19,7 @@ import { OrderSummary } from '@/components/checkout/OrderSummary';
 import Colors from '@/constants/Colors';
 import { OrderType } from '@/types/store';
 import { StripeProvider } from '@stripe/stripe-react-native';
+import { CheckoutProvider } from '@/contexts/CheckoutContext';
 
 interface CustomerDetails {
   firstName: string;
@@ -254,12 +255,18 @@ export default function CheckoutScreen() {
   if (isStripeReady) {
     return (
       <StripeProvider publishableKey={stripeApiKey}>
-        <CheckoutContent />
+        <CheckoutProvider>
+          <CheckoutContent />
+        </CheckoutProvider>
       </StripeProvider>
     );
   }
 
-  return <CheckoutContent />;
+  return (
+    <CheckoutProvider>
+      <CheckoutContent />
+    </CheckoutProvider>
+  );
 }
 
 const styles = StyleSheet.create({
