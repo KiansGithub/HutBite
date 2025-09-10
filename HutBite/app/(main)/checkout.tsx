@@ -40,7 +40,7 @@ export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const { total, items, itemCount } = useBasket();
-  const { storeInfo, urlForImages } = useStore();
+  const { storeInfo, urlForImages, stripeStoreUrl, stripeApiKey } = useStore();
   const params = useLocalSearchParams<{ orderType?: OrderType }>();
   const orderType = (params.orderType || 'DELIVERY') as OrderType;
 
@@ -62,10 +62,6 @@ export default function CheckoutScreen() {
   const [paymentMethod, setPaymentMethod] = useState<'stripe' | 'cash'>('stripe');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-
-  // Get store configuration
-  const stripeApiKey = (storeInfo as any)?.cardPaymentInfo?.publishableKey || '';
-  const stripeStoreUrl = (storeInfo as any)?.StoreURL || '';
 
   // Validation function
   const validateForm = (): boolean => {

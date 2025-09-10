@@ -137,7 +137,15 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
         }
       } catch {}
 
-      setStoreState((prev) => ({ ...prev, storeInfo }));
+      setStoreState((prev) => ({ 
+            ...prev, 
+            storeInfo, 
+            stripeStoreUrl: profile.StoreURL, 
+            stripeApiKey: settings.cardPaymentInfo.publishableKey, 
+            minDeliveryValue: settings.minDlvValue || 0, 
+            urlForImages: settings.urlForImages || '',
+            currency: 'GBP'
+          }));
 
       const fetchedToppings = await getToppings(profile.StoreURL, storeId);
       setStoreState((prev) => ({ ...prev, toppingGroups: fetchedToppings }));

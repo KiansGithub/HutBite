@@ -10,6 +10,7 @@ import { BasketProvider, useBasket } from '@/contexts/BasketContext';
 import { BlurView } from 'expo-blur';
 import { CartIcon } from '@/components/CartIcon';
 import { useAuthGate } from '@/hooks/useAuthGate';
+import { APP_CONFIG } from '@/constants/config';
 
 function TabLayout() {
     const insets = useSafeAreaInsets();
@@ -38,9 +39,11 @@ function TabLayout() {
                     color: '#000',
                 },
                 headerRight: () => (
-                    <View style={{ marginRight: 15 }}>
-                        <CartIcon />
-                    </View>
+                    APP_CONFIG.ORDERING_ENABLED ? (
+                        <View style={{ marginRight: 15 }}>
+                            <CartIcon />
+                        </View>
+                    ) : null
                 ),
                 tabBarShowLabel: true,
                 tabBarBackground: () => (
@@ -141,6 +144,14 @@ function TabLayout() {
             />
             <Tabs.Screen
                 name="basket"
+                options={{
+                    href: null, // Hide from tab bar
+                    headerShown: false,
+                    tabBarStyle: { display: 'none' },
+                }}
+            />
+             <Tabs.Screen
+                name="checkout"
                 options={{
                     href: null, // Hide from tab bar
                     headerShown: false,

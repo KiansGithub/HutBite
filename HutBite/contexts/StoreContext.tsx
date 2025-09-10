@@ -58,6 +58,7 @@ interface StoreState {
 interface StoreContextType extends StoreState {
     setStoreState: React.Dispatch<React.SetStateAction<StoreState>>; 
     handleError: (errorMessage: string) => void;
+    selectStore: (storeId: string) => Promise<void>;
 }
 
 // Define the default state values for the context
@@ -93,6 +94,7 @@ const StoreContext = createContext<StoreContextType>({
     ...defaultState, 
     setStoreState: () => {},
     handleError: () => {},
+    selectStore: () => Promise.resolve(),
 });
 
 // Define the StoreProvider component, which wraps the app and provides the shared state.
@@ -105,12 +107,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setStoreState(prev => ({ ...prev, error: errorMessage}));
     }
 
+    // Method to select and load store data
+    const selectStore = async (storeId: string) => {
+        try {
+            setStoreState(prev => ({ ...prev, loading: true, error: null }));
+ 
+            // This would be implemented based on your store selection logic
+            // For now, just update the nearestStoreId
+            setStoreState(prev => ({
+                ...prev,
+                nearestStoreId: storeId,
+                loading: false
+            }));
+        } catch (error) {
+            handleError(error instanceof Error ? error.message : 'Failed to select store');
+            setStoreState(prev => ({ ...prev, loading: false }));
+        }
+    };
+
     // Provide the store state and the `setStoreState` function to child components.
     return (
         <StoreContext.Provider value={{ 
             ...storeState, 
             setStoreState, 
-            handleError,  
+            handleError, 
+            selectStore, 
             }}>
             {children}
         </StoreContext.Provider>
