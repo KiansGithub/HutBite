@@ -7,6 +7,7 @@ import { submitOrder, formatOrderData } from '@/services/orderService';
 import { createPaymentIntent } from '@/services/payment';
 import Constants from 'expo-constants';
 import { OrderType } from '@/types/store';
+import * as Linking from 'expo-linking';
 
 interface StripePaymentProps {
     onPaymentSuccess: () => void; 
@@ -46,6 +47,21 @@ export const StripePayment: React.FC<StripePaymentProps> =({
     const [loading, setLoading] = useState(false);
     const [paymentSheetInitialized, setPaymentSheetInitialized] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    // Use one currency everywhere (UI shows GBP)
+    const CURRENCY = 'gbp' as const;
+
+    // Safely convert totals like "8.90", "£8.90", "8.90 GBP" → minor units (e.g., 890)
+    const toMinorUnits = (val: string | number, currency: string = CURRENCY) => {
+        const cleaned = typeof val === 'number' ? String(val) : val.replace(/[^0-9.-]+/g, '');
+        const float = Number.parseFloat(cleaned);
+        if (!Number.isFinite(float) || float <= 0) return 0;
+
+        // GBP/EUR use 2 decimals; handle 0-decimal currencies if needed
+        const zeroDecimal = /^(jpy|krw|clp|vnd|xaf|xof|xpf)$/i.test(currency);
+        const factor = zeroDecimal ? 1 : 100;
+        return Math.round(float * factor);
+    };
     
     // Define thereturn URL for Stripe Payment Flow 
     // Check if running in expo go 
@@ -56,12 +72,9 @@ export const StripePayment: React.FC<StripePaymentProps> =({
         ? `exp`
         : (Constants.manifest?.scheme || 'hutbite');
     
-    const returnUrl = Platform.OS === 'ios'
-        ? `${appScheme}://payment-result`
-        : `${appScheme}://`
-    
+    const returnUrl = Linking.createURL('payment-result');
     console.log('Return URL for Stripe:', returnUrl);
-
+    
     console.log('StripeStoreUrl in pyment : ', stripeStoreUrl);
     console.log('StripeApiKey in  payment : ', stripeApiKey)
 
@@ -79,19 +92,14 @@ export const StripePayment: React.FC<StripePaymentProps> =({
                 throw new Error('Stripe store URL is missing');
             }
 
-            // Create a payment intent on the server 
-            const { clientSecret } = await createPaymentIntent({
-                amount: parseFloat(total) * 100,
-                currency: 'eur',
-                // customerEmail: customerDetails.email, 
-                // customerName: customerDetails.name, 
-                // items: items.map(item => ({
-                //     id: item.id, 
-                //     name: item.product_name, 
-                //     quantity: parseInt(item.quantity, 10),
-                //     price: parseFloat(item.price.replace(/[^0-9.-]+/g, '')),
-                // })),
-            }, stripeStoreUrl);
+            const amountInt = toMinorUnits(total, CURRENCY);
+            if (!amountInt) {
+                throw new Error(`Invalid amount: "${total}"`);
+            }
+            const { clientSecret } = await createPaymentIntent(
+                { amount: amountInt, currency: CURRENCY },
+                stripeStoreUrl
+            );
 
             // Initialize the payment sheet 
             const { error } = await initPaymentSheet({
@@ -145,13 +153,13 @@ export const StripePayment: React.FC<StripePaymentProps> =({
 
             const { error } = await presentPaymentSheet();
 
-            if (error) {
-                if (error.code === 'Canceled') {
-                    // User canceled the payment - not an error 
+            const presentResult = await presentPaymentSheet();
+            if (presentResult?.error) {
+                if (presentResult.error.code === 'Canceled') {
                     setErrorMessage('Payment canceled');
-                    return; 
+                    return;
                 }
-                throw new Error(error.message);
+                throw new Error(presentResult.error.message);
             }
 
             // Payment successful, now submit the order 
@@ -161,7 +169,7 @@ export const StripePayment: React.FC<StripePaymentProps> =({
             const paymentDetails = {
                 paymentMethod: 'Stripe',
                 paymentId: `stripe_${Date.now()}`,
-                amount: `${parseFloat(total).toFixed(2)} EUR`
+                amount: `${parseFloat(total).toFixed(2)} GBP`
             };
 
             // Format order data 
