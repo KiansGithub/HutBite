@@ -176,16 +176,12 @@ export default function CheckoutScreen() {
   if (stripeApiKey) {
     return (
       <StripeProvider publishableKey={stripeApiKey}>
-        <CheckoutProvider>
           <CheckoutInner />
-        </CheckoutProvider>
       </StripeProvider>
     );
   }
   return (
-    <CheckoutProvider>
-      <CheckoutInner />
-    </CheckoutProvider>
+    <CheckoutInner />
   );
 }
 
