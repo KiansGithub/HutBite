@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import MapScreen from '../map';
+import MapScreen from '../(tabs)/map';
 import { useRestaurantData } from '@/hooks/useRestaurantData';
 import { useLocation } from '@/hooks/useLocation';
 import { router } from 'expo-router';

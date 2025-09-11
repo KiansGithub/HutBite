@@ -1,6 +1,6 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
-import ActivityScreen from '../activity';
+import ActivityScreen from '../(tabs)/activity';
 
 // Mocks aligned with existing tests
 jest.mock('react-native-safe-area-context', () => {

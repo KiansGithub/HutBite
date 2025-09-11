@@ -14,7 +14,6 @@ import {
 import { useTheme, ActivityIndicator, Text } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-
 import { IBaseProduct } from '@/types/product';
 import { IOptionSelections } from '@/types/productOptions';
 import { ProductOptions } from './ProductOptions';

@@ -1,43 +1,15 @@
-// contexts/CheckoutContext.tsx
 import React, { createContext, useContext, useMemo, useState, ReactNode, useEffect } from 'react';
 import { useBasket } from '@/contexts/BasketContext';
 import { useStore } from '@/contexts/StoreContext';
 import type { OrderType } from '@/types/store';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type Theme = 'light' | 'dark';
-
-export interface AddressDetails {
-  address: string;
-  city: string;
-  postalCode: string;
-}
-
-export interface BuildingDetails {
-  buildingType: string;
-  apt: string;
-  buildingName: string;
-  entryCode: string;
-}
-
-export interface ContactDetails {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-}
+export interface AddressDetails { address: string; city: string; postalCode: string; }
+export interface BuildingDetails { buildingType: string; apt: string; buildingName: string; entryCode: string; }
+export interface ContactDetails { firstName: string; lastName: string; email: string; phone: string; }
 
 interface ComputedTotals {
-  subtotalNum: number;
-  deliveryNum: number;
-  serviceNum: number;
-  tipNum: number;
-  totalNum: number;
-  subtotal: string;
-  delivery: string;
-  service: string;
-  tip: string;
-  total: string;
+  subtotalNum: number; deliveryNum: number; serviceNum: number; tipNum: number; totalNum: number;
+  subtotal: string; delivery: string; service: string; tip: string; total: string;
 }
 
 interface CheckoutData {
@@ -46,9 +18,13 @@ interface CheckoutData {
   buildingDetails: BuildingDetails;
   deliveryInstructions: string;
   phoneValid: boolean;
-  orderType: OrderType;           // 'DELIVERY' | 'COLLECTION'
+  orderType: OrderType;    // 'DELIVERY' | 'COLLECTION'
   tipPercent: number;
   promoCode: string;
+
+  // NEW: derived completeness flags used by UI + validation
+  addressComplete: boolean;
+  phoneComplete: boolean;
 
   setContact: (v: Partial<ContactDetails>) => void;
   setAddressDetails: (details: Partial<AddressDetails>) => void;
@@ -60,7 +36,6 @@ interface CheckoutData {
   setPromoCode: (code: string) => void;
 
   totals: ComputedTotals;
-
   formatCurrency: (n: number) => string;
   parseCurrency: (s: string) => number;
 
@@ -80,30 +55,14 @@ interface CheckoutData {
 
 const CheckoutContext = createContext<CheckoutData | undefined>(undefined);
 
-const CHECKOUT_STATE_KEY = 'checkout_state';
-
 export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   const { total, getFormattedBasketData } = useBasket();
   const { deliveryCharge, serviceCharge, currency, orderType: storeOrderType } = useStore();
 
   // ---- Raw state
-  const [contact, _setContact] = useState<ContactDetails>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-  });
-  const [addressDetails, _setAddressDetails] = useState<AddressDetails>({
-    address: '',
-    city: '',
-    postalCode: '',
-  });
-  const [buildingDetails, _setBuildingDetails] = useState<BuildingDetails>({
-    buildingType: '',
-    apt: '',
-    buildingName: '',
-    entryCode: '',
-  });
+  const [contact, _setContact] = useState<ContactDetails>({ firstName: '', lastName: '', email: '', phone: '' });
+  const [addressDetails, _setAddressDetails] = useState<AddressDetails>({ address: '', city: '', postalCode: '' });
+  const [buildingDetails, _setBuildingDetails] = useState<BuildingDetails>({ buildingType: '', apt: '', buildingName: '', entryCode: '' });
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [phoneValid, setPhoneValid] = useState(true);
   const [orderType, setOrderType] = useState<OrderType>(storeOrderType || 'DELIVERY');
@@ -114,21 +73,25 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     if (storeOrderType && storeOrderType !== orderType) setOrderType(storeOrderType);
   }, [storeOrderType]);
 
-  // ---- Helpers
-  const parseCurrency = (s: string): number => {
-    if (!s) return 0;
-    return Number((s.replace(/[^\d.-]/g, '') || '0'));
-  };
+  // ---- Derived completeness (single source of truth)
+  const addressComplete = useMemo(() => {
+    return !!(
+      addressDetails.address?.trim() &&
+      addressDetails.city?.trim() &&
+      addressDetails.postalCode?.trim()
+    );
+  }, [addressDetails]);
 
+  const phoneComplete = useMemo(() => {
+    return !!contact.phone?.trim() && phoneValid;
+  }, [contact.phone, phoneValid]);
+
+  // ---- Money helpers
+  const parseCurrency = (s: string): number => Number((s || '').replace(/[^\d.-]/g, '') || '0');
   const formatCurrency = (n: number): string => {
     try {
-      return new Intl.NumberFormat(undefined, {
-        style: 'currency',
-        currency: currency || 'GBP',
-      }).format(n);
-    } catch {
-      return `£${n.toFixed(2)}`;
-    }
+      return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'GBP' }).format(n);
+    } catch { return `£${n.toFixed(2)}`; }
   };
 
   const basketSubtotalNum = useMemo(() => parseCurrency(total), [total]);
@@ -137,15 +100,10 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     const deliveryNum = orderType === 'DELIVERY' ? Number(deliveryCharge || 0) : 0;
     const serviceNum = Number(serviceCharge || 0);
     const base = basketSubtotalNum + deliveryNum + serviceNum;
-    const tipNum = Math.max(0, Math.round((base * (tipPercent / 100)) * 100) / 100);
+    const tipNum = Math.max(0, Math.round(base * (tipPercent / 100) * 100) / 100);
     const totalNum = Math.max(0, Math.round((base + tipNum) * 100) / 100);
-
     return {
-      subtotalNum: basketSubtotalNum,
-      deliveryNum,
-      serviceNum,
-      tipNum,
-      totalNum,
+      subtotalNum: basketSubtotalNum, deliveryNum, serviceNum, tipNum, totalNum,
       subtotal: formatCurrency(basketSubtotalNum),
       delivery: formatCurrency(deliveryNum),
       service: formatCurrency(serviceNum),
@@ -155,35 +113,19 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   }, [basketSubtotalNum, deliveryCharge, serviceCharge, orderType, tipPercent, currency]);
 
   // ---- Setters
-  const setContact = (v: Partial<ContactDetails>) =>
-    _setContact(prev => ({ ...prev, ...v }));
+  const setContact = (v: Partial<ContactDetails>) => _setContact(prev => ({ ...prev, ...v }));
+  const setAddressDetails = (v: Partial<AddressDetails>) => _setAddressDetails(prev => ({ ...prev, ...v }));
+  const setBuildingDetails = (v: Partial<BuildingDetails>) => _setBuildingDetails(prev => ({ ...prev, ...v }));
 
-  const setAddressDetails = (v: Partial<AddressDetails>) =>
-    _setAddressDetails(prev => ({ ...prev, ...v }));
-
-  const setBuildingDetails = (v: Partial<BuildingDetails>) =>
-    _setBuildingDetails(prev => ({ ...prev, ...v }));
-
-  // ---- Validation
+  // ---- Validation uses the same flags as UI
   const validate = () => {
     const errors: Record<string, string> = {};
 
-    // Names optional
-    // if (!contact.firstName.trim()) errors.firstName = 'First name is required';
-    // if (!contact.lastName.trim()) errors.lastName = 'Last name is required';
-
-    // Email optional; only validate if present
-    if (contact.email && !/\S+@\S+\.\S+/.test(contact.email)) {
-      errors.email = 'Enter a valid email';
+    if (!phoneComplete) {
+      errors.phone = contact.phone?.trim() ? 'Enter a valid phone number' : 'Phone number is required';
     }
 
-    if (!contact.phone.trim()) {
-      errors.phone = 'Phone number is required';
-    } else if (!phoneValid) {
-      errors.phone = 'Enter a valid phone number';
-    }
-
-    if (orderType === 'DELIVERY') {
+    if (orderType === 'DELIVERY' && !addressComplete) {
       if (!addressDetails.address.trim()) errors.address = 'Address is required for delivery';
       if (!addressDetails.city.trim()) errors.city = 'City is required for delivery';
       if (!addressDetails.postalCode.trim()) errors.postalCode = 'Postal code is required for delivery';
@@ -193,7 +135,6 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getCheckoutPayload = () => {
-    // Provide safe fallbacks so downstream (e.g., receipts) look sane
     const cleanedContact: ContactDetails = {
       ...contact,
       firstName: (contact.firstName || '').trim() || 'Guest',
@@ -225,6 +166,9 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     tipPercent,
     promoCode,
 
+    addressComplete,
+    phoneComplete,
+
     setContact,
     setAddressDetails,
     setBuildingDetails,
@@ -250,3 +194,4 @@ export const useCheckout = () => {
   if (!ctx) throw new Error('useCheckout must be used within a CheckoutProvider');
   return ctx;
 };
+
