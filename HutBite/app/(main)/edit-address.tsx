@@ -53,11 +53,15 @@ const EditAddressScreen = () => {
     const details = await addressyRetrieve(item.Id);
     if (!details) return;
 
-    const line1 = details.Line1 || '';
-    const line2 = details.Line2 ? `, ${details.Line2}` : '';
-    const line3 = details.Line3 ? `, ${details.Line3}` : '';
-    const city = details.City || '';
-    const postalCode = details.PostalCode || '';
+    const line1 = (details.Line1 || '').trim();
+    const line2 = (details.Line2 || '').trim();
+    const line3 = (details.Line3 || '').trim();
+    const city = (details.City || '').trim();
+    const postalCode = (details.PostalCode || '').trim();
+ 
+    // Build address string properly, avoiding leading commas
+    const addressParts = [line1, line2, line3].filter(part => part.length > 0);
+    const fullAddress = addressParts.join(', ');
 
     // Optional: delivery eligibility check against a known outward code
     if (REQUIRED_POSTCODE_OUTWARD_FROM_STORE) {
@@ -73,7 +77,7 @@ const EditAddressScreen = () => {
     }
 
     setAddressDetails({
-      address: `${line1}${line2}${line3}`.replace(/^,\s*/, ''),
+      address: fullAddress,
       city,
       postalCode,
     });
