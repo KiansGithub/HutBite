@@ -119,8 +119,8 @@ function CheckoutInner() {
         >
           <CartSummary />
           <DeliveryDetails />
-          <PromoCodeInput />
-          <TipSelector />
+          {/* <PromoCodeInput /> */}
+          {/* <TipSelector /> */}
           <OrderSummary />
         </ScrollView>
       </KeyboardAvoidingView>

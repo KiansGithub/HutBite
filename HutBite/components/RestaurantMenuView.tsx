@@ -266,7 +266,7 @@ export default function RestaurantMenuView({
           {items && items.length > 0 && (
             <TouchableOpacity
               style={[styles.basketFooter, { backgroundColor: colors.primary }]}
-              onPress={() => router.replace('/(main)/basket')}
+              onPress={() => router.push('/(main)/basket')}
             >
               <View style={styles.basketInfo}>
                 <Ionicons name="basket" size={20} color="#fff" />
