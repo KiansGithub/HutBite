@@ -15,13 +15,13 @@ export default function MainLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
             {/* Flow screens OUTSIDE tabs */}
-            <Stack.Screen name="restaurant/[id]/menu" options={{ presentation: 'fullScreenModal', headerShown: false }} />
-            <Stack.Screen name="basket" options={{ headerShown: false }} />
-            <Stack.Screen name="checkout" options={{ headerShown: false }} />
-            <Stack.Screen name="edit-address" options={{ headerShown: false }} />
-            <Stack.Screen name="edit-building-details" options={{ headerShown: false }} />
-            <Stack.Screen name="edit-delivery-instructions" options={{ headerShown: false }} />
-            <Stack.Screen name="edit-phone-number" options={{ headerShown: false }} />
+            <Stack.Screen name="menu" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="basket" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="checkout" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="edit-address" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="edit-building-details" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="edit-delivery-instructions" options={{ headerShown: false, presentation: 'card' }} />
+            <Stack.Screen name="edit-phone-number" options={{ headerShown: false, presentation: 'card' }} />
 
             {/* Non-tab details */}
             <Stack.Screen name="restaurant/[id]" options={{ headerShown: false }} />

@@ -60,7 +60,7 @@ export default function FeedScreen() {
 
   const openMenuScreen = useCallback((restaurantId: string, itemId?: string) => {
     router.push({
-      pathname: '/restaurant/[id]/menu',   // ← route to the new screen
+      pathname: '/menu',   // ← route to the new screen
       params: { id: String(restaurantId), itemId },
     });
   }, []);
