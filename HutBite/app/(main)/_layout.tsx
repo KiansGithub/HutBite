@@ -15,6 +15,7 @@ export default function MainLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
 
             {/* Flow screens OUTSIDE tabs */}
+            <Stack.Screen name="restaurant/[id]/menu" options={{ presentation: 'fullScreenModal', headerShown: false }} />
             <Stack.Screen name="basket" options={{ headerShown: false }} />
             <Stack.Screen name="checkout" options={{ headerShown: false }} />
             <Stack.Screen name="edit-address" options={{ headerShown: false }} />

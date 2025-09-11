@@ -1,49 +1,118 @@
-// components/checkout/OrderSummary.tsx
-import React, { useMemo } from 'react';
+// components/checkout/CartSummary.tsx
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text } from '@/components/Themed';
-import { useCheckout } from '@/contexts/CheckoutContext';
-import type { OrderType } from '@/types/store';
+import { useBasket } from '@/contexts/BasketContext';
+import Colors from '@/constants/Colors';
 
 export const CartSummary = () => {
-  const { totals, orderType } = useCheckout(); // <-- live values
-  // totals has: subtotal, delivery, service, tip, total (strings)
-  // and *_Num numeric versions if needed
+  const { items, itemCount, total } = useBasket();
 
-  // Optionally hide rows that are zero (e.g., delivery on COLLECTION, no tip yet)
-  const showDelivery = orderType === ('DELIVERY' as OrderType) && totals.deliveryNum > 0;
-  const showService  = totals.serviceNum > 0;
-  const showTip      = totals.tipNum > 0;
+  if (!items || items.length === 0) return null;
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Summary</Text>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Cart Summary</Text>
+        <Text style={styles.itemCount}>
+          • {itemCount} item{itemCount === 1 ? '' : 's'}
+        </Text>
+      </View>
 
-      <Row label="Subtotal" value={totals.subtotal} />
+      {/* Items */}
+      {items.map((item) => (
+        <View key={item.id} style={styles.itemContainer}>
+          <Text style={styles.quantity}>{item.quantity}×</Text>
+          <View style={styles.itemDetails}>
+            <Text style={styles.itemName}>{item.product_name}</Text>
+          </View>
+          <Text style={styles.itemPrice}>{item.subtotal}</Text>
+        </View>
+      ))}
 
-      {showDelivery && <Row label="Delivery Fee" value={totals.delivery} />}
-      {showService && <Row label="Fees & Estimated Tax" value={totals.service} />}
-      {showTip && <Row label="Courier Tip" value={totals.tip} />}
-
-      <View style={[styles.row, styles.totalRow]}>
-        <Text style={styles.totalText}>Total</Text>
-        <Text style={styles.totalText}>{totals.total}</Text>
+      {/* Subtotal Row */}
+      <View style={styles.footer}>
+        <Text style={styles.footerLabel}>Subtotal</Text>
+        <Text style={styles.footerValue}>{total}</Text>
       </View>
     </View>
   );
 };
 
-const Row = ({ label, value }: { label: string; value: string }) => (
-  <View style={styles.row}>
-    <Text>{label}</Text>
-    <Text>{value}</Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  title: { fontSize: 18, fontWeight: 'bold', marginBottom: 10 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 },
-  totalRow: { borderTopWidth: 1, borderColor: '#ccc', paddingTop: 10, marginTop: 10 },
-  totalText: { fontWeight: 'bold', fontSize: 16 },
+  container: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+    backgroundColor: '#fff',
+    borderBottomWidth: 8,
+    borderBottomColor: '#f0f0f0',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111',
+  },
+  itemCount: {
+    fontSize: 16,
+    color: '#666',
+    marginLeft: 8,
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  quantity: {
+    fontSize: 16,
+    color: '#666',
+    marginRight: 12,
+  },
+  itemDetails: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+  },
+  itemDescription: {
+    fontSize: 14,
+    color: '#666',
+  },
+  optionText: {
+    fontSize: 13,
+    color: Colors.light.medium,
+    marginTop: 2,
+  },
+  itemPrice: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+    marginLeft: 8,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: Colors.light.border,
+    marginTop: 12,
+    paddingTop: 12,
+  },
+  footerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111',
+  },
+  footerValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#111',
+  },
 });

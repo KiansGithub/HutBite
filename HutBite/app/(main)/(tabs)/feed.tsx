@@ -15,7 +15,6 @@ import { useRestaurantData, RestaurantWithDistance } from '@/hooks/useRestaurant
 import { FeedContentItem } from '@/types/feedContent';
 import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
 import { RestaurantCard } from '@/components/RestaurantCard';
-import { RestaurantMenuModal } from '@/components/RestaurantMenuModal';
 import { useLocation } from '@/hooks/useLocation';
 import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
@@ -58,6 +57,13 @@ export default function FeedScreen() {
   const { restaurants: allRestaurants, feedContent, loading, reshuffleRestaurants } = useRestaurantData();
   const { searchQuery, setSearchQuery, searchResults, isSearching, setSearchType } = useSearch(allRestaurants, []);
   const { addItem } = useBasket();
+
+  const openMenuScreen = useCallback((restaurantId: string, itemId?: string) => {
+    router.push({
+      pathname: '/restaurant/[id]/menu',   // ← route to the new screen
+      params: { id: String(restaurantId), itemId },
+    });
+  }, []);
 
   // Track previous search state to detect when search is cleared
   const prevIsSearching = useRef(isSearching);
@@ -149,21 +155,14 @@ const handleOrderPress = useCallback((
   }
 
   if (restaurant.receives_orders) {
-    setSelectedRestaurant(restaurant);
-    setSelectedMenuItem(undefined);   // ← clear any auto-add intent
-    setMenuModalVisible(true);        // ← open menu to browse
+    openMenuScreen(restaurant.id);
   } else {
     router.push(`/restaurant/${restaurant.id}`);
   }
-}, []);
+}, [openMenuScreen]);
   const handleMenuPress = useCallback((restaurantId: string) => {
-    const restaurant = restaurants.find((r) => r.id === restaurantId);
-    if (restaurant) {
-      setSelectedRestaurant(restaurant);
-      setSelectedMenuItem(undefined);   // ← important
-      setMenuModalVisible(true);
-    }
-  }, [restaurants]);
+    openMenuScreen(restaurantId);
+  }, [openMenuScreen]);
 
   const renderRestaurant = useCallback(
     ({ item, index }: { item: RestaurantWithDistance; index: number }) => {
@@ -287,18 +286,6 @@ const handleOrderPress = useCallback((
       )}
 
       <SignInNudge topOverlayHeight={88} />
-
-      {selectedRestaurant && (
-        <RestaurantMenuModal
-          visible={menuModalVisible}
-          restaurant={selectedRestaurant}
-          initialMenuItem={selectedMenuItem}
-          onClose={() => {
-            setMenuModalVisible(false);
-            setSelectedMenuItem(undefined);
-          }}
-        />
-      )}
     </View>
   );
 }
