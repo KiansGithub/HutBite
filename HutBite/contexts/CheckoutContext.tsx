@@ -41,17 +41,15 @@ interface ComputedTotals {
 }
 
 interface CheckoutData {
-  // raw form state
   contact: ContactDetails;
   addressDetails: AddressDetails;
   buildingDetails: BuildingDetails;
   deliveryInstructions: string;
   phoneValid: boolean;
   orderType: OrderType;           // 'DELIVERY' | 'COLLECTION'
-  tipPercent: number;             // e.g. 0, 5, 10, 15
+  tipPercent: number;
   promoCode: string;
 
-  // setters
   setContact: (v: Partial<ContactDetails>) => void;
   setAddressDetails: (details: Partial<AddressDetails>) => void;
   setBuildingDetails: (details: Partial<BuildingDetails>) => void;
@@ -61,14 +59,11 @@ interface CheckoutData {
   setTipPercent: (pct: number) => void;
   setPromoCode: (code: string) => void;
 
-  // derived values
   totals: ComputedTotals;
 
-  // helpers
   formatCurrency: (n: number) => string;
   parseCurrency: (s: string) => number;
 
-  // validation + payload helpers for payment
   validate: () => { ok: boolean; errors: Record<string, string> };
   getCheckoutPayload: () => {
     contact: ContactDetails;
@@ -110,12 +105,11 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     entryCode: '',
   });
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
-  const [phoneValid, setPhoneValid] = useState(false);
+  const [phoneValid, setPhoneValid] = useState(true);
   const [orderType, setOrderType] = useState<OrderType>(storeOrderType || 'DELIVERY');
   const [tipPercent, setTipPercent] = useState<number>(0);
   const [promoCode, setPromoCode] = useState<string>('');
 
-  // Keep in sync if store changes orderType elsewhere
   useEffect(() => {
     if (storeOrderType && storeOrderType !== orderType) setOrderType(storeOrderType);
   }, [storeOrderType]);
@@ -123,7 +117,6 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   // ---- Helpers
   const parseCurrency = (s: string): number => {
     if (!s) return 0;
-    // remove currency symbol(s), commas and spaces
     return Number((s.replace(/[^\d.-]/g, '') || '0'));
   };
 
@@ -134,7 +127,6 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
         currency: currency || 'GBP',
       }).format(n);
     } catch {
-      // fallback
       return `£${n.toFixed(2)}`;
     }
   };
@@ -162,7 +154,7 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [basketSubtotalNum, deliveryCharge, serviceCharge, orderType, tipPercent, currency]);
 
-  // ---- Setters (partial-friendly)
+  // ---- Setters
   const setContact = (v: Partial<ContactDetails>) =>
     _setContact(prev => ({ ...prev, ...v }));
 
@@ -176,12 +168,12 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   const validate = () => {
     const errors: Record<string, string> = {};
 
-    if (!contact.firstName.trim()) errors.firstName = 'First name is required';
-    if (!contact.lastName.trim()) errors.lastName = 'Last name is required';
+    // Names optional
+    // if (!contact.firstName.trim()) errors.firstName = 'First name is required';
+    // if (!contact.lastName.trim()) errors.lastName = 'Last name is required';
 
-    if (!contact.email.trim()) {
-      errors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(contact.email)) {
+    // Email optional; only validate if present
+    if (contact.email && !/\S+@\S+\.\S+/.test(contact.email)) {
       errors.email = 'Enter a valid email';
     }
 
@@ -200,17 +192,28 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
     return { ok: Object.keys(errors).length === 0, errors };
   };
 
-  const getCheckoutPayload = () => ({
-    contact,
-    addressDetails,
-    buildingDetails,
-    deliveryInstructions,
-    orderType,
-    tipPercent,
-    promoCode,
-    basketItems: getFormattedBasketData(),
-    totals,
-  });
+  const getCheckoutPayload = () => {
+    // Provide safe fallbacks so downstream (e.g., receipts) look sane
+    const cleanedContact: ContactDetails = {
+      ...contact,
+      firstName: (contact.firstName || '').trim() || 'Guest',
+      lastName: (contact.lastName || '').trim() || 'Customer',
+      email: (contact.email || '').trim() || `guest+${Date.now()}@hutbite.app`,
+      phone: (contact.phone || '').trim(),
+    };
+
+    return {
+      contact: cleanedContact,
+      addressDetails,
+      buildingDetails,
+      deliveryInstructions,
+      orderType,
+      tipPercent,
+      promoCode,
+      basketItems: getFormattedBasketData(),
+      totals,
+    };
+  };
 
   const value: CheckoutData = {
     contact,
