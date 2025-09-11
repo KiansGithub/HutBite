@@ -3,6 +3,7 @@ import React, { createContext, useContext, useMemo, useState, ReactNode, useEffe
 import { useBasket } from '@/contexts/BasketContext';
 import { useStore } from '@/contexts/StoreContext';
 import type { OrderType } from '@/types/store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Theme = 'light' | 'dark';
 
@@ -83,6 +84,8 @@ interface CheckoutData {
 }
 
 const CheckoutContext = createContext<CheckoutData | undefined>(undefined);
+
+const CHECKOUT_STATE_KEY = 'checkout_state';
 
 export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   const { total, getFormattedBasketData } = useBasket();
