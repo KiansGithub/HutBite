@@ -9,12 +9,12 @@ import { useCheckout } from '@/contexts/CheckoutContext';
 
 const EditPhoneNumberScreen = () => {
   const insets = useSafeAreaInsets();
-  const { phoneNumber, setPhoneNumber } = useCheckout();
+  const { contact, setContact } = useCheckout();
 
-  const [currentPhoneNumber, setCurrentPhoneNumber] = useState(phoneNumber);
+  const [currentPhoneNumber, setCurrentPhoneNumber] = useState(contact.phone);
 
   const handleSave = () => {
-    setPhoneNumber(currentPhoneNumber);
+    setContact({ phone: currentPhoneNumber });
     router.back();
   };
 
@@ -30,7 +30,7 @@ const EditPhoneNumberScreen = () => {
       <View style={styles.formContainer}>
         <TextInput
           style={styles.input}
-          placeholder="(702) 665-9987"
+          placeholder="+447842261519"
           value={currentPhoneNumber}
           onChangeText={setCurrentPhoneNumber}
           keyboardType="phone-pad"
