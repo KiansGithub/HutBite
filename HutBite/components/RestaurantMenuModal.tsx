@@ -106,7 +106,11 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
       setLoading(true);
       setError(null);
 
+      // test storeId 
       const storeId = STORE_CONFIG.TEST_STORE_ID;
+
+      // cheshunt storeId
+      // const storeId = 'TGFP-CHE-20171004';
 
       const profile = await getStoreProfile(storeId);
       if (!profile) throw new Error('Failed to fetch store profile');

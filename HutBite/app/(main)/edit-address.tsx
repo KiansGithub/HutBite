@@ -76,6 +76,12 @@ const EditAddressScreen = () => {
       }
     }
 
+    console.log('Setting address details in edit-address.tsx:', {
+      address: fullAddress,
+      city,
+      postalCode,
+    });
+
     setAddressDetails({
       address: fullAddress,
       city,

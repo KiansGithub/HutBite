@@ -31,6 +31,8 @@ export const DeliveryDetails = () => {
   const { addressDetails, buildingDetails, deliveryInstructions, contact, orderType } = useCheckout();
   const { postcode, storeInfo } = useStore();
 
+  console.log('Rendering DeliveryDetails with address:', addressDetails);
+
   // DELIVERY mode state
   const hasAddress =
     !!(addressDetails.address?.trim() || addressDetails.city?.trim() || addressDetails.postalCode?.trim());

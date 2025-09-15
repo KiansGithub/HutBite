@@ -22,8 +22,8 @@ export const API = {
    * Development configuration - use DEVDATA storee for testing
    */
   const DEV_CONFIG = {
-    STORE_ID: 'DEVDATA',
-    USE_DEV_STORE: true, 
+    STORE_ID: 'DEVDATA', // DEVDATA
+    USE_DEV_STORE: false, 
   };
 
   /**
@@ -63,8 +63,8 @@ export const API = {
    * Store configuration constants 
    */
   export const STORE_CONFIG = {
-    TEST_STORE_ID: 'DEVDATA',
-    GROUP_NAME: 'TGFPIZZAGERMANY',
+    TEST_STORE_ID: 'ElCurioso-20161122', // ElCurioso-20161122 // TGFP-CHE-20171004 // DEVDATA
+    GROUP_NAME: 'TGFPIZZA', // TGFPIZZAGERMANY // TGFPIZZA
   } as const;
 
   /**

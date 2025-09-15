@@ -114,7 +114,10 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
 
   // ---- Setters
   const setContact = (v: Partial<ContactDetails>) => _setContact(prev => ({ ...prev, ...v }));
-  const setAddressDetails = (v: Partial<AddressDetails>) => _setAddressDetails(prev => ({ ...prev, ...v }));
+  const setAddressDetails = (v: Partial<AddressDetails>) => {
+    console.log('Updating address details in CheckoutContext:', v);
+    _setAddressDetails(prev => ({ ...prev, ...v }));
+  };
   const setBuildingDetails = (v: Partial<BuildingDetails>) => _setBuildingDetails(prev => ({ ...prev, ...v }));
 
   // ---- Validation uses the same flags as UI
@@ -194,4 +197,3 @@ export const useCheckout = () => {
   if (!ctx) throw new Error('useCheckout must be used within a CheckoutProvider');
   return ctx;
 };
-

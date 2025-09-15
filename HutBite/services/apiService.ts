@@ -79,8 +79,11 @@ export interface IStoreStatusResponse {
 export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | null> => {
     try {
         const url = buildApiUrl(API.ENDPOINTS.GET_STORE_PROFILE, { StoreID: storeId });
+        console.log("Get store profile: ", url);
         const response = await fetch(url);
         const data = await response.json();
+
+        data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
 
         if (!data?.StoreURL) {
             throw new Error('Invalid store profile response');
@@ -132,6 +135,7 @@ export const getStoreStatus = async (storeUrl: string): Promise<boolean | null> 
 export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | null> => {
     try {
         const url = `${storeUrl}/api/StoreWebSetting`;
+        console.log("Get web settings: ", url);
         const response = await fetch(url);
         const data = await response.json();
         if (!data?.cardPaymentInfo?.publishableKey) {
@@ -165,6 +169,7 @@ export const getMenuCategories = async (
     try {
         const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
 
+        console.log("Get menu categories: ", url);
         const response = await fetch(url, {
             method: 'GET',
             headers: AUTH.HEADERS,
