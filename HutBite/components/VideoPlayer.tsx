@@ -257,7 +257,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           player={player}
           style={[styles.video, { width, height }]}
           contentFit="cover"
-          allowsFullscreen={false}
           allowsPictureInPicture={false}
           nativeControls={false}
           useExoShutter

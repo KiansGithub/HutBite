@@ -142,6 +142,8 @@ export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | n
             throw new Error('Invalid web settings response');
         }
 
+        console.log("stripe publishable key: ", data.cardPaymentInfo.publishableKey);
+
         return {
             cardPaymentInfo: {
                 publishableKey: data.cardPaymentInfo.publishableKey

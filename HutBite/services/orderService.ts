@@ -4,6 +4,9 @@ import { formatCurrency, generateOrderId, calculateExpectedTime } from '@/utils/
 import { OrderCustomerDetails, OrderPaymentDetails, OrderSubmissionResponse } from '@/types/order';
 import { validateOrderData, handleOrderSubmissionError } from '@/utils/errorHandling';
 
+const toE164 = (phone?: string) =>
+  phone ? phone.replace(/[^\d+]/g, '').replace(/^00/, '+') : undefined;
+
 /**
  * Formats basket items, customer details, and payment info into the required order JSON structure 
  * @param items - Basket items 
@@ -31,8 +34,9 @@ export const formatOrderData = (
     options: (item.options || []).map(opt => ({
       option_list_name: opt.option_list_name, // The backend expects this field name
       name: opt.label, // The backend also requires a 'name' field
+      ref: (opt as any).ref ?? undefined, 
       price: opt.price,
-      quantity: opt.quantity,
+      quantity: opt.quantity ?? 1,
     })),
   }));
 
@@ -44,14 +48,19 @@ export const formatOrderData = (
     },
   ];
 
+  const ref = generateOrderId();
+
   return {
     status: 'new',
+    channel: 'hutbite',
+    ref, 
+    private_ref: ref, 
     service_type: orderType === 'DELIVERY' ? 'delivery' : 'collection',
     customer: {
       first_name: customer.firstName,
       last_name: customer.lastName,
       email: customer.email,
-      phone: customer.phone,
+      phone: toE164(customer.phone),
       address_1: customer.address,
       city: customer.city,
       postal_code: customer.postalCode,
