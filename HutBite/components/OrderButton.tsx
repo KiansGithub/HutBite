@@ -23,9 +23,14 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
     onMenuPress,
 }) => {
     const handlePress = () => {
-        if (restaurant.receives_orders) {
+        if (!APP_CONFIG.ORDERING_ENABLED) {
+            // When ordering is disabled, always go to restaurant page
+            onOrderPress();
+        } else if (restaurant.receives_orders) {
+            // When ordering is enabled and restaurant accepts orders, open menu modal
             onMenuPress?.();
         } else {
+            // When ordering is enabled but restaurant doesn't accept orders, go to restaurant page
             onOrderPress();
         }
     };
