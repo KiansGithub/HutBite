@@ -259,7 +259,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           contentFit="cover"
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter={false}
+          useExoShutter
           surfaceType="textureView"
         />
   
@@ -277,13 +277,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         >
           <Ionicons name="heart" size={80} color="#ff3040" />
         </Animated.View>
-
-        {/* Thumbnail placeholder */}
-        {showThumb && (
-          <View style={[styles.thumbnail, { width, height }]}>
-            <Ionicons name="videocam" size={80} color="#fff" />
-          </View>
-        )}
       </View>
     </GestureDetector>
   );
@@ -307,11 +300,5 @@ const styles = StyleSheet.create({
   retryText: {
     color: '#999',
     fontSize: 14,
-  },
-  thumbnail: {
-    position: 'absolute',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
   },
 });

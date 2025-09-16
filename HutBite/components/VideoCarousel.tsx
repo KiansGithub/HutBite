@@ -101,16 +101,12 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
       getItemLayout={(_d, index) => ({ length: ITEM_WIDTH, offset: ITEM_WIDTH * index, index })}
       onMomentumScrollEnd={handleMomentumEnd}
       style={styles.flatList}
-      // Aggressive optimization for smooth scrolling
-      maxToRenderPerBatch={1}
-      windowSize={2}
+      // Slightly relaxed virtualization; avoid removeClippedSubViews here
+      maxToRenderPerBatch={3}
+      windowSize={3}
       initialNumToRender={1}
-      scrollEventThrottle={8}
+      scrollEventThrottle={16}
       showsHorizontalScrollIndicator={false}
-      removeClippedSubviews={false}
-      maintainVisibleContentPosition={{
-        minIndexForVisible: 0,
-      }}
     />
   );
 };
