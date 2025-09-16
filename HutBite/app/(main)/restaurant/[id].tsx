@@ -206,9 +206,9 @@ export default function RestaurantScreen() {
             <TouchableOpacity onPress={handleShare} style={styles.iconBtn}>
               <Ionicons name="share-outline" size={22} color={UI.text} />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.iconBtn, styles.addButton]}>
+            {/* <TouchableOpacity style={[styles.iconBtn, styles.addButton]}>
               <Ionicons name="add" size={22} color="#FFFFFF" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
         </View>
       </View>
@@ -254,7 +254,7 @@ export default function RestaurantScreen() {
 
         {/* Order from section */}
         <View style={styles.contentCard}>
-          <Text style={styles.sectionTitle}>Get delivery from</Text>
+          <Text style={styles.sectionTitle}>Links:</Text>
           {restaurant.order_links && Object.keys(restaurant.order_links).length > 0 ? (
             <View style={styles.linkGrid}>
               {Object.entries(restaurant.order_links).map(([platform, url], i) => (
