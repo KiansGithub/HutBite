@@ -29,13 +29,13 @@ interface VideoPlayerProps {
   onVideoFailed?: (itemId: string) => void;
 }
 
-const LOADING_TIMEOUT_MS = 12_000;
+const LOADING_TIMEOUT_MS = 5_000;
 const MAX_RETRY_ATTEMPTS = 2;
 
 /**
  * VideoPlayer with automatic cache‑busting retry logic.
  * – First attempt is cached.
- * – On any fatal error *or* loading stall (>12 s) the bad cache entry is cleared and the
+ * – On any fatal error *or* loading stall (>5 s) the bad cache entry is cleared and the
  *   same URL is replayed once uncached with a throw‑away query param so ExoPlayer
  *   is forced to hit the network.
  */
@@ -62,7 +62,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const playerRef = useRef<ReturnType<typeof useVideoPlayer> | null>(null);
   const startedOnceRef = useRef(false); // seek(0) only on very first warm play
 
-  // thumbnail fade
+  // thumbnail fade - show immediately to prevent white screen
   const [showThumb, setShowThumb] = useState(true);
   const opacity = useRef(new RNAnimated.Value(1)).current;
 
@@ -259,7 +259,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           contentFit="cover"
           allowsPictureInPicture={false}
           nativeControls={false}
-          useExoShutter
+          useExoShutter={false}
           surfaceType="textureView"
         />
   
@@ -277,6 +277,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
         >
           <Ionicons name="heart" size={80} color="#ff3040" />
         </Animated.View>
+
+        {/* Thumbnail placeholder */}
+        {showThumb && (
+          <View style={[styles.thumbnail, { width, height }]}>
+            <Ionicons name="videocam" size={80} color="#fff" />
+          </View>
+        )}
       </View>
     </GestureDetector>
   );
@@ -300,5 +307,11 @@ const styles = StyleSheet.create({
   retryText: {
     color: '#999',
     fontSize: 14,
+  },
+  thumbnail: {
+    position: 'absolute',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a1a',
   },
 });
