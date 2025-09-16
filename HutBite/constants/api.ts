@@ -63,8 +63,8 @@ export const API = {
    * Store configuration constants 
    */
   export const STORE_CONFIG = {
-    TEST_STORE_ID: 'ElCurioso-20161122', // ElCurioso-20161122 // TGFP-CHE-20171004 // DEVDATA
-    GROUP_NAME: 'TGFPIZZA', // TGFPIZZAGERMANY // TGFPIZZA
+    TEST_STORE_ID: 'DEVDATA', // ElCurioso-20161122 // TGFP-CHE-20171004 // DEVDATA
+    GROUP_NAME: 'TGFPIZZAGERMANY', // TGFPIZZAGERMANY // TGFPIZZA
   } as const;
 
   /**

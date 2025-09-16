@@ -83,7 +83,7 @@ export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | 
         const response = await fetch(url);
         const data = await response.json();
 
-        data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
+        // data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
 
         if (!data?.StoreURL) {
             throw new Error('Invalid store profile response');
