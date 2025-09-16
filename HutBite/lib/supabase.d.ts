@@ -23,6 +23,7 @@ export interface Database {
           google_rating: number | null
           google_review_count: number | null
           receives_orders: boolean
+          own_delivery: boolean
         }
         Insert: {
           id?: string
@@ -37,6 +38,7 @@ export interface Database {
           google_rating: number | null
           google_review_count: number | null
           receives_orders?: boolean
+          own_delivery?: boolean
         }
         Update: {
           id?: string
@@ -51,6 +53,7 @@ export interface Database {
           google_rating: number | null
           google_review_count: number | null
           receives_orders?: boolean
+          own_delivery?: boolean
         }
       }
       menu_items: {

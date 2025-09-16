@@ -3,6 +3,7 @@ import { StyleSheet, View, ActivityIndicator, Platform, Text } from 'react-nativ
 import { Button, useTheme } from 'react-native-paper';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useBasket } from '@/contexts/BasketContext';
+import { useStore } from '@/contexts/StoreContext';
 import { submitOrder, formatOrderData } from '@/services/orderService';
 import { createPaymentIntent } from '@/services/payment';
 import Constants from 'expo-constants';
@@ -25,7 +26,6 @@ interface StripePaymentProps {
     };
     stripeApiKey: string; 
     stripeStoreUrl: string; 
-    orderType: OrderType; 
     disabled?: boolean; 
 }
 
@@ -36,12 +36,12 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
     customerDetails,
     stripeApiKey, 
     stripeStoreUrl, 
-    orderType = 'DELIVERY' as OrderType,
     disabled = false, 
 }) => {
     const [orderSubmitting, setOrderSubmitting] = useState(false);
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const { total, items } = useBasket();
+    const { orderType } = useStore();
     const theme = useTheme();
 
     const [loading, setLoading] = useState(false);
@@ -178,7 +178,7 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
                     postalCode: customerDetails.postalCode, 
                 },
                 paymentDetails, 
-                orderType, 
+                orderType.toUpperCase() as OrderType, 
                 'store-1',
                 total
             );

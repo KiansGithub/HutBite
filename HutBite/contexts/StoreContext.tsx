@@ -40,6 +40,7 @@ interface StoreState {
     selectedCategoryId: string | null;
     minDeliveryValue: number; 
     stripeApiKey: string; 
+    own_delivery: boolean;
     menuSRV: string; 
     orderType: string; 
     categories: MenuCategory[];
@@ -75,6 +76,7 @@ const defaultState: StoreState = {
     selectedCategoryId: null,
     stripeApiKey: '',
     minDeliveryValue: 0,
+    own_delivery: false,
     menuSRV: '',
     orderType: '',
     groups: [],

@@ -5,16 +5,11 @@ import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { OrderType } from '@/types/store';
+import { useStore } from '@/contexts/StoreContext';
 
-export function OrderTypeSelector({
-  value,
-  onChange,
-  error,
-}: {
-  value: OrderType | null;                 // <-- allow null
-  onChange: (v: OrderType) => void;
-  error?: string;
-}) {
+export function OrderTypeSelector({ error }: { error?: string }) {
+  const { orderType, setOrderType } = useStore();
+
   const Opt = ({
     type,
     icon,
@@ -24,10 +19,10 @@ export function OrderTypeSelector({
     icon: React.ComponentProps<typeof Ionicons>['name'];
     label: string;
   }) => {
-    const selected = value === type;
+    const selected = orderType.toUpperCase() === type;
     return (
       <Pressable
-        onPress={() => onChange(type)}
+        onPress={() => setOrderType(type.toLowerCase() as OrderType)}
         android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
         style={[
           styles.opt,
@@ -49,7 +44,7 @@ export function OrderTypeSelector({
 
   return (
     <View style={styles.wrap}>
-      <View style={[styles.segment, value == null && styles.segmentUnselected]}>
+      <View style={[styles.segment, orderType == null && styles.segmentUnselected]}>
         <Opt type="DELIVERY" icon="bicycle-outline" label="Delivery" />
         <Opt type="COLLECTION" icon="storefront-outline" label="Collection" />
       </View>
