@@ -7,7 +7,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
-
+import { OrderTypeSelector } from '@/components/checkout/OrderTypeSelector';
 import { useBasket } from '@/contexts/BasketContext';
 import { useStore } from '@/contexts/StoreContext';
 import { CheckoutProvider, useCheckout } from '@/contexts/CheckoutContext';
@@ -117,6 +117,7 @@ function CheckoutInner() {
           contentContainerStyle={[styles.contentContainer, { paddingBottom: insets.bottom + 200 }]}
           showsVerticalScrollIndicator={false}
         >
+          <OrderTypeSelector />
           <CartSummary />
           <DeliveryDetails />
           {/* <PromoCodeInput /> */}
