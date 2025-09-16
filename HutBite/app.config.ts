@@ -14,7 +14,7 @@ const config: ExpoConfig = {
   splash: {
     image: "./assets/images/logo.png",
     resizeMode: "contain",
-    backgroundColor: "#F9FAFB"
+    backgroundColor: "#FFFFFF"
   },
   ios: {
     bundleIdentifier: "com.hutbite.hutbite",
