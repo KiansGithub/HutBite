@@ -1,3 +1,20 @@
+/**
+ * @fileoverview API Service Layer for HutBite Food Delivery App
+ * 
+ * This service handles all external API communications including:
+ * - Store profile and configuration retrieval
+ * - Menu data fetching (categories, groups, products)
+ * - Store status and availability checks
+ * - Stripe payment configuration
+ * - Offer and deal management
+ * 
+ * All functions handle errors gracefully and return null/empty arrays on failure
+ * to prevent app crashes and maintain user experience.
+ * 
+ * @author HutBite Team
+ * @version 1.0.0
+ */
+
 import { parseString } from 'xml2js';
 import { API, AUTH, buildApiUrl } from '@/constants/api';
 import type {
@@ -16,6 +33,8 @@ import type { IToppingGroup } from '@/types/toppings';
 
 /**
  * Store status response from UnitStatus API
+ * @interface IStoreStatusResponse
+ * @property {boolean} isOpen - Whether the store is currently open for orders
  */
 export interface IStoreStatusResponse {
     isOpen: boolean;
@@ -72,9 +91,24 @@ export interface IStoreStatusResponse {
 // };
 
 /**
- * Fetches store profile information
- * @param storeId - Store identifier
- * @returns Promise with store profile data
+ * Fetches comprehensive store profile information including contact details and configuration
+ * 
+ * @async
+ * @function getStoreProfile
+ * @param {string} storeId - Unique identifier for the store (e.g., 'ElCurioso-20161122')
+ * @returns {Promise<IStoreProfile | null>} Store profile data or null if fetch fails
+ * 
+ * @example
+ * ```typescript
+ * const profile = await getStoreProfile('ElCurioso-20161122');
+ * if (profile) {
+ *   console.log(`Store: ${profile.StoreName} at ${profile.Address}`);
+ *   console.log(`Phone: ${profile.Phone}`);
+ * }
+ * ```
+ * 
+ * @throws {Error} When store profile response is invalid or missing StoreURL
+ * @since 1.0.0
  */
 export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | null> => {
     try {
@@ -83,6 +117,7 @@ export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | 
         const response = await fetch(url);
         const data = await response.json();
 
+        // TODO: Remove hardcoded StoreURL for production
         data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
 
         if (!data?.StoreURL) {
@@ -102,9 +137,25 @@ export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | 
 };
 
 /**
- * Fetches store opening/closing status
- * @param storeUrl - Base URL for the store
- * @returns Promise with store status information (true if closed, false if open)
+ * Checks if a store is currently open or closed for orders
+ * 
+ * @async
+ * @function getStoreStatus
+ * @param {string} storeUrl - Base URL for the store's API (e.g., 'https://elcurioso.tgfpizza.com')
+ * @returns {Promise<boolean | null>} True if store is CLOSED, false if OPEN, null on error
+ * 
+ * @example
+ * ```typescript
+ * const isClosed = await getStoreStatus('https://elcurioso.tgfpizza.com');
+ * if (isClosed === true) {
+ *   showClosedMessage();
+ * } else if (isClosed === false) {
+ *   allowOrdering();
+ * }
+ * ```
+ * 
+ * @note The API returns 'false' when store is open, 'true' when closed
+ * @since 1.0.0
  */
 export const getStoreStatus = async (storeUrl: string): Promise<boolean | null> => {
     try {
@@ -120,6 +171,7 @@ export const getStoreStatus = async (storeUrl: string): Promise<boolean | null> 
         }
 
         const statusText = await response.text();
+        // API returns 'false' for open, 'true' for closed
         return statusText.trim().toLowerCase() === 'false';
     } catch (error) {
         console.error('Error fetching store status:', error);
@@ -128,9 +180,25 @@ export const getStoreStatus = async (storeUrl: string): Promise<boolean | null> 
 };
 
 /**
- * Fetches web setting including Stripe configuration
- * @param storeUrl - Base URL for the store
- * @returns Promise with web settings data
+ * Retrieves store web settings including Stripe payment configuration and image URLs
+ * 
+ * @async
+ * @function getWebSettings
+ * @param {string} storeUrl - Base URL for the store's API
+ * @returns {Promise<IWebSettings | null>} Web settings including Stripe config or null on error
+ * 
+ * @example
+ * ```typescript
+ * const settings = await getWebSettings('https://elcurioso.tgfpizza.com');
+ * if (settings) {
+ *   initializeStripe(settings.cardPaymentInfo.publishableKey);
+ *   setImageBaseUrl(settings.urlForImages);
+ *   setMinDeliveryValue(settings.minDlvValue);
+ * }
+ * ```
+ * 
+ * @throws {Error} When web settings response is invalid or missing publishableKey
+ * @since 1.0.0
  */
 export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | null> => {
     try {
@@ -159,16 +227,32 @@ export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | n
 };
 
 /**
- * Fetches menu categories from the menu service
- * @param stripeStoreUrl - Base URL for the store
- * @param storeId - Store identifier
- * @returns Promise with array of menu categories
+ * Fetches all menu categories for a specific store
+ * 
+ * @async
+ * @function getMenuCategories
+ * @param {string} stripeStoreUrl - Store-specific API base URL
+ * @param {string} storeId - Unique store identifier
+ * @returns {Promise<MenuCategory[]>} Array of menu categories, empty array on error
+ * 
+ * @example
+ * ```typescript
+ * const categories = await getMenuCategories('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122');
+ * categories.forEach(category => {
+ *   console.log(`Category: ${category.name} (ID: ${category.id})`);
+ * });
+ * ```
+ * 
+ * @deprecated Consider using API.ENDPOINTS.GROUPS_IN_CATEGORY for consistency
+ * @todo Update to use centralized API constants instead of hardcoded endpoint
+ * @since 1.0.0
  */
 export const getMenuCategories = async (
     stripeStoreUrl: string,
     storeId: string
 ): Promise<MenuCategory[]> => {
     try {
+        // TODO: Update to use API.ENDPOINTS.GROUPS_IN_CATEGORY for consistency
         const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
 
         console.log("Get menu categories: ", url);
@@ -191,11 +275,28 @@ export const getMenuCategories = async (
 }
 
 /**
- * Fetches groups within a category from the menu service
- * @param stripeStoreUrl - The store's specific API URL
- * @param storeId - ID of the store
- * @param categoryId - ID of the category to fetch groups for
- * @returns Promise with array of menu groups
+ * Fetches all product groups within a specific menu category
+ * 
+ * @async
+ * @function getGroupsByCategory
+ * @param {string} stripeStoreUrl - Store-specific API base URL
+ * @param {string} storeId - Unique store identifier
+ * @param {string} categoryId - ID of the category to fetch groups for
+ * @returns {Promise<MenuGroup[]>} Array of menu groups, empty array on error
+ * 
+ * @example
+ * ```typescript
+ * const groups = await getGroupsByCategory(
+ *   'https://elcurioso.tgfpizza.com', 
+ *   'ElCurioso-20161122', 
+ *   'pizza-category-id'
+ * );
+ * groups.forEach(group => {
+ *   console.log(`Group: ${group.name} - ${group.products.length} products`);
+ * });
+ * ```
+ * 
+ * @since 1.0.0
  */
 export const getGroupsByCategory = async (
     stripeStoreUrl: string,
@@ -224,7 +325,28 @@ export const getGroupsByCategory = async (
 };
 
 /**
- * Fetches all toppings
+ * Fetches all available toppings for menu customization
+ * 
+ * @async
+ * @function getToppings
+ * @param {string} stripeStoreUrl - Store-specific API base URL
+ * @param {string} storeId - Unique store identifier
+ * @returns {Promise<IToppingGroup[]>} Array of topping groups, empty array on error
+ * 
+ * @example
+ * ```typescript
+ * const toppings = await getToppings('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122');
+ * toppings.forEach(group => {
+ *   console.log(`Topping Group: ${group.name}`);
+ *   group.toppings.forEach(topping => {
+ *     console.log(`  - ${topping.name}: $${topping.price}`);
+ *   });
+ * });
+ * ```
+ * 
+ * @note Uses hardcoded CatID=9 for topping category
+ * @todo Make topping category ID configurable
+ * @since 1.0.0
  */
 export const getToppings = async(
     stripeStoreUrl: string,
@@ -252,10 +374,24 @@ export const getToppings = async(
 }
 
 /**
- * Fetches offers from the GetOffers API endpoint
- * @param stripeStoreUrl - Base URL for the store
- * @param storeId - Store identifier
- * @returns Promise with array of offer products
+ * Fetches current offers and deals from the store
+ * 
+ * @async
+ * @function getOffers
+ * @param {string} stripeStoreUrl - Store-specific API base URL
+ * @param {string} storeId - Unique store identifier
+ * @returns {Promise<IBaseProduct[]>} Array of offer products, empty array on error
+ * 
+ * @example
+ * ```typescript
+ * const offers = await getOffers('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122');
+ * offers.forEach(offer => {
+ *   console.log(`Deal: ${offer.name} - ${offer.discountPercent}% off`);
+ * });
+ * ```
+ * 
+ * @note Parses winPizzaObject JSON string from API response
+ * @since 1.0.0
  */
 export const getOffers = async (stripeStoreUrl: string, storeId: string): Promise<IBaseProduct[]> => {
     try {
@@ -276,9 +412,11 @@ export const getOffers = async (stripeStoreUrl: string, storeId: string): Promis
             return [];
         }
 
+        // Parse the JSON string within the response
         const offersData = JSON.parse(data.winPizzaObject);
         let dealProducts: IBaseProduct[] =[];
 
+        // Extract products from nested group structure
         if (offersData.DeGroup && Array.isArray(offersData.DeGroup)) {
             offersData.DeGroup.forEach((group: any) => {
                 if (group.DeProducts && Array.isArray(group.DeProducts)) {

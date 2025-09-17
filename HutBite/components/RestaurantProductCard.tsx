@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, Animated } from 'react-native';
 import { Card } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/components/Themed';
@@ -24,10 +24,25 @@ export function RestaurantProductCard({
 }: RestaurantProductCardProps) {
   
   const { urlForImages } = useStore();
+  const [scaleAnim] = useState(new Animated.Value(1));
   
   const imageUrl = product.ImgUrl ? buildImageUrl(urlForImages, product.ImgUrl) : null;
   
   const handleAddPress = () => {
+    // Add a subtle bounce animation for feedback
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    
     onPress();
   };
 
@@ -98,12 +113,20 @@ export function RestaurantProductCard({
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity 
-            style={[styles.addButton, { backgroundColor: colors.primary }]}
-            onPress={handleAddPress}
-          >
-            <Ionicons name="add" size={24} color="#fff" />
-          </TouchableOpacity>
+          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <TouchableOpacity 
+              style={[styles.addButton, { backgroundColor: colors.primary }]}
+              onPress={handleAddPress}
+            >
+              <Ionicons name="add" size={24} color="#fff" />
+              {/* Show a small badge if there are items in basket for this product */}
+              {quantity > 0 && (
+                <View style={[styles.quantityBadge, { backgroundColor: colors.error || '#FF6B6B' }]}>
+                  <Text style={styles.quantityBadgeText}>{quantity}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </Animated.View>
         )}
       </View>
     </Card>
@@ -213,5 +236,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  quantityBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  quantityBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#fff',
   },
 });

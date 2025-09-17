@@ -23,8 +23,8 @@ export function RestaurantProductList({
 }: RestaurantProductListProps) {
 
   const renderItem = ({ item }: { item: IBaseProduct }) => {
-    const basketItem = basketItems.find(bi => bi.productId === item.ID);
-    const quantity = basketItem ? basketItem.quantity : 0;
+    const basketItem = basketItems.find(bi => bi.id === item.ID);
+    const quantity = basketItem ? parseInt(basketItem.quantity) : 0;
     const imageUrl = buildImageUrl(item.ImgUrl);
     
     return (
