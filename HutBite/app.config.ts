@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: "HutBite",
   slug: "HutBite",
   owner: "kiandev",
-  version: "1.0.1",
+  version: "1.0.2",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "hutbite",
@@ -36,7 +36,7 @@ const config: ExpoConfig = {
   },
   android: {
     package: "com.hutbite.hutbite",
-    newArchEnabled: false,
+    newArchEnabled: true,
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
       backgroundColor: "#F9FAFB"
