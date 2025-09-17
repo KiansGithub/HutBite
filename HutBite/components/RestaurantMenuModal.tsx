@@ -245,13 +245,15 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
   const productCategories = categories.filter(cat => cat.CatType === 1);
 
   const handleShare = async () => {
+    const restaurantName = storeProfile?.StoreName || restaurant?.name || 'Restaurant';
+    const message = `Check out ${restaurantName}!`;
     try {
       const result = await Share.share({
-        message: `Check out ${storeProfile?.StoreName}!`,
+        message: message,
       });
       if (result.action === Share.sharedAction) {
         if (result.activityType) {
-          console.log('Shared with activity type of result.activityType');
+          console.log('Shared with activity type of ', result.activityType);
         } else {
           console.log('Shared');
         }
