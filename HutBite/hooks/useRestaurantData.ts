@@ -60,7 +60,28 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                 // Create combined feed content 
                 const combinedFeedContent: RestaurantFeedData = {};
 
-                // Add menu items to feed content 
+                // Add UGC videos to feed content FIRST (so they appear at start of carousel)
+                ugcVideos?.forEach(ugcVideo => {
+                    const feedItem: FeedContentItem = {
+                        id: ugcVideo.id, 
+                        type: 'ugc_video',
+                        restaurant_id: ugcVideo.restaurant_id, 
+                        title: ugcVideo.title || 'User Video',
+                        description: ugcVideo.description, 
+                        video_url: ugcVideo.video_url, 
+                        thumb_url: ugcVideo.thumb_url,
+                        created_at: ugcVideo.created_at,
+                        user_id: ugcVideo.user_id,
+                        suggested_restaurant_name: ugcVideo.suggested_restaurant_name
+                    }; 
+
+                    if (!combinedFeedContent[ugcVideo.restaurant_id]) {
+                        combinedFeedContent[ugcVideo.restaurant_id] = [];
+                    }
+                    combinedFeedContent[ugcVideo.restaurant_id].push(feedItem);
+                });
+
+                // Add menu items to feed content SECOND (so they appear after UGC videos)
                 ms?.forEach(menuItem => {
                     const feedItem: FeedContentItem = {
                         id: menuItem.id, 
@@ -81,27 +102,6 @@ export const useRestaurantData = (searchResults?: Restaurant[]) => {
                         combinedFeedContent[menuItem.restaurant_id] = [];
                     }
                     combinedFeedContent[menuItem.restaurant_id].push(feedItem);
-                });
-
-                // Add UGC videos to feed content 
-                ugcVideos?.forEach(ugcVideo => {
-                    const feedItem: FeedContentItem = {
-                        id: ugcVideo.id, 
-                        type: 'ugc_video',
-                        restaurant_id: ugcVideo.restaurant_id, 
-                        title: ugcVideo.title || 'User Video',
-                        description: ugcVideo.description, 
-                        video_url: ugcVideo.video_url, 
-                        thumb_url: ugcVideo.thumb_url,
-                        created_at: ugcVideo.created_at,
-                        user_id: ugcVideo.user_id,
-                        suggested_restaurant_name: ugcVideo.suggested_restaurant_name
-                    }; 
-
-                    if (!combinedFeedContent[ugcVideo.restaurant_id]) {
-                        combinedFeedContent[ugcVideo.restaurant_id] = [];
-                    }
-                    combinedFeedContent[ugcVideo.restaurant_id].push(feedItem);
                 });
 
                 // Calculate distances for all restaurants if location is available 

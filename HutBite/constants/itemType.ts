@@ -1,0 +1,33 @@
+export enum ItemType {
+    PRODUCT = 1,
+    OFFERS = 2,
+    OFFER = 3,
+    OPTION = 4,
+    MIXEDOPTION = 5,
+    TOPPING = 6,
+    PRICE = 11,
+    MODIFIER = 12,
+    BAR = 13,
+    GIFTVOUCHER = 14,
+    SERVICE = 15,
+    PAYOUT = 16,
+    SALE = 17,
+    DLVCHARGE = 18,
+}
+
+export const ItemTypeName: Record<number, string> = {
+    [ItemType.PRODUCT]: 'PRODUCT',
+    [ItemType.OFFERS]: 'OFFERS',
+    [ItemType.OFFER]: 'OFFER',
+    [ItemType.OPTION]: 'OPTION',
+    [ItemType.MIXEDOPTION]: 'MIXEDOPTION',
+    [ItemType.TOPPING]: 'TOPPING',
+    [ItemType.PRICE]: 'PRICE',
+    [ItemType.MODIFIER]: 'MODIFIER',
+    [ItemType.BAR]: 'BAR',
+    [ItemType.GIFTVOUCHER]: 'GIFTVOUCHER',
+    [ItemType.SERVICE]: 'SERVICE',
+    [ItemType.PAYOUT]: 'PAYOUT',
+    [ItemType.SALE]: 'SALE',
+    [ItemType.DLVCHARGE]: 'DLVCHARGE',
+};

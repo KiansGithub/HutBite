@@ -102,9 +102,10 @@ const VideoCarouselComponent: React.FC<VideoCarouselProps> = ({
       onMomentumScrollEnd={handleMomentumEnd}
       style={styles.flatList}
       // Slightly relaxed virtualization; avoid removeClippedSubViews here
-      maxToRenderPerBatch={3}
-      windowSize={3}
+      maxToRenderPerBatch={2}
+      windowSize={2}
       initialNumToRender={1}
+      updateCellsBatchingPeriod={50}
       scrollEventThrottle={16}
       showsHorizontalScrollIndicator={false}
     />

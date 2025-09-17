@@ -269,11 +269,10 @@ const handleOrderPress = useCallback((
           snapToOffsets={restaurants.map((_, index) => index * H)}
           disableIntervalMomentum={true}
           scrollEventThrottle={16}
-          maxToRenderPerBatch={3}
-          windowSize={3}
+          maxToRenderPerBatch={2}
+          windowSize={2}
           initialNumToRender={1}
-          updateCellsBatchingPeriod={100}
-          removeClippedSubviews={true}
+          updateCellsBatchingPeriod={50}
         />
       )}
 

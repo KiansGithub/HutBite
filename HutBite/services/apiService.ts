@@ -83,7 +83,7 @@ export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | 
         const response = await fetch(url);
         const data = await response.json();
 
-        // data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
+        data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
 
         if (!data?.StoreURL) {
             throw new Error('Invalid store profile response');
@@ -169,7 +169,7 @@ export const getMenuCategories = async (
     storeId: string
 ): Promise<MenuCategory[]> => {
     try {
-        const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
+        const url = `${stripeStoreUrl}/api/${API.ENDPOINTS.GROUPS_IN_CATEGORY}?StoreID=${storeId}&CatType=CATEGORY`;
 
         console.log("Get menu categories: ", url);
         const response = await fetch(url, {
