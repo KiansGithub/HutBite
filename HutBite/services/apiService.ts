@@ -118,7 +118,7 @@ export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | 
         const data = await response.json();
 
         // TODO: Remove hardcoded StoreURL for production
-        data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
+        // data.StoreURL = 'https://elcurioso.tgfpizza.com'; // for dev purposes 
 
         if (!data?.StoreURL) {
             throw new Error('Invalid store profile response');

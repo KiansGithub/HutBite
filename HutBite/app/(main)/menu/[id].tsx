@@ -17,6 +17,7 @@ import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { supabase } from '@/lib/supabase';
 import { useStore } from '@/contexts/StoreContext';
+import { STORE_CONFIG } from '@/constants/api';
 
 const { width: SCREEN_W } = Dimensions.get('screen');
 
@@ -39,7 +40,7 @@ type Restaurant = {
 };
 
 export default function MenuScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, storeId } = useLocalSearchParams<{ id: string; storeId?: string }>();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const insets = useSafeAreaInsets();
@@ -62,7 +63,8 @@ export default function MenuScreen() {
 
         // Fetch store settings from your backend
         if (data?.id) {
-          await selectStore(data.id);
+          const effectiveStoreId = storeId || data.store_id || STORE_CONFIG.TEST_STORE_ID;
+          await selectStore(effectiveStoreId);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

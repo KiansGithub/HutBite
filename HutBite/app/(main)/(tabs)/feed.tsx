@@ -59,9 +59,11 @@ export default function FeedScreen() {
   const { addItem } = useBasket();
 
   const openMenuScreen = useCallback((restaurantId: string, itemId?: string) => {
+    const restaurant = allRestaurants.find(r => r.id === restaurantId);
+    const storeId = restaurant?.store_id || STORE_CONFIG.TEST_STORE_ID;
     router.push({
       pathname: '/menu',   // ← route to the new screen
-      params: { id: String(restaurantId), itemId },
+      params: { id: String(restaurantId), storeId, itemId },
     });
   }, []);
 
