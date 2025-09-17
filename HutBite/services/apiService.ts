@@ -169,7 +169,7 @@ export const getMenuCategories = async (
     storeId: string
 ): Promise<MenuCategory[]> => {
     try {
-        const url = `${stripeStoreUrl}/api/${API.ENDPOINTS.GROUPS_IN_CATEGORY}?StoreID=${storeId}&CatType=CATEGORY`;
+        const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
 
         console.log("Get menu categories: ", url);
         const response = await fetch(url, {
