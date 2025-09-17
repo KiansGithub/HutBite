@@ -357,7 +357,7 @@ export function useBasket() {
         setError,
         total, 
         itemCount,
-        currentStoreId: storeInfo?.nearestStoreId,
+        currentStoreId: nearestStoreId,
         meetsMinDeliveryValue
     };
 }

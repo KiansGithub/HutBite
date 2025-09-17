@@ -38,6 +38,15 @@ export const formatOrderData = (
     const quantity = toQty(item.quantity);
     const subtotalNum = unit * quantity;
 
+    // Transform options from IBasketOption format to TGF format
+    const transformedOptions = (item.options || []).map((option) => ({
+      option_list_name: option.option_list_name || "Options",
+      name: option.label, // TGF expects 'name' instead of 'label'
+      ref: option.ref || null,
+      price: option.price ? money(toNumber(option.price)) : "0.00 EUR",
+      quantity: option.quantity || 1
+    }));
+
     return {
       // identifiers
       id: item.id ?? item.pro_id ?? item.sku_ref ?? item.product_name,
@@ -53,8 +62,8 @@ export const formatOrderData = (
       subtotal_num: subtotalNum,        // numeric
       subtotal: money(subtotalNum),     // "24.68 EUR"
 
-      // extras
-      options: item.options || [],
+      // extras - use transformed options
+      options: transformedOptions,
       cat_id: (item as any).cat_id,
       grp_id: (item as any).grp_id,
 
@@ -89,12 +98,6 @@ export const formatOrderData = (
     order_id: orderId,
     resource_id: orderId,
     location_id: storeId,
-
-    // 🔑 Mirror items at the top level so your validator finds them
-    items: lines,
-    orderLines: lines,
-    lines,
-
     // ─────────────────────────────────────────────────────────
     // new_state field (kept intact, but uses normalized lines)
     // ─────────────────────────────────────────────────────────
@@ -107,8 +110,8 @@ export const formatOrderData = (
       service_type: orderType === 'DELIVERY' ? 'delivery' : 'collection',
       service_type_ref: orderType === 'DELIVERY' ? '1001' : '1002',
       created_at: createdAt,
-      created_by: 'Developer Tools',
-      channel: 'TGFONLINE',
+      created_by: 'Hutbite App',
+      channel: 'HUTBITE',
       expected_time: expectedTime,
       confirmed_time: null,
       customer_notes: null,
@@ -173,7 +176,7 @@ export const formatOrderData = (
         postal_code: customer.postalCode,
         city: customer.city,
         state: null,
-        country: 'DE',
+        country: 'GB',
         latitude: null,
         longitude: null,
         delivery_notes: null,

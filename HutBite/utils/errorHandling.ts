@@ -197,7 +197,8 @@ export const handlePaymentError = (
 export const validateOrderData = (orderData: any): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    if (!orderData.items || orderData.items.length === 0) {
+    // Check for items in the correct location - they are nested in new_state
+    if (!orderData.new_state?.items || orderData.new_state.items.length === 0) {
         errors.push('Warenkorb ist leer');
     }
 
