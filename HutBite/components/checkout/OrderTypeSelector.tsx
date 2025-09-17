@@ -5,10 +5,10 @@ import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import Colors from '@/constants/Colors';
 import { OrderType } from '@/types/store';
-import { useStore } from '@/contexts/StoreContext';
+import { useCheckout } from '@/contexts/CheckoutContext';
 
 export function OrderTypeSelector({ error }: { error?: string }) {
-  const { orderType, setOrderType } = useStore();
+  const { orderType, setOrderType } = useCheckout();
 
   const Opt = ({
     type,
