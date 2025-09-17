@@ -30,7 +30,7 @@ function calculateProductSubtotal(
     const optionsTotal = options.reduce((sum, option) => {
         return sum + (parsePriceString(option.price) * option.quantity);
     }, 0);
-    return `${(basePrice + optionsTotal).toFixed(2)} ${currency}`;
+    return `£${(basePrice + optionsTotal).toFixed(2)}`;
 }
 
 // Transform IBaseProduct to BasketItem format 
@@ -313,7 +313,7 @@ export function useBasket() {
 
     // Calculate total basket value 
     const total = useMemo(() => {
-        return state.items
+        return '£' + state.items
           .reduce((sum, item) => {
             const itemTotal = parseFloat(item.subtotal.replace(/[^0-9.-]+/g, ''));
             return sum + itemTotal;
@@ -328,7 +328,7 @@ export function useBasket() {
 
     // Check if basket meets minimum delivery value 
     const meetsMinDeliveryValue = useCallback((minValue: number): { valid: boolean; message?: string} => {
-        const totalValue = parseFloat(total);
+        const totalValue = parseFloat(total.replace(/[^0-9.-]+/g, ''));
 
         if (totalValue < minValue) {
             const difference = (minValue - totalValue).toFixed(2);

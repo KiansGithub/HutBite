@@ -223,12 +223,12 @@ export default function RestaurantMenuView({
           {/* Delivery Info */}
           <View style={[styles.deliveryInfo, { backgroundColor: colors.tabIconDefault + '10' }]}>
             <View style={styles.deliveryItem}>
-              <Text style={[styles.deliveryValue, { color: colors.text }]}>$0.00</Text>
+              <Text style={[styles.deliveryValue, { color: colors.text }]}>£0.00</Text>
               <Text style={[styles.deliveryLabel, { color: colors.text }]}>Delivery Fee</Text>
             </View>
             <View style={styles.deliveryItem}>
               <Text style={[styles.deliveryValue, { color: colors.text }]}>
-                ${webSettings?.minDlvValue ? webSettings.minDlvValue.toFixed(2) : '10.00'}
+                £{webSettings?.minDlvValue ? webSettings.minDlvValue.toFixed(2) : '10.00'}
               </Text>
               <Text style={[styles.deliveryLabel, { color: colors.text }]}>Minimum Order</Text>
             </View>

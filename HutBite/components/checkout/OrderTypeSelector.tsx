@@ -22,7 +22,7 @@ export function OrderTypeSelector({ error }: { error?: string }) {
     const selected = orderType.toUpperCase() === type;
     return (
       <Pressable
-        onPress={() => setOrderType(type.toLowerCase() as OrderType)}
+        onPress={() => setOrderType(type as OrderType)}
         android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
         style={[
           styles.opt,

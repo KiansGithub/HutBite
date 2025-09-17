@@ -65,12 +65,12 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   const [buildingDetails, _setBuildingDetails] = useState<BuildingDetails>({ buildingType: '', apt: '', buildingName: '', entryCode: '' });
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [phoneValid, setPhoneValid] = useState(true);
-  const [orderType, setOrderType] = useState<OrderType>('delivery');
+  const [orderType, setOrderType] = useState<OrderType>('DELIVERY');
   const [tipPercent, setTipPercent] = useState<number>(0);
   const [promoCode, setPromoCode] = useState<string>('');
 
   useEffect(() => {
-    if (storeOrderType && storeOrderType !== orderType) setOrderType(storeOrderType);
+    if (storeOrderType && storeOrderType !== orderType) setOrderType(storeOrderType as OrderType);
   }, [storeOrderType]);
 
   // ---- Derived completeness (single source of truth)

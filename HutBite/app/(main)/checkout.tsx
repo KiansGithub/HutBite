@@ -173,7 +173,7 @@ function CheckoutInner() {
 
 export default function CheckoutScreen() {
   const { stripeApiKey } = useStore();
-  // Wrap with CheckoutProvider (and StripeProvider if key exists)
+  // Wrap with StripeProvider if key exists
   if (stripeApiKey) {
     return (
       <StripeProvider publishableKey={stripeApiKey}>

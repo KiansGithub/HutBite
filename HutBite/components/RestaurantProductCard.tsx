@@ -88,7 +88,7 @@ export function RestaurantProductCard({
                 style={[styles.price, { color: colors.text }]}
                 numberOfLines={1}
               >
-                ${getProductPrice(product)?.toFixed(2) || '0.00'}
+                £{getProductPrice(product)?.toFixed(2) || '0.00'}
               </Text>
         </View>
       </TouchableOpacity>

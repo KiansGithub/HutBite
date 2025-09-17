@@ -5,6 +5,7 @@ import {
   Modal,
   TouchableOpacity,
   ActivityIndicator,
+  Share,
 } from 'react-native';
 import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
@@ -243,6 +244,25 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
 
   const productCategories = categories.filter(cat => cat.CatType === 1);
 
+  const handleShare = async () => {
+    try {
+      const result = await Share.share({
+        message: `Check out ${storeProfile?.StoreName}!`,
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          console.log('Shared with activity type of result.activityType');
+        } else {
+          console.log('Shared');
+        }
+      } else if (result.action === Share.dismissedAction) {
+        console.log('Dismissed');
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  };
+
   return (
     <Modal
       visible={visible}
@@ -290,10 +310,17 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.headerIcon}>
+          <TouchableOpacity 
+            style={styles.headerIcon}
+            onPress={() => {
+              if (restaurant?.id) {
+                router.push(`/restaurant/${restaurant.id}`);
+              }
+            }}
+          >
             <Ionicons name="information-circle-outline" size={22} color="#111" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.headerIcon}>
+          <TouchableOpacity style={styles.headerIcon} onPress={handleShare}>
             <Ionicons name="share-outline" size={22} color="#111" />
           </TouchableOpacity>
         </View>
@@ -306,12 +333,12 @@ const topPad = (insets.top || 0) + 6; // 6 for a little breathing room
             {/* Delivery Info */}
             <View style={[styles.deliveryInfo, { backgroundColor: colors.tabIconDefault + '10' }]}>
               <View style={styles.deliveryItem}>
-                <Text style={[styles.deliveryValue, { color: colors.text }]}>$0.00</Text>
+                <Text style={[styles.deliveryValue, { color: colors.text }]}>£0.00</Text>
                 <Text style={[styles.deliveryLabel, { color: colors.text }]}>Delivery Fee</Text>
               </View>
               <View style={styles.deliveryItem}>
                 <Text style={[styles.deliveryValue, { color: colors.text }]}>
-                  ${webSettings?.minDlvValue ? webSettings.minDlvValue.toFixed(2) : '10.00'}
+                  £{webSettings?.minDlvValue ? webSettings.minDlvValue.toFixed(2) : '10.00'}
                 </Text>
                 <Text style={[styles.deliveryLabel, { color: colors.text }]}>Minimum Order</Text>
               </View>

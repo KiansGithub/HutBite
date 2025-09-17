@@ -103,8 +103,8 @@ export function BasketProvider({ children }: BasketProviderProps) {
     const getFormattedBasketData = () => {
         return items.map((item: any) => ({
             ...item, 
-            price: item.price.startsWith('€') ? item.price : `€${item.price}`,
-            subtotal: item.subtotal.startsWith('€') ? item.subtotal : `€${item.subtotal}`
+            price: item.price.startsWith('£') ? item.price : `£${item.price}`,
+            subtotal: item.subtotal.startsWith('£') ? item.subtotal : `£${item.subtotal}`
         }));
     };
 

@@ -377,7 +377,7 @@ export function calculateItemSubtotal(item: IBasketItem, newQuantity?: number): 
     const total = (basePrice + optionsTotal) * quantity; 
 
 
-    return `${total.toFixed(2)}`;
+    return `£${total.toFixed(2)}`;
 }
 
 
