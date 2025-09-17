@@ -181,7 +181,7 @@ function calculateItemSubtotal(item: IBasketItem, newQuantity: number = 1): stri
 
 export function useBasket() {
     const [state, dispatch] = useReducer(basketReducer, initialState);
-    const { urlForImages, currency, storeInfo } = useStore();
+    const { urlForImages, currency, storeInfo, nearestStoreId } = useStore();
 
     const addItem = useCallback((
         itemOrProduct: IBasketItem | IBaseProduct, 
@@ -357,6 +357,7 @@ export function useBasket() {
         setError,
         total, 
         itemCount,
+        currentStoreId: storeInfo?.nearestStoreId,
         meetsMinDeliveryValue
     };
 }

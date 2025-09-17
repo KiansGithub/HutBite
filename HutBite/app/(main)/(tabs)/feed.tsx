@@ -65,7 +65,7 @@ export default function FeedScreen() {
       pathname: '/menu',   // ← route to the new screen
       params: { id: String(restaurantId), storeId, itemId },
     });
-  }, []);
+  }, [allRestaurants]);
 
   // Track previous search state to detect when search is cleared
   const prevIsSearching = useRef(isSearching);

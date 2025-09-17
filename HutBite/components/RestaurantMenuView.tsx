@@ -33,8 +33,10 @@ const colors = Colors.light;
 
 export default function RestaurantMenuView({
   initialMenuItem,
+  storeId,
 }: {
   initialMenuItem?: FeedContentItem;
+  storeId?: string;
 }) {
   const insets = useSafeAreaInsets();
   const topPad = (insets.top || 0) + 6;
@@ -63,9 +65,12 @@ export default function RestaurantMenuView({
       setLoading(true);
       setError(null);
 
-      const storeId = STORE_CONFIG.TEST_STORE_ID;
+      const effectiveStoreId = storeId || STORE_CONFIG.TEST_STORE_ID;
 
-      const profile = await getStoreProfile(storeId);
+      // Update StoreContext with the correct store ID
+      setStoreState((prev) => ({ ...prev, nearestStoreId: effectiveStoreId }));
+
+      const profile = await getStoreProfile(effectiveStoreId);
       if (!profile) throw new Error('Failed to fetch store profile');
       setStoreProfile(profile);
 
@@ -73,7 +78,7 @@ export default function RestaurantMenuView({
       if (!settings) throw new Error('Failed to fetch web settings');
       setWebSettings(settings);
 
-      const menuCategories = await getMenuCategories(profile.StoreURL, storeId);
+      const menuCategories = await getMenuCategories(profile.StoreURL, effectiveStoreId);
       if (!menuCategories || menuCategories.length === 0) {
         throw new Error('No menu categories available');
       }
@@ -95,14 +100,14 @@ export default function RestaurantMenuView({
         currency: 'GBP',
       }));
 
-      const fetchedToppings = await getToppings(profile.StoreURL, storeId);
+      const fetchedToppings = await getToppings(profile.StoreURL, effectiveStoreId);
       setStoreState((prev) => ({ ...prev, toppingGroups: fetchedToppings }));
 
       const productCategories = menuCategories.filter((c) => c.CatType === 1);
       if (productCategories.length > 0) {
         const allProducts: IBaseProduct[] = [];
         for (const category of productCategories) {
-          const groups = await getGroupsByCategory(profile.StoreURL, storeId, category.ID);
+          const groups = await getGroupsByCategory(profile.StoreURL, effectiveStoreId, category.ID);
           groups.forEach((g) => {
             if (g.DeProducts) {
               const withCat = g.DeProducts.map((p) => ({
