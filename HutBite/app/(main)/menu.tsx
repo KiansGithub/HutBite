@@ -1,6 +1,8 @@
 import React from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import RestaurantMenuView from '@/components/RestaurantMenuView';
 
 export default function MenuScreen() {
-  return <RestaurantMenuView />;
+  const { storeId } = useLocalSearchParams<{ storeId?: string }>();
+  return <RestaurantMenuView storeId={storeId} />;
 }

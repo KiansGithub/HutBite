@@ -17,7 +17,7 @@ const toE164 = (phone?: string) =>
  * @param total - Total cost of the order
  * @returns Formatted order data
  */
-export const formatOrderData = (
+export const hubriseFormatOrderData = (
   items: IBasketItem[],
   customer: OrderCustomerDetails,
   payment: OrderPaymentDetails,
@@ -78,7 +78,7 @@ export const formatOrderData = (
  * @param storeUrl - URL of the store API 
  * @returns Promise with order submission response 
  */
-export const submitOrder = async (orderData: any, storeUrl: string): Promise<OrderSubmissionResponse> => {
+export const hubriseSubmitOrder = async (orderData: any, storeUrl: string): Promise<OrderSubmissionResponse> => {
     try {
       // The backend is now responsible for validation.
       // const validation = validateOrderData(orderData);
