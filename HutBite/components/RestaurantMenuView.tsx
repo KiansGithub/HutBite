@@ -54,7 +54,7 @@ export default function RestaurantMenuView({
   const [activeProduct, setActiveProduct] = useState<IBaseProduct | null>(null);
 
   const { items, addItem } = useBasket();
-  const { setStoreState, toppingGroups } = useStore();
+  const { setStoreState, toppingGroups, optionCategoryId } = useStore();
 
   useEffect(() => {
     loadMenuData();
@@ -78,7 +78,10 @@ export default function RestaurantMenuView({
       if (!settings) throw new Error('Failed to fetch web settings');
       setWebSettings(settings);
 
-      const menuCategories = await getMenuCategories(profile.StoreURL, effectiveStoreId);
+      const { categories: menuCategories, optionCatId } = await getMenuCategories(
+        profile.StoreURL,
+        effectiveStoreId
+      );
       if (!menuCategories || menuCategories.length === 0) {
         throw new Error('No menu categories available');
       }
@@ -98,6 +101,7 @@ export default function RestaurantMenuView({
         minDeliveryValue: settings.minDlvValue || 0,
         urlForImages: settings.urlForImages || '',
         currency: 'GBP',
+        optionCategoryId: optionCatId,
       }));
 
       const fetchedToppings = await getToppings(profile.StoreURL, effectiveStoreId);
@@ -167,9 +171,9 @@ export default function RestaurantMenuView({
       const formattedOptions = formatOptionsForBasket(
         selections.options,
         activeProduct,
-        activeProduct.CatID
+        optionCategoryId ?? undefined
       );
-      const formattedToppings = formatToppingsForBasket(selections.toppings || [], toppingGroups);
+      const formattedToppings = formatToppingsForBasket(selections.toppings || [], toppingGroups, activeProduct);
 
       addItem(
         activeProduct,
@@ -181,7 +185,7 @@ export default function RestaurantMenuView({
       setRoute('menu');
       setActiveProduct(null);
     },
-    [activeProduct, addItem, toppingGroups]
+    [activeProduct, addItem, toppingGroups, optionCategoryId]
   );
 
   const productCategories = categories.filter((c) => c.CatType === 1);

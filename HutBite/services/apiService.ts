@@ -30,6 +30,7 @@ import type {
     IBaseProduct
 } from '@/types/store';
 import type { IToppingGroup } from '@/types/toppings';
+import { ItemType } from '@/types/enums';
 
 /**
  * Store status response from UnitStatus API
@@ -233,7 +234,7 @@ export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | n
  * @function getMenuCategories
  * @param {string} stripeStoreUrl - Store-specific API base URL
  * @param {string} storeId - Unique store identifier
- * @returns {Promise<MenuCategory[]>} Array of menu categories, empty array on error
+ * @returns {Promise<{ categories: MenuCategory[]; optionCatId: string | null; }>} Array of menu categories and optionCatId, empty array on error
  * 
  * @example
  * ```typescript
@@ -250,7 +251,7 @@ export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | n
 export const getMenuCategories = async (
     stripeStoreUrl: string,
     storeId: string
-): Promise<MenuCategory[]> => {
+): Promise<{ categories: MenuCategory[]; optionCatId: string | null; }> => {
     try {
         // TODO: Update to use API.ENDPOINTS.GROUPS_IN_CATEGORY for consistency
         const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
@@ -263,14 +264,20 @@ export const getMenuCategories = async (
 
         const data = await response.json();
 
+        console.log("categories from store", JSON.stringify(data, null, 2));
+
         if (!Array.isArray(data)) {
             throw new Error('Invalid menu categories response format');
         }
 
-        return data;
+        const optionCategory = data.find((category: MenuCategory) => category.CatType === ItemType.OPTION);
+        const optionCatId = optionCategory ? optionCategory.ID : null;
+        console.log('Found option category ID: ', optionCatId);
+
+        return { categories: data, optionCatId };
     } catch (error) {
         console.error('Error fetching menu categories:', error);
-        return [];
+        return { categories: [], optionCatId: null };
     }
 }
 
