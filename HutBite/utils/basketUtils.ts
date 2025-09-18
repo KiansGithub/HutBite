@@ -163,6 +163,36 @@ export function formatToppingsForBasket(
     });
 }
 
+/**
+ * Identify extra toppings in options 
+ * @param options - Array of basket options 
+ * @param product - Product with original toppings 
+ * @returns Options with isExtra flag added to toppings
+ */
+export function identifyExtraToppings(options: IBasketOption[], product: IBaseProduct): IBasketOption[] {
+    // Identify extra toppings 
+    const finalOptions = options.map(option => {
+        if (option.option_list_name === 'Topping') {
+            // Find the topping definition from the product's original toppings 
+            const originalTopping = product.Toppings?.find(t => {
+                // Handle both direct ID match and ref format like "catId-grpId-toppingId"
+                const toppingId = option.ref.includes('-') ? option.ref.split('-').pop() : option.ref; 
+                return t.ID === toppingId; 
+            });
+
+            // A topping is "extra" if: 
+            // 1. It's not in the original toppings list, OR 
+            // 2. The quantity exceeds the original portion (OrgPortion)
+            const originalPortion = originalTopping?.OrgPortion || 0;
+            const isExtra = !originalTopping || option.quantity > originalPortion; 
+
+            return { ...option, isExtra };
+        }
+        return option;
+    });
+
+    return finalOptions; 
+}
 
 /**
  * Get the product price from DePrice or DeGroupedPrices
