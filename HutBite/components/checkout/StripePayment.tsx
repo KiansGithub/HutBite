@@ -162,7 +162,7 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
             const paymentDetails = {
                 paymentMethod: 'Stripe',
                 paymentId: `stripe_${Date.now()}`,
-                amount: `£${parseFloat(total).toFixed(2)}`
+                amount: total // Use total as-is since it's already formatted as "£8.90"
             };
 
             // Format order data 

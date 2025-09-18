@@ -24,7 +24,7 @@ export const formatOrderData = (
 ) => {
   const orderId = generateOrderId();
   const expectedTime = calculateExpectedTime();
-  const currency = 'EUR';
+  const currency = 'GBP';
   const createdAt = new Date().toISOString();
 
   // helpers
@@ -53,7 +53,7 @@ export const formatOrderData = (
         option_list_name: option.option_list_name || "Options",
         name: option.label, // TGF expects 'name' instead of 'label'
         ref: option.ref || null,
-        price: option.price ? money(toNumber(option.price)) : "0.00 EUR",
+        price: option.price ? money(toNumber(option.price)) : "0.00 GBP",
         quantity: option.quantity || 1
       }));
 
@@ -66,11 +66,11 @@ export const formatOrderData = (
 
       // amounts (numeric + human-readable)
       unit_price: unit,                 // numeric
-      price: money(unit),               // "12.34 EUR"
+      price: money(unit),               // "12.34 GBP"
       quantity,                         // numeric
       quantity_str: String(quantity),   // string variant
       subtotal_num: subtotalNum,        // numeric
-      subtotal: money(subtotalNum),     // "24.68 EUR"
+      subtotal: money(subtotalNum),     // "24.68 GBP"
 
       // extras - use transformed options
       options: transformedOptions,
@@ -139,9 +139,9 @@ export const formatOrderData = (
         product_name: l.name,
         sku_name: l.sku_name,
         sku_ref: l.sku_ref,
-        price: l.price,                   // "12.34 EUR"
+        price: l.price,                   // "12.34 GBP"
         quantity: String(l.quantity),     // string (as before)
-        subtotal: l.subtotal,             // "24.68 EUR"
+        subtotal: l.subtotal,             // "24.68 GBP"
         tax_rate: null,
         customer_notes: null,
         points_earned: null,
