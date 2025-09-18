@@ -41,7 +41,14 @@ export const formatOrderData = (
 
     // Transform options from IBasketOption format to TGF format, filtering out non-extra toppings
     const transformedOptions = (item.options || [])
-      .filter(option => option.option_list_name !== 'Topping' || option.isExtra)
+      .filter(option => {
+        // Include all non-topping options
+        if (option.option_list_name !== 'Topping') {
+          return true;
+        }
+        // Only include toppings that are explicitly marked as extra
+        return option.isExtra === true;
+      })
       .map((option) => ({
         option_list_name: option.option_list_name || "Options",
         name: option.label, // TGF expects 'name' instead of 'label'
