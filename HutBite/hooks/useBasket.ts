@@ -55,7 +55,7 @@ function transformProductToBasketItem(
         availableToppings
     });
 
-    // COnvert options array to options object for calculateItemPrice 
+    // Convert options array to options object for calculateItemPrice 
     const optionsObject = options.reduce((acc, opt) => {
         acc[opt.option_list_name] = opt.ref; 
         return acc;
@@ -73,6 +73,16 @@ function transformProductToBasketItem(
 
     const sku_ref = `${product.CatID || ''}-${product.GrpID || ''}-${product.ID || ''}`;
 
+    // Identify extra toppings
+    const finalOptions = options.map(option => {
+        if (option.option_list_name === 'Topping') {
+            const defaultTopping = product.Toppings?.find(t => t.ID === option.ref);
+            const isExtra = !defaultTopping || option.quantity > (defaultTopping.OrgPortion || 0);
+            return { ...option, isExtra };
+        }
+        return option;
+    });
+
     return {
         basketItemId: generateSimpleId(),
         id: product.ID, 
@@ -81,7 +91,7 @@ function transformProductToBasketItem(
         imageUrl: imageUrl,
         price: `${calculatedPrice.total.toFixed(2)} ${currency}`,
         quantity: '1',
-        options: options || [], 
+        options: finalOptions, 
         subtotal: `${calculatedPrice.total.toFixed(2)} ${currency}`,
         cat_id: product.CatID ?? null,
         grp_id: product.GrpID ?? null,

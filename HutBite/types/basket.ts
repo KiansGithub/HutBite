@@ -7,6 +7,7 @@ export interface IBasketOption {
     label: string; 
     price: string; 
     quantity: number; 
+    isExtra?: boolean; // Flag for extra toppings
 }
 
 /**

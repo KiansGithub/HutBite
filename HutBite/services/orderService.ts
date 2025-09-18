@@ -11,6 +11,7 @@ import { validateOrderData, handleOrderSubmissionError } from '@/utils/errorHand
  * @param payment - Payment details 
  * @param orderType - Type of order (delivery or collection)
  * @param storeId - ID of the store 
+ * @param total - Total cost of the order
  * @returns Formatted order data
  */
 export const formatOrderData = (
@@ -38,14 +39,16 @@ export const formatOrderData = (
     const quantity = toQty(item.quantity);
     const subtotalNum = unit * quantity;
 
-    // Transform options from IBasketOption format to TGF format
-    const transformedOptions = (item.options || []).map((option) => ({
-      option_list_name: option.option_list_name || "Options",
-      name: option.label, // TGF expects 'name' instead of 'label'
-      ref: option.ref || null,
-      price: option.price ? money(toNumber(option.price)) : "0.00 EUR",
-      quantity: option.quantity || 1
-    }));
+    // Transform options from IBasketOption format to TGF format, filtering out non-extra toppings
+    const transformedOptions = (item.options || [])
+      .filter(option => option.option_list_name !== 'Topping' || option.isExtra)
+      .map((option) => ({
+        option_list_name: option.option_list_name || "Options",
+        name: option.label, // TGF expects 'name' instead of 'label'
+        ref: option.ref || null,
+        price: option.price ? money(toNumber(option.price)) : "0.00 EUR",
+        quantity: option.quantity || 1
+      }));
 
     return {
       // identifiers
