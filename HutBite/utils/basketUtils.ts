@@ -133,13 +133,11 @@ export function formatToppingsForBasket(
     const basketOptions: IBasketOption[] = [];
 
     toppings.forEach(topping => {
-        // Try to find actual topping name and details from groups if available
         let toppingName = topping.name;
         let catId = '';
         let grpId = '';
 
         if (allToppingGroups) {
-            // Search through all topping groups to find topping by ID 
             for (const group of allToppingGroups) {
                 const foundTopping = group.DeProducts.find(t => t.ID === topping.id);
                 if (foundTopping) {
@@ -151,29 +149,40 @@ export function formatToppingsForBasket(
             }
         }
 
-        // Find the original topping definition from the product
         const originalTopping = product?.Toppings?.find(t => t.ID === topping.id);
         const originalPortion = originalTopping?.OrgPortion || 0;
 
-        // Calculate extra portions (only add to basket if there are extras)
-        const extraPortions = Math.max(0, topping.portions - originalPortion);
+        const currentPortions = topping.portions;
 
-        // Only add to basket if there are extra portions
-        if (extraPortions > 0) {
+        // Case 1: Topping was removed (quantity is 0 but was originally > 0)
+        if (currentPortions === 0 && originalPortion > 0) {
             const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
-
+            basketOptions.push({
+                option_list_name: 'Topping',
+                ref: refValue,
+                label: `No ${toppingName || `Topping${topping.id}`}`,
+                price: '0.00',
+                quantity: 0, // Indicate removal
+                isExtra: false
+            });
+            console.log(`Adding REMOVED topping to basket: ${toppingName}`);
+        
+        // Case 2: Extra portions were added
+        } else if (currentPortions > originalPortion) {
+            const extraPortions = currentPortions - originalPortion;
+            const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
             basketOptions.push({
                 option_list_name: 'Topping',
                 ref: refValue,
                 label: toppingName || `Topping${topping.id}`,
-                price: `0.00`,
-                quantity: extraPortions
+                price: '0.00', // Price for extras should be calculated elsewhere
+                quantity: extraPortions,
+                isExtra: true
             });
-
-            console.log(`Adding extra topping to basket: ${toppingName}, original: ${originalPortion}, selected: ${topping.portions}, extra: ${extraPortions}`);
-        } else {
-            console.log(`Skipping topping ${toppingName}: no extra portions (original: ${originalPortion}, selected: ${topping.portions})`);
+            console.log(`Adding EXTRA topping to basket: ${toppingName}, extra: ${extraPortions}`);
         }
+        // Default toppings (currentPortions > 0 && currentPortions <= originalPortion) are not added as separate options
+        // unless you want to explicitly list all included toppings.
     });
 
     return basketOptions;
