@@ -94,7 +94,7 @@ export const formatOrderData = (
         pricing_value: null,
       },
     };
-  }).filter(l => l.quantity > 0);
+  }).filter(l => l.quantity !== 0);
 
   console.log('Format order data total:', total);
 

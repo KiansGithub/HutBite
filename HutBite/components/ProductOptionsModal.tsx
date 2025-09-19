@@ -282,7 +282,15 @@ console.log('Validation state:', validationState);
       setToppingSelections(extractedToppings);
     } else if (product.Toppings) {
       // Process initial toppings to respect OrgPortion values
-      const initialToppingSelections = processToppingSelections(product.Toppings, toppings);
+      // Initialize with ALL toppings that have original portions, including those set to 0
+      const initialToppingSelections = product.Toppings.map(topping => {
+        const catalogTopping = toppings.find(t => t.ID === topping.ID);
+        return {
+          id: topping.ID,
+          name: catalogTopping?.Name || topping.Name || `Topping ${topping.ID}`,
+          portions: topping.OrgPortion || 0
+        };
+      });
       setToppingSelections(initialToppingSelections);
     }
   }, [existingItem, product.Toppings, toppings]);

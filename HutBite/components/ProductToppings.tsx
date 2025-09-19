@@ -58,9 +58,7 @@ export const ProductToppings: React.FC<ProductToppingsProps> = ({
 
       const toppingGroup = groupedToppings.find(group => group.toppings.some(t => t.ID === id));
 
-      if (newPortions === 0) {
-        return prev.filter(s => s.id !== id);
-      }
+      
 
       if (toppingGroup?.groupInfo.isOneChoice) {
         if (newPortions > 1) {
