@@ -39,20 +39,24 @@ export const formatOrderData = (
     const quantity = toQty(item.quantity);
     const subtotalNum = unit * quantity;
 
-    // Transform options from IBasketOption format to TGF format
-    const transformedOptions = (item.options || []).map((option) => {
-        // For toppings, the name is already formatted (e.g., "No Pineapple")
-        // so we just pass it through.
-        const name = option.label;
-
-        return {
-            option_list_name: option.option_list_name || "Options",
-            name: name, // Use the label directly, which may be prefixed with "No"
-            ref: option.ref || null,
-            price: option.price ? money(toNumber(option.price)) : "0.00 GBP",
-            quantity: option.quantity || 0
-        };
-    });
+    // Transform options from IBasketOption format to TGF format, filtering out non-extra toppings
+    const transformedOptions = (item.options || [])
+      .filter(option => {
+        // Include all non-topping options
+        if (option.option_list_name !== 'Topping') {
+          return true;
+        }
+        // Only include toppings that are explicitly marked as extra
+        return option.isExtra === true || option.isRemoved === true;
+      })
+      .map((option) => ({
+        option_list_name: option.option_list_name || "Options",
+        name: option.label, // TGF expects 'name' instead of 'label'
+        ref: option.ref || null,
+        price: option.price ? money(toNumber(option.price)) : "0.00 GBP",
+        quantity: option.isRemoved ? -option.quantity : option.quantity, // Negative quantity for removed items
+        removed: option.isRemoved || false // Add removed flag to the order
+      }));
 
     return {
       // identifiers
@@ -90,7 +94,7 @@ export const formatOrderData = (
         pricing_value: null,
       },
     };
-  });
+  }).filter(l => l.quantity > 0);
 
   console.log('Format order data total:', total);
 
