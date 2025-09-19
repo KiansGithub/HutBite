@@ -158,21 +158,39 @@ export function formatToppingsForBasket(
         // Calculate extra portions (only add to basket if there are extras)
         const extraPortions = Math.max(0, topping.portions - originalPortion);
 
+        // Calculate removed portions (only add to basket if there are removals)
+        const removedPortions = Math.max(0, originalPortion - topping.portions);
+
+        const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
+
         // Only add to basket if there are extra portions
         if (extraPortions > 0) {
-            const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
-
             basketOptions.push({
                 option_list_name: 'Topping',
                 ref: refValue,
                 label: toppingName || `Topping${topping.id}`,
                 price: `0.00`,
-                quantity: extraPortions
+                quantity: extraPortions, 
+                isExtra: true
             });
 
             console.log(`Adding extra topping to basket: ${toppingName}, original: ${originalPortion}, selected: ${topping.portions}, extra: ${extraPortions}`);
-        } else {
-            console.log(`Skipping topping ${toppingName}: no extra portions (original: ${originalPortion}, selected: ${topping.portions})`);
+        
+        }
+
+        // Add removed toppings to basket 
+        if (removedPortions > 0) {
+            basketOptions.push({
+                option_list_name: 'Topping',
+                ref: refValue,
+                label: `No ${toppingName || `Topping${topping.id}`}`,
+                price: `0.00`,
+                quantity: removedPortions,
+                isExtra: false,
+                isRemoved: true
+            });
+
+            console.log(`Adding removed topping to basket: ${toppingName}, original: ${originalPortion}, selected: ${topping.portions}, removed: ${removedPortions}`);
         }
     });
 
