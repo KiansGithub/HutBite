@@ -254,7 +254,8 @@ export const getMenuCategories = async (
     storeId: string
 ): Promise<{ categories: MenuCategory[]; optionCatId: string | null; toppingCatId: string | null; }> => {
     try {
-        const fullUrl = `${stripeStoreUrl}/api/${API.ENDPOINTS.EXTRACT_MENU_CATEGORIES}?StoreID=${storeId}`;
+        const fullUrl = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
+        console.log("Get menu categories: ", fullUrl);
 
         const response = await fetch(fullUrl, {
             method: 'GET',
@@ -266,6 +267,7 @@ export const getMenuCategories = async (
         }
 
         const data = await response.json();
+        console.log("categories from store", data);
 
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format');
