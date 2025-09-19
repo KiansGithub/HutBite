@@ -50,6 +50,7 @@ interface StoreState {
     serviceCharge: number; 
     selectedGroupId: string | null;
     optionCategoryId: string | null;
+    toppingCategoryId: string | null;
     loading: boolean; 
     storeClosedMode: boolean;
 }
@@ -85,6 +86,7 @@ const defaultState: StoreState = {
     serviceCharge: 0.90,
     selectedGroupId: null,
     optionCategoryId: null,
+    toppingCategoryId: null,
     categories: [],  // Placeholder for menu categories.
     loading: false,
     storeClosedMode: false,

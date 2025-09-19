@@ -234,40 +234,41 @@ export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | n
  * @function getMenuCategories
  * @param {string} stripeStoreUrl - Store-specific API base URL
  * @param {string} storeId - Unique store identifier
- * @returns {Promise<{ categories: MenuCategory[]; optionCatId: string | null; }>} Array of menu categories and optionCatId, empty array on error
+ * @returns {Promise<{ categories: MenuCategory[]; optionCatId: string | null; toppingCatId: string | null; }>} Array of menu categories, optionCatId, and toppingCatId, empty array on error
  * 
  * @example
  * ```typescript
- * const categories = await getMenuCategories('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122');
+ * const { categories, optionCatId, toppingCatId } = await getMenuCategories('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122');
  * categories.forEach(category => {
  *   console.log(`Category: ${category.name} (ID: ${category.id})`);
  * });
+ * console.log(`Option Category ID: ${optionCatId}, Topping Category ID: ${toppingCatId}`);
  * ```
  * 
- * @deprecated Consider using API.ENDPOINTS.GROUPS_IN_CATEGORY for consistency
- * @todo Update to use centralized API constants instead of hardcoded endpoint
+ * @note Filters out categories where DisplyAble is false
+ * @note Dynamically finds option and topping categories using ItemType enum
  * @since 1.0.0
  */
 export const getMenuCategories = async (
     stripeStoreUrl: string,
     storeId: string
-): Promise<{ categories: MenuCategory[]; optionCatId: string | null; }> => {
+): Promise<{ categories: MenuCategory[]; optionCatId: string | null; toppingCatId: string | null; }> => {
     try {
+        const fullUrl = `${stripeStoreUrl}/api/${API.ENDPOINTS.EXTRACT_MENU_CATEGORIES}?StoreID=${storeId}`;
 
-        const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
-
-        console.log("Get menu categories: ", url);
-        const response = await fetch(url, {
+        const response = await fetch(fullUrl, {
             method: 'GET',
-            headers: AUTH.HEADERS,
+            headers: AUTH.HEADERS
         });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
         const data = await response.json();
 
-        console.log("categories from store", JSON.stringify(data, null, 2));
-
         if (!Array.isArray(data)) {
-            throw new Error('Invalid menu categories response format');
+            throw new Error('Invalid response format');
         }
 
         const visibleCategories = data.filter(category => category.DisplyAble !== false);
@@ -276,10 +277,14 @@ export const getMenuCategories = async (
         const optionCatId = optionCategory ? optionCategory.ID : null;
         console.log('Found option category ID: ', optionCatId);
 
-        return { categories: visibleCategories, optionCatId };
+        const toppingCategory = data.find((category: MenuCategory) => category.CatType === ItemType.TOPPING);
+        const toppingCatId = toppingCategory ? toppingCategory.ID : null;
+        console.log('Found topping category ID: ', toppingCatId);
+
+        return { categories: visibleCategories, optionCatId, toppingCatId };
     } catch (error) {
         console.error('Error fetching menu categories:', error);
-        return { categories: [], optionCatId: null };
+        return { categories: [], optionCatId: null, toppingCatId: null };
     }
 }
 
@@ -340,11 +345,12 @@ export const getGroupsByCategory = async (
  * @function getToppings
  * @param {string} stripeStoreUrl - Store-specific API base URL
  * @param {string} storeId - Unique store identifier
+ * @param {string} toppingCatId - ID of the topping category
  * @returns {Promise<IToppingGroup[]>} Array of topping groups, empty array on error
  * 
  * @example
  * ```typescript
- * const toppings = await getToppings('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122');
+ * const toppings = await getToppings('https://elcurioso.tgfpizza.com', 'ElCurioso-20161122', 'topping-category-id');
  * toppings.forEach(group => {
  *   console.log(`Topping Group: ${group.name}`);
  *   group.toppings.forEach(topping => {
@@ -353,17 +359,16 @@ export const getGroupsByCategory = async (
  * });
  * ```
  * 
- * @note Uses hardcoded CatID=9 for topping category
- * @todo Make topping category ID configurable
  * @since 1.0.0
  */
 export const getToppings = async(
     stripeStoreUrl: string,
-    storeId: string
+    storeId: string,
+    toppingCatId: string
 ) : Promise<IToppingGroup[]> => {
     try {
         const fullUrl = `${stripeStoreUrl}/api/${API.ENDPOINTS.GROUPS_IN_CATEGORY}` +
-            `?StoreID=${storeId}&CatType=TOPPING&CatID=9`;
+            `?StoreID=${storeId}&CatType=TOPPING&CatID=${toppingCatId}`;
 
         const response = await fetch(fullUrl, {
             method: 'GET',

@@ -32,26 +32,20 @@ export function Menu() {
             setError(null);
 
             try {
-                const fetchedCategories = await getMenuCategories(stripeStoreUrl, nearestStoreId);
+                const { categories: fetchedCategories, optionCatId, toppingCatId } = await getMenuCategories(stripeStoreUrl, nearestStoreId);
 
                 console.log('catType', fetchedCategories);
-
-                const optionCategory = fetchedCategories.find(
-                    cat => cat.CatType === ItemType.OPTION
-                );
-
-                console.log('optionCategory', optionCategory);
+                console.log('optionCategoryId', optionCatId);
+                console.log('toppingCategoryId', toppingCatId);
 
                 if (fetchedCategories.length === 0) {
                     throw new Error('No menu categories available.');
                 }
 
-                console.log('optionCategoryId', optionCategory ? optionCategory.ID : null);
-
                 setStoreState((prev) => ({
                     ...prev,
                     categories: fetchedCategories,
-                    optionCategoryId: optionCategory ? optionCategory.ID : null,
+                    optionCategoryId: optionCatId,
                 }));
             } catch (err) {
                 setError(

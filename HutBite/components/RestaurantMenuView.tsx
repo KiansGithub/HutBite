@@ -78,7 +78,7 @@ export default function RestaurantMenuView({
       if (!settings) throw new Error('Failed to fetch web settings');
       setWebSettings(settings);
 
-      const { categories: menuCategories, optionCatId } = await getMenuCategories(
+      const { categories: menuCategories, optionCatId, toppingCatId } = await getMenuCategories(
         profile.StoreURL,
         effectiveStoreId
       );
@@ -102,10 +102,17 @@ export default function RestaurantMenuView({
         urlForImages: settings.urlForImages || '',
         currency: 'GBP',
         optionCategoryId: optionCatId,
+        toppingCategoryId: toppingCatId,
       }));
 
-      const fetchedToppings = await getToppings(profile.StoreURL, effectiveStoreId);
-      setStoreState((prev) => ({ ...prev, toppingGroups: fetchedToppings }));
+      // Only fetch toppings if we have a valid topping category ID
+      if (toppingCatId) {
+        const fetchedToppings = await getToppings(profile.StoreURL, effectiveStoreId, toppingCatId);
+        setStoreState((prev) => ({ ...prev, toppingGroups: fetchedToppings }));
+      } else {
+        console.warn('No topping category found for store:', effectiveStoreId);
+        setStoreState((prev) => ({ ...prev, toppingGroups: [] }));
+      }
 
       const productCategories = menuCategories.filter((c) => c.CatType === 1);
       if (productCategories.length > 0) {
