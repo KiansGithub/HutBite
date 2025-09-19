@@ -253,7 +253,7 @@ export const getMenuCategories = async (
     storeId: string
 ): Promise<{ categories: MenuCategory[]; optionCatId: string | null; }> => {
     try {
-        // TODO: Update to use API.ENDPOINTS.GROUPS_IN_CATEGORY for consistency
+
         const url = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
 
         console.log("Get menu categories: ", url);
@@ -270,11 +270,13 @@ export const getMenuCategories = async (
             throw new Error('Invalid menu categories response format');
         }
 
+        const visibleCategories = data.filter(category => category.DisplyAble !== false);
+
         const optionCategory = data.find((category: MenuCategory) => category.CatType === ItemType.OPTION);
         const optionCatId = optionCategory ? optionCategory.ID : null;
         console.log('Found option category ID: ', optionCatId);
 
-        return { categories: data, optionCatId };
+        return { categories: visibleCategories, optionCatId };
     } catch (error) {
         console.error('Error fetching menu categories:', error);
         return { categories: [], optionCatId: null };
