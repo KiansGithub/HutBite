@@ -151,12 +151,12 @@ export function formatToppingsForBasket(
 
         const originalTopping = product?.Toppings?.find(t => t.ID === topping.id);
         const originalPortion = originalTopping?.OrgPortion || 0;
-
         const currentPortions = topping.portions;
+
+        const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
 
         // Case 1: Topping was removed (quantity is 0 but was originally > 0)
         if (currentPortions === 0 && originalPortion > 0) {
-            const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
             basketOptions.push({
                 option_list_name: 'Topping',
                 ref: refValue,
@@ -170,55 +170,23 @@ export function formatToppingsForBasket(
         // Case 2: Extra portions were added
         } else if (currentPortions > originalPortion) {
             const extraPortions = currentPortions - originalPortion;
-            const refValue = catId && grpId ? `${catId}-${grpId}-${topping.id}` : topping.id;
             basketOptions.push({
                 option_list_name: 'Topping',
                 ref: refValue,
                 label: toppingName || `Topping${topping.id}`,
-                price: '0.00', // Price for extras should be calculated elsewhere
+                price: '0.00', // Price for extras is calculated elsewhere
                 quantity: extraPortions,
                 isExtra: true
             });
             console.log(`Adding EXTRA topping to basket: ${toppingName}, extra: ${extraPortions}`);
         }
-        // Default toppings (currentPortions > 0 && currentPortions <= originalPortion) are not added as separate options
-        // unless you want to explicitly list all included toppings.
+        // Default toppings (currentPortions > 0 && currentPortions <= originalPortion) are implicitly included
+        // and don't need to be added as a separate option unless the format requires it.
     });
 
     return basketOptions;
 }
 
-
-/**
- * Identify extra toppings in options 
- * @param options - Array of basket options 
- * @param product - Product with original toppings 
- * @returns Options with isExtra flag added to toppings
- */
-export function identifyExtraToppings(options: IBasketOption[], product: IBaseProduct): IBasketOption[] {
-    // Identify extra toppings 
-    const finalOptions = options.map(option => {
-        if (option.option_list_name === 'Topping') {
-            // Find the topping definition from the product's original toppings 
-            const originalTopping = product.Toppings?.find(t => {
-                // Handle both direct ID match and ref format like "catId-grpId-toppingId"
-                const toppingId = option.ref.includes('-') ? option.ref.split('-').pop() : option.ref; 
-                return t.ID === toppingId; 
-            });
-
-            // A topping is "extra" if: 
-            // 1. It's not in the original toppings list, OR 
-            // 2. The quantity exceeds the original portion (OrgPortion)
-            const originalPortion = originalTopping?.OrgPortion || 0;
-            const isExtra = !originalTopping || option.quantity > originalPortion; 
-
-            return { ...option, isExtra };
-        }
-        return option;
-    });
-
-    return finalOptions; 
-}
 
 /**
  * Get the product price from DePrice or DeGroupedPrices
@@ -377,7 +345,7 @@ export const calculateItemPrice = (
           return total;
         }
   
-        // ✅ Included (free) portions: prefer product-level mapping, then catalog
+        // Included (free) portions: prefer product-level mapping, then catalog
         const includedFromProduct =
           product.Toppings?.find(pt => pt.ID === topping.id)?.OrgPortion;
         const includedFromCatalog = toppingDefinition.OrgPortion;

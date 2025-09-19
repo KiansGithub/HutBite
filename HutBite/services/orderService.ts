@@ -39,7 +39,7 @@ export const formatOrderData = (
     const quantity = toQty(item.quantity);
     const subtotalNum = unit * quantity;
 
-    // Transform options from IBasketOption format to TGF format, making sure to include all toppings
+    // Transform options from IBasketOption format to TGF format
     const transformedOptions = (item.options || []).map((option) => {
         // For toppings, the name is already formatted (e.g., "No Pineapple")
         // so we just pass it through.
@@ -50,7 +50,7 @@ export const formatOrderData = (
             name: name, // Use the label directly, which may be prefixed with "No"
             ref: option.ref || null,
             price: option.price ? money(toNumber(option.price)) : "0.00 GBP",
-            quantity: option.quantity || 1
+            quantity: option.quantity || 0
         };
     });
 
@@ -90,7 +90,7 @@ export const formatOrderData = (
         pricing_value: null,
       },
     };
-  }).filter(l => l.quantity > 0);
+  });
 
   console.log('Format order data total:', total);
 
