@@ -4,6 +4,7 @@ import { Button, useTheme } from 'react-native-paper';
 import { useStripe } from '@stripe/stripe-react-native';
 import { useBasket } from '@/contexts/BasketContext';
 import { useStore } from '@/contexts/StoreContext';
+import { useCheckout } from '@/contexts/CheckoutContext';
 import { submitOrder, formatOrderData } from '@/services/orderService';
 import { saveOrderToDatabase } from '@/services/orderDatabaseService';
 import { createPaymentIntent } from '@/services/payment';
@@ -43,7 +44,8 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
     const [orderSubmitting, setOrderSubmitting] = useState(false);
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const { total, items } = useBasket();
-    const { orderType, nearestStoreId } = useStore();
+    const { nearestStoreId } = useStore();
+    const { orderType } = useCheckout();
     const theme = useTheme();
 
     const [loading, setLoading] = useState(false);
