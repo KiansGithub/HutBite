@@ -193,59 +193,76 @@ export default function FeedScreen() {
     }
   }, [menuDataCache]);
 
-  // Replace the whole function with this:
-const handleOrderPress = useCallback(async (
-  restaurant: RestaurantWithDistance,
-  selectedItem: FeedContentItem // underscore to avoid unused var warning
-) => {
-  if (!APP_CONFIG.ORDERING_ENABLED) {
-    router.push(`/restaurant/${restaurant.id}`);
-    return;
-  }
+  const handleOrderPress = useCallback(async (
+    restaurant: RestaurantWithDistance,
+    selectedItem: FeedContentItem 
+  ) => {
+    console.log('🛒 handleOrderPress called with:', { restaurant: restaurant.name, selectedItem });
+ 
+    if (!APP_CONFIG.ORDERING_ENABLED) {
+      router.push(`/restaurant/${restaurant.id}`);
+      return;
+    }
+ 
+    // Load menu data for this restaurant
+    console.log('📋 Loading menu data for restaurant:', restaurant.id);
+    const menuData = await loadMenuDataForRestaurant(restaurant);
+    if (!menuData) {
+      console.error('Failed to load menu data for restaurant');
+      return;
+    }
 
-  if (!restaurant.receives_orders) {
-    router.push(`/restaurant/${restaurant.id}`);
-    return;
-  }
-
-  // Load menu data for this restaurant 
-  const menuData = await loadMenuDataForRestaurant(restaurant);
-  if (!menuData) {
-    console.error('Failed to load menu data for restaurant');
-    return; 
-  }
-
-  // Find the product using Supabase IDs 
-  const product = findProductByIds(
-    menuData.categories, 
-    selectedItem.cat_id, 
-    selectedItem.grp_id, 
-    selectedItem.pro_id
-  );
-
-  if (!product) {
-    console.error('Product not found:', {
-      cat_id: selectedItem.cat_id, 
-      group_id: selectedItem.grp_id, 
-      product_id: selectedItem.pro_id
-    })
-    return;
-  }
-
-  // Check if product requires options 
-  const requiresOptions = product.Modifiable && 
+    // Set store context for this restaurant
+    const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
+    setStoreState((prev) => ({ 
+      ...prev, 
+      nearestStoreId: storeId,
+      categories: menuData.categories
+    }));
+ 
+    console.log('📋 Menu data loaded, searching for product with IDs:', {
+      cat_id: selectedItem.cat_id,
+      grp_id: selectedItem.grp_id,
+      pro_id: selectedItem.pro_id
+    });
+ 
+    // Find the product using Supabase IDs
+    const product = findProductByIds(
+      menuData.categories,
+      selectedItem.cat_id,
+      selectedItem.grp_id,
+      selectedItem.pro_id
+    );
+ 
+    if (!product) {
+      console.error('Product not found:', {
+        cat_id: selectedItem.cat_id,
+        grp_id: selectedItem.grp_id,
+        pro_id: selectedItem.pro_id
+      });
+      return;
+    }
+ 
+    console.log('✅ Product found:', product.Name);
+ 
+    // Check if product requires options
+    const requiresOptions = product.Modifiable &&
       (product.DeGroupedPrices?.DePrices?.length > 1 ||
-        product.ToppingGrpID ||
-        productHasOptions(product));
-
-  if (requiresOptions) {
-    // Open menu screen with this specific item 
+       product.ToppingGrpID ||
+       productHasOptions(product));
+ 
+    console.log('🔧 Product requires options:', requiresOptions);
+ 
+    if (!requiresOptions) {
+      // Add directly to basket with correct parameters
+      console.log('➕ Adding product directly to basket');
+      addItem(product, [], [], []); // product, options, toppings, availableToppings
+    }
+ 
+    // Always navigate to menu after adding (or if options required)
+    console.log('🧭 Navigating to menu screen');
     openMenuScreen(restaurant.id, selectedItem.id);
-  } else {
-    // Add directly to basket 
-    addItem(product, []);
-  } 
-}, [loadMenuDataForRestaurant, openMenuScreen, addItem]);
+  }, [loadMenuDataForRestaurant, openMenuScreen, addItem, setStoreState]);
 
   const handleMenuPress = useCallback((restaurantId: string) => {
     openMenuScreen(restaurantId);
