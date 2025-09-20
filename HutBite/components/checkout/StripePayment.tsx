@@ -43,7 +43,7 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
     const [orderSubmitting, setOrderSubmitting] = useState(false);
     const { initPaymentSheet, presentPaymentSheet } = useStripe();
     const { total, items } = useBasket();
-    const { orderType } = useStore();
+    const { orderType, nearestStoreId } = useStore();
     const theme = useTheme();
 
     const [loading, setLoading] = useState(false);
@@ -165,7 +165,6 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
             const userId = user?.id || null;
 
             // Get store information
-            const { nearestStoreId } = useStore();
             const storeId = nearestStoreId || 'store-1'; // Fallback to default store
             const restaurantId = storeId; // Use store ID as restaurant ID for now
 
