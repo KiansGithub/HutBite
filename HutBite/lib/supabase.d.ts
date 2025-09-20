@@ -302,6 +302,95 @@ export interface Database {
           status?: "pending" | "approved" | "rejected"
         }
       }
+      orders: {
+        Row: {
+          id: string
+          created_at: string
+          updated_at: string
+          order_id: string
+          user_id: string | null
+          restaurant_id: string
+          store_id: string
+          status: "pending" | "confirmed" | "preparing" | "ready" | "delivered" | "cancelled"
+          service_type: "delivery" | "collection"
+          total_amount: number
+          currency: string
+          customer_email: string
+          customer_first_name: string
+          customer_last_name: string
+          customer_phone: string
+          customer_address: string | null
+          customer_postal_code: string | null
+          customer_city: string | null
+          payment_method: string
+          payment_id: string | null
+          payment_status: "pending" | "completed" | "failed" | "refunded"
+          expected_time: string | null
+          confirmed_time: string | null
+          item_count: number
+          order_data: Json
+          submission_response: Json | null
+          error_message: string | null
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          order_id: string
+          user_id?: string | null
+          restaurant_id: string
+          store_id: string
+          status?: "pending" | "confirmed" | "preparing" | "ready" | "delivered" | "cancelled"
+          service_type: "delivery" | "collection"
+          total_amount: number
+          currency?: string
+          customer_email: string
+          customer_first_name: string
+          customer_last_name: string
+          customer_phone: string
+          customer_address?: string | null
+          customer_postal_code?: string | null
+          customer_city?: string | null
+          payment_method: string
+          payment_id?: string | null
+          payment_status?: "pending" | "completed" | "failed" | "refunded"
+          expected_time?: string | null
+          confirmed_time?: string | null
+          item_count: number
+          order_data: Json
+          submission_response?: Json | null
+          error_message?: string | null
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          updated_at?: string
+          order_id?: string
+          user_id?: string | null
+          restaurant_id?: string
+          store_id?: string
+          status?: "pending" | "confirmed" | "preparing" | "ready" | "delivered" | "cancelled"
+          service_type?: "delivery" | "collection"
+          total_amount?: number
+          currency?: string
+          customer_email?: string
+          customer_first_name?: string
+          customer_last_name?: string
+          customer_phone?: string
+          customer_address?: string | null
+          customer_postal_code?: string | null
+          customer_city?: string | null
+          payment_method?: string
+          payment_id?: string | null
+          payment_status?: "pending" | "completed" | "failed" | "refunded"
+          expected_time?: string | null
+          confirmed_time?: string | null
+          item_count?: number
+          order_data?: Json
+          submission_response?: Json | null
+          error_message?: string | null
+        }
+      }
     }
     Views: {
       [_ in never]: never

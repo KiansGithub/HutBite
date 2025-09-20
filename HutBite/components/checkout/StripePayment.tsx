@@ -5,7 +5,9 @@ import { useStripe } from '@stripe/stripe-react-native';
 import { useBasket } from '@/contexts/BasketContext';
 import { useStore } from '@/contexts/StoreContext';
 import { submitOrder, formatOrderData } from '@/services/orderService';
+import { saveOrderToDatabase } from '@/services/orderDatabaseService';
 import { createPaymentIntent } from '@/services/payment';
+import { supabase } from '@/lib/supabase';
 import Constants from 'expo-constants';
 import { OrderType } from '@/types/store';
 import * as Linking from 'expo-linking';
@@ -158,6 +160,15 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
             // Payment successful, now submit the order 
             setOrderSubmitting(true);
 
+            // Get current user for order tracking
+            const { data: { user } } = await supabase.auth.getUser();
+            const userId = user?.id || null;
+
+            // Get store information
+            const { nearestStoreId } = useStore();
+            const storeId = nearestStoreId || 'store-1'; // Fallback to default store
+            const restaurantId = storeId; // Use store ID as restaurant ID for now
+
             // Create payment details object 
             const paymentDetails = {
                 paymentMethod: 'Stripe',
@@ -179,22 +190,69 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
                 },
                 paymentDetails, 
                 orderType.toUpperCase() as OrderType, 
-                'store-1',
+                storeId,
                 total
             );
 
-            // Submit the order 
+            console.log('📦 ORDER DATA - Formatted order:', {
+                orderId: orderData.order_id,
+                storeId,
+                restaurantId,
+                total,
+                itemCount: items.length,
+                userId
+            });
+
+            // Submit the order to external API
             const orderResult = await submitOrder(orderData, stripeStoreUrl);
+
+            console.log('🚀 ORDER SUBMISSION - Result:', orderResult);
+
+            // Save order to database regardless of external API result
+            // This ensures we have a record even if external submission fails
+            const databaseResult = await saveOrderToDatabase(
+                orderData,
+                items,
+                {
+                    firstName: customerDetails.firstName,
+                    lastName: customerDetails.lastName,
+                    email: customerDetails.email,
+                    phone: customerDetails.phone,
+                    address: customerDetails.address,
+                    city: customerDetails.city,
+                    postalCode: customerDetails.postalCode,
+                },
+                paymentDetails,
+                orderType.toUpperCase() as OrderType,
+                storeId,
+                restaurantId,
+                total,
+                orderResult,
+                userId
+            );
+
+            console.log('💾 DATABASE SAVE - Result:', databaseResult);
 
             setOrderSubmitting(false);
 
-            orderResult.success ? onPaymentSuccess() : onPaymentError(orderResult.error || 'Order submission failed');
+            // Consider the order successful if either external submission succeeded 
+            // or database save succeeded (we have a record)
+            if (orderResult.success || databaseResult.success) {
+                console.log('✅ ORDER SUCCESS - Order completed successfully');
+                onPaymentSuccess();
+            } else {
+                console.error('❌ ORDER FAILED - Both external submission and database save failed');
+                const errorMsg = orderResult.error || databaseResult.error || 'Order processing failed';
+                onPaymentError(errorMsg);
+            }
+
         } catch (error) {
             console.error("Payment error:", error);
             setErrorMessage(error instanceof Error ? error.message : 'Payment failed');
             onPaymentError(error instanceof Error ? error.message : 'Payment failed');
         } finally {
             setLoading(false);
+            setOrderSubmitting(false);
         }
     };
 
