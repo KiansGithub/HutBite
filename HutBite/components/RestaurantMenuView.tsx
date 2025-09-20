@@ -28,6 +28,7 @@ import {
   formatToppingsForBasket,
 } from '@/utils/basketUtils';
 import { processProductOptions } from '@/utils/productOptionsUtils';
+import { handleSupabaseProductAddition } from '@/utils/productUtils';
 
 const colors = Colors.light;
 
@@ -196,6 +197,35 @@ export default function RestaurantMenuView({
   );
 
   const productCategories = categories.filter((c) => c.CatType === 1);
+
+  const addSupabaseProduct = useCallback(
+    (catId: string, grpId: string, proId: string) => {
+      const result = handleSupabaseProductAddition(
+        categories, 
+        products, 
+        catId, 
+        grpId, 
+        proId, 
+        // Direct add callback 
+        (product) => {
+          addItem(product, []);
+        },
+        // Options required callback 
+        (product) => {
+          setActiveProduct(product);
+          setRoute('options');
+        }
+      );
+
+      if (!result.success) {
+        setError(result.message || 'Failed to add product');
+        console.error('Failed to add Supabase product:', result.message);
+      }
+
+      return result; 
+    },
+    [categories, products, addItem]
+  );
 
   return (
     <SafeAreaView
