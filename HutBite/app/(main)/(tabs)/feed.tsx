@@ -30,6 +30,8 @@ import { supabase } from '@/lib/supabase';
 import { STORE_CONFIG } from '@/constants/api';
 import { getStoreProfile, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
 import { APP_CONFIG } from '@/constants/config';
+import { IBaseProduct, MenuCategory } from '@/types/store';
+import { useStore } from '@/contexts/StoreContext';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
@@ -145,23 +147,106 @@ export default function FeedScreen() {
   const [menuModalVisible, setMenuModalVisible] = useState(false);
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantWithDistance | null>(null);
   const [selectedMenuItem, setSelectedMenuItem] = useState<FeedContentItem | undefined>(undefined);
+  const [menuDataCache, setMenuDataCache] = useState<{[restaurantId: string]: {categories: MenuCategory[], products: IBaseProduct[]}}>({});
+  const { setStoreState } = useStore();
+
+  const loadMenuDataForRestaurant = useCallback(async (restaurant: RestaurantWithDistance) => {
+    // Check if we already have menu data cached 
+    if (menuDataCache[restaurant.id]) {
+      return menuDataCache[restaurant.id];
+    }
+
+    try {
+      const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID; 
+
+      const profile = await getStoreProfile(storeId);
+      if (!profile) throw new Error('Failed to fetch store profile');
+
+      const { categories: menuCategories } = await getMenuCategories(profile.StoreURL, storeId);
+      if (!menuCategories || menuCategories.length === 0) {
+        throw new Error('No menu categories available');
+      }
+
+      const productCategories = menuCategories.filter((c) => c.CatType === 1);
+      const allProducts: IBaseProduct[] = [];
+
+      for (const category of productCategories) {
+        const groups = await getGroupsByCategory(profile.StoreURL, storeId, category.ID);
+        groups.forEach((g) => {
+          if (g.DeProducts) {
+            const withCat = g.DeProducts.map((p) => ({
+              ...p, 
+              CategoryID: category.ID, 
+              CategoryName: category.Name, 
+            }));
+            allProducts.push(...withCat);
+          }
+        });
+      }
+
+      const menuData = { categories: menuCategories, products: allProducts };
+      setMenuDataCache(prev => ({ ...prev, [restaurant.id]: menuData }));
+      return menuData; 
+    } catch (error) {
+      console.error('Failed to load menu data:', error);
+      return null; 
+    }
+  }, [menuDataCache]);
 
   // Replace the whole function with this:
-const handleOrderPress = useCallback((
+const handleOrderPress = useCallback(async (
   restaurant: RestaurantWithDistance,
-  _selectedItem: FeedContentItem // underscore to avoid unused var warning
+  selectedItem: FeedContentItem // underscore to avoid unused var warning
 ) => {
   if (!APP_CONFIG.ORDERING_ENABLED) {
     router.push(`/restaurant/${restaurant.id}`);
     return;
   }
 
-  if (restaurant.receives_orders) {
-    openMenuScreen(restaurant.id);
-  } else {
+  if (!restaurant.receives_orders) {
     router.push(`/restaurant/${restaurant.id}`);
+    return;
   }
-}, [openMenuScreen]);
+
+  // Load menu data for this restaurant 
+  const menuData = await loadMenuDataForRestaurant(restaurant);
+  if (!menuData) {
+    console.error('Failed to load menu data for restaurant');
+    return; 
+  }
+
+  // Find the product using Supabase IDs 
+  const product = findProductByIds(
+    menuData.categories, 
+    selectedItem.cat_id, 
+    selectedItem.grp_id, 
+    selectedItem.pro_id
+  );
+
+  if (!product) {
+    console.error('Product not found:', {
+      cat_id: selectedItem.cat_id, 
+      group_id: selectedItem.grp_id, 
+      product_id: selectedItem.pro_id
+    })
+    return;
+  }
+
+  // Check if product requires options 
+  const requiresOptions = product.Modifiable && 
+      (product.DeGroupedPrices?.DePrices?.length > 1 ||
+        product.ToppingGrpID ||
+        productHasOptions(product));
+
+  if (requiresOptions) {
+    // Open menu screen with this specific item 
+    openMenuScreen(restaurant.id, selectedItem.id);
+  } else {
+    // Add directly to basket 
+    addItem(product, []);
+  } 
+}, [loadMenuDataForRestaurant, openMenuScreen, addItem]);
+
   const handleMenuPress = useCallback((restaurantId: string) => {
     openMenuScreen(restaurantId);
   }, [openMenuScreen]);
