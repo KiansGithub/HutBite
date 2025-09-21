@@ -25,7 +25,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useTabTheme } from '@/contexts/TabThemeContext';
 import { useBasket } from '@/contexts/BasketContext';
 import SignInNudge from '@/components/SignInNudge';
-import { findProductByIds, productHasOptions } from '@/utils/productUtils';
+import { findProductByIds, productHasOptions, logProductsInCategory } from '@/utils/productUtils';
 import { supabase } from '@/lib/supabase';
 import { STORE_CONFIG } from '@/constants/api';
 import { getStoreProfile, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
@@ -151,10 +151,12 @@ export default function FeedScreen() {
   const { setStoreState } = useStore();
 
   const loadMenuDataForRestaurant = useCallback(async (restaurant: RestaurantWithDistance) => {
+    // TEMPORARY: Clear cache to test the fix
+    console.log('🔄 Clearing menu cache for debugging...');
     // Check if we already have menu data cached 
-    if (menuDataCache[restaurant.id]) {
-      return menuDataCache[restaurant.id];
-    }
+    // if (menuDataCache[restaurant.id]) {
+    //   return menuDataCache[restaurant.id];
+    // }
 
     try {
       const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID; 
@@ -169,22 +171,39 @@ export default function FeedScreen() {
 
       const productCategories = menuCategories.filter((c) => c.CatType === 1);
       const allProducts: IBaseProduct[] = [];
+      
+      // Populate each category with its groups and products
+      const populatedCategories = await Promise.all(
+        productCategories.map(async (category) => {
+          console.log(`📂 Loading groups for category: ${category.Name} (ID: ${category.ID})`);
+          const groups = await getGroupsByCategory(profile.StoreURL, storeId, category.ID);
+          
+          // Add products to the flat array for backward compatibility
+          groups.forEach((g) => {
+            if (g.DeProducts) {
+              const withCat = g.DeProducts.map((p) => ({
+                ...p, 
+                CategoryID: category.ID, 
+                CategoryName: category.Name, 
+              }));
+              allProducts.push(...withCat);
+            }
+          });
+          
+          // Return category with populated groups
+          return {
+            ...category,
+            DeGroups: groups
+          };
+        })
+      );
 
-      for (const category of productCategories) {
-        const groups = await getGroupsByCategory(profile.StoreURL, storeId, category.ID);
-        groups.forEach((g) => {
-          if (g.DeProducts) {
-            const withCat = g.DeProducts.map((p) => ({
-              ...p, 
-              CategoryID: category.ID, 
-              CategoryName: category.Name, 
-            }));
-            allProducts.push(...withCat);
-          }
-        });
-      }
-
-      const menuData = { categories: menuCategories, products: allProducts };
+      const menuData = { 
+        categories: populatedCategories, 
+        products: allProducts 
+      };
+      
+      console.log(`✅ Menu data loaded: ${populatedCategories.length} categories, ${allProducts.length} total products`);
       setMenuDataCache(prev => ({ ...prev, [restaurant.id]: menuData }));
       return menuData; 
     } catch (error) {
@@ -240,6 +259,11 @@ export default function FeedScreen() {
         grp_id: selectedItem.grp_id,
         pro_id: selectedItem.pro_id
       });
+      
+      // Log all products in the category to help debug
+      console.log('🔍 Debugging: Logging all products in category for investigation...');
+      logProductsInCategory(menuData.categories, selectedItem.cat_id);
+      
       return;
     }
  
