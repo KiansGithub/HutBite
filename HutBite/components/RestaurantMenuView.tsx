@@ -34,9 +34,16 @@ const colors = Colors.light;
 
 export default function RestaurantMenuView({
   initialMenuItem,
+  initialProductIds,
   storeId,
 }: {
   initialMenuItem?: FeedContentItem;
+  initialProductIds?: {
+    cat_id: string;
+    grp_id: string;
+    pro_id: string;
+    auto_add: boolean;
+  };
   storeId?: string;
 }) {
   const insets = useSafeAreaInsets();
@@ -140,6 +147,38 @@ export default function RestaurantMenuView({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (initialProductIds && products.length > 0 && !loading) {
+      console.log('🎯 Looking for initial product with IDs:', initialProductIds);
+      
+      // Find the product by matching cat_id, grp_id, and pro_id
+      const product = products.find(p => {
+        // Check if this product matches the IDs from feed
+        return p.CategoryID === initialProductIds.cat_id && 
+               p.GrpID === initialProductIds.grp_id && 
+               p.ID === initialProductIds.pro_id;
+      });
+      
+      if (product) {
+        console.log('✅ Found initial product:', product.Name);
+        
+        if (initialProductIds.auto_add) {
+          // Trigger the same logic as handleProductPress
+          handleProductPress(product);
+        }
+      } else {
+        console.error('❌ Product not found with IDs:', initialProductIds);
+        // Log available products for debugging
+        console.log('Available products:', products.map(p => ({
+          name: p.Name,
+          CategoryID: p.CategoryID,
+          GrpID: p.GrpID,
+          ID: p.ID
+        })));
+      }
+    }
+  }, [initialProductIds, products, loading, handleProductPress]);
 
   const buildImageUrl = (imgUrl?: string) =>
     !imgUrl || !webSettings?.urlForImages ? null : `${webSettings.urlForImages}${imgUrl}`;

@@ -1,4 +1,4 @@
-import { useReducer, useCallback, useMemo, useEffect } from 'react';
+import { useReducer, useCallback, useMemo, useEffect, useRef } from 'react';
 import type { BasketState, BasketAction } from '../components/types';
 import type { IBasketItem } from '../components/basket/types';
 import type { IBaseProduct } from '@/types/product';
@@ -192,6 +192,7 @@ function calculateItemSubtotal(item: IBasketItem, newQuantity: number = 1): stri
 export function useBasket() {
     const [state, dispatch] = useReducer(basketReducer, initialState);
     const { urlForImages, currency, storeInfo, nearestStoreId } = useStore();
+    const previousStoreId = useRef<string | null>(null);
 
     const addItem = useCallback((
         itemOrProduct: IBasketItem | IBaseProduct, 
@@ -320,6 +321,15 @@ export function useBasket() {
     const setError = useCallback((error: string) => {
         dispatch({ type: 'SET_ERROR', payload: error });
     }, []);
+
+    // Clear basket when switching between different stores (not on initial load or same store)
+    useEffect(() => {
+        if (previousStoreId.current !== null && nearestStoreId && nearestStoreId !== previousStoreId.current && state.items.length > 0) {
+            console.log(`🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId}, clearing basket to prevent mixed items`);
+            clearBasket();
+        }
+        previousStoreId.current = nearestStoreId;
+    }, [nearestStoreId, clearBasket, state.items.length]);
 
     // Calculate total basket value 
     const total = useMemo(() => {

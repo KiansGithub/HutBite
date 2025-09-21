@@ -25,13 +25,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import { useTabTheme } from '@/contexts/TabThemeContext';
 import { useBasket } from '@/contexts/BasketContext';
 import SignInNudge from '@/components/SignInNudge';
-import { findProductByIds, productHasOptions, logProductsInCategory } from '@/utils/productUtils';
-import { supabase } from '@/lib/supabase';
 import { STORE_CONFIG } from '@/constants/api';
-import { getStoreProfile, getMenuCategories, getGroupsByCategory } from '@/services/apiService';
 import { APP_CONFIG } from '@/constants/config';
-import { IBaseProduct, MenuCategory } from '@/types/store';
-import { useStore } from '@/contexts/StoreContext';
 
 const { height: H } = Dimensions.get('screen');
 const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
@@ -107,9 +102,9 @@ export default function FeedScreen() {
       // On focus do nothing special here
       return () => {
         // On blur: ensure menu modal is closed so it doesn't overlay other screens
-        setMenuModalVisible(false);
-        setSelectedRestaurant(null);
-        setSelectedMenuItem(undefined);
+        // setMenuModalVisible(false);
+        // setSelectedRestaurant(null);
+        // setSelectedMenuItem(undefined);
       };
     }, [])
   );
@@ -144,149 +139,37 @@ export default function FeedScreen() {
     setSearchType('restaurants');
   }, [setSearchType]);
 
-  const [menuModalVisible, setMenuModalVisible] = useState(false);
-  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantWithDistance | null>(null);
-  const [selectedMenuItem, setSelectedMenuItem] = useState<FeedContentItem | undefined>(undefined);
-  const [menuDataCache, setMenuDataCache] = useState<{[restaurantId: string]: {categories: MenuCategory[], products: IBaseProduct[]}}>({});
-  const { setStoreState } = useStore();
-
-  const loadMenuDataForRestaurant = useCallback(async (restaurant: RestaurantWithDistance) => {
-    // TEMPORARY: Clear cache to test the fix
-    console.log('🔄 Clearing menu cache for debugging...');
-    // Check if we already have menu data cached 
-    // if (menuDataCache[restaurant.id]) {
-    //   return menuDataCache[restaurant.id];
-    // }
-
-    try {
-      const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID; 
-
-      const profile = await getStoreProfile(storeId);
-      if (!profile) throw new Error('Failed to fetch store profile');
-
-      const { categories: menuCategories } = await getMenuCategories(profile.StoreURL, storeId);
-      if (!menuCategories || menuCategories.length === 0) {
-        throw new Error('No menu categories available');
-      }
-
-      const productCategories = menuCategories.filter((c) => c.CatType === 1);
-      const allProducts: IBaseProduct[] = [];
-      
-      // Populate each category with its groups and products
-      const populatedCategories = await Promise.all(
-        productCategories.map(async (category) => {
-          console.log(`📂 Loading groups for category: ${category.Name} (ID: ${category.ID})`);
-          const groups = await getGroupsByCategory(profile.StoreURL, storeId, category.ID);
-          
-          // Add products to the flat array for backward compatibility
-          groups.forEach((g) => {
-            if (g.DeProducts) {
-              const withCat = g.DeProducts.map((p) => ({
-                ...p, 
-                CategoryID: category.ID, 
-                CategoryName: category.Name, 
-              }));
-              allProducts.push(...withCat);
-            }
-          });
-          
-          // Return category with populated groups
-          return {
-            ...category,
-            DeGroups: groups
-          };
-        })
-      );
-
-      const menuData = { 
-        categories: populatedCategories, 
-        products: allProducts 
-      };
-      
-      console.log(`✅ Menu data loaded: ${populatedCategories.length} categories, ${allProducts.length} total products`);
-      setMenuDataCache(prev => ({ ...prev, [restaurant.id]: menuData }));
-      return menuData; 
-    } catch (error) {
-      console.error('Failed to load menu data:', error);
-      return null; 
-    }
-  }, [menuDataCache]);
-
   const handleOrderPress = useCallback(async (
     restaurant: RestaurantWithDistance,
     selectedItem: FeedContentItem 
   ) => {
     console.log('🛒 handleOrderPress called with:', { restaurant: restaurant.name, selectedItem });
- 
+
     if (!APP_CONFIG.ORDERING_ENABLED) {
       router.push(`/restaurant/${restaurant.id}`);
       return;
     }
- 
-    // Load menu data for this restaurant
-    console.log('📋 Loading menu data for restaurant:', restaurant.id);
-    const menuData = await loadMenuDataForRestaurant(restaurant);
-    if (!menuData) {
-      console.error('Failed to load menu data for restaurant');
-      return;
-    }
 
-    // Set store context for this restaurant
-    const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
-    setStoreState((prev) => ({ 
-      ...prev, 
-      nearestStoreId: storeId,
-      categories: menuData.categories
-    }));
- 
-    console.log('📋 Menu data loaded, searching for product with IDs:', {
+    // Navigate to menu with product IDs so menu can handle the logic
+    console.log('🧭 Navigating to menu screen with product IDs:', {
       cat_id: selectedItem.cat_id,
       grp_id: selectedItem.grp_id,
       pro_id: selectedItem.pro_id
     });
- 
-    // Find the product using Supabase IDs
-    const product = findProductByIds(
-      menuData.categories,
-      selectedItem.cat_id,
-      selectedItem.grp_id,
-      selectedItem.pro_id
-    );
- 
-    if (!product) {
-      console.error('Product not found:', {
+    
+    const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
+    router.push({
+      pathname: '/menu',
+      params: { 
+        id: String(restaurant.id), 
+        storeId,
         cat_id: selectedItem.cat_id,
         grp_id: selectedItem.grp_id,
-        pro_id: selectedItem.pro_id
-      });
-      
-      // Log all products in the category to help debug
-      console.log('🔍 Debugging: Logging all products in category for investigation...');
-      logProductsInCategory(menuData.categories, selectedItem.cat_id);
-      
-      return;
-    }
- 
-    console.log('✅ Product found:', product.Name);
- 
-    // Check if product requires options
-    const requiresOptions = product.Modifiable &&
-      (product.DeGroupedPrices?.DePrices?.length > 1 ||
-       product.ToppingGrpID ||
-       productHasOptions(product));
- 
-    console.log('🔧 Product requires options:', requiresOptions);
- 
-    if (!requiresOptions) {
-      // Add directly to basket with correct parameters
-      console.log('➕ Adding product directly to basket');
-      addItem(product, [], [], []); // product, options, toppings, availableToppings
-    }
- 
-    // Always navigate to menu after adding (or if options required)
-    console.log('🧭 Navigating to menu screen');
-    openMenuScreen(restaurant.id, selectedItem.id);
-  }, [loadMenuDataForRestaurant, openMenuScreen, addItem, setStoreState]);
+        pro_id: selectedItem.pro_id,
+        auto_add: 'true' // Flag to indicate this should auto-trigger add to basket
+      },
+    });
+  }, []);
 
   const handleMenuPress = useCallback((restaurantId: string) => {
     openMenuScreen(restaurantId);
