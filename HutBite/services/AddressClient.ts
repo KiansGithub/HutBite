@@ -13,7 +13,7 @@ import {
 
 class AddressClient {
   private cache: DeliverabilityCache = {};
-  private readonly baseUrl = process.env.EXPO_PUBLIC_DELIVERABILITY_API_URL || 'https://e724bfcd241c.ngrok-free.app';
+  private readonly baseUrl = 'https://e724bfcd241c.ngrok-free.app';
   private readonly timeout = 6000; // 6 seconds
   private readonly cacheExpiry = 30 * 60 * 1000; // 30 minutes
 
@@ -97,11 +97,15 @@ class AddressClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
+    console.log('Making deliverability request to:', `${this.baseUrl}/deliverability/check`);
+    console.log('Request payload:', JSON.stringify(request, null, 2));
+
     try {
       const response = await fetch(`${this.baseUrl}/deliverability/check`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true', // Skip ngrok browser warning
         },
         body: JSON.stringify(request),
         signal: controller.signal,
@@ -109,7 +113,12 @@ class AddressClient {
 
       clearTimeout(timeoutId);
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
         throw new DeliverabilityError(
           `HTTP ${response.status}: ${response.statusText}`,
           'HTTP_ERROR',
@@ -118,10 +127,13 @@ class AddressClient {
       }
 
       const result: DeliverabilityResult = await response.json();
+      console.log('API Success Response:', result);
       return { ...result, source: 'api' };
 
     } catch (error) {
       clearTimeout(timeoutId);
+      
+      console.error('Request failed:', error);
       
       if (error.name === 'AbortError') {
         throw new DeliverabilityError('Request timeout', 'TIMEOUT');
