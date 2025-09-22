@@ -20,8 +20,8 @@ export function useBasket() {
   const previousStoreId = useRef<string | null>(null);
 
   // State for basket clear confirmation 
-  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
-  const [pendingStoreId, setPendingStoreId] = useState<string | null>(null);
+  // const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  // const [pendingStoreId, setPendingStoreId] = useState<string | null>(null);
 
   // Calculate derived values using memoization
   const total = useMemo(() => {
@@ -33,36 +33,38 @@ export function useBasket() {
   }, [basketState.items]);
 
   // Clear basket when switching between different stores
-  useEffect(() => {
-    if (
-      previousStoreId.current !== null &&
-      nearestStoreId &&
-      nearestStoreId !== previousStoreId.current &&
-      basketState.items.length > 0
-    ) {
-      console.log(
-        `🔄 Store change detected from ${previousStoreId.current} to ${nearestStoreId}, showing confirmation`
-      );
-      setPendingStoreId(nearestStoreId);
-      setShowClearConfirmation(true);
-      return; // Don't update previousStoreId yet
-    }
-    previousStoreId.current = nearestStoreId;
-  }, [nearestStoreId, basketState.items.length]);
+  // DISABLED: Now handled by BasketClearConfirmationContext in feed.tsx
+  // useEffect(() => {
+  //   if (
+  //     previousStoreId.current !== null &&
+  //     nearestStoreId &&
+  //     nearestStoreId !== previousStoreId.current &&
+  //     basketState.items.length > 0
+  //   ) {
+  //     console.log(
+  //       `🔄 Store change detected from ${previousStoreId.current} to ${nearestStoreId}, showing confirmation`
+  //     );
+  //     // setPendingStoreId(nearestStoreId);
+  //     // setShowClearConfirmation(true);
+  //     return; // Don't update previousStoreId yet
+  //   }
+  //   previousStoreId.current = nearestStoreId;
+  // }, [nearestStoreId, basketState.items.length]);
 
   // Handle confirmation modal actions
-  const handleClearConfirm = useCallback(() => {
-    basketState.clearBasket();
-    previousStoreId.current = pendingStoreId;
-    setShowClearConfirmation(false);
-    setPendingStoreId(null);
-  }, [basketState.clearBasket, pendingStoreId]);
+  // DISABLED: Now handled by BasketClearConfirmationContext
+  // const handleClearConfirm = useCallback(() => {
+  //   basketState.clearBasket();
+  //   // previousStoreId.current = pendingStoreId;
+  //   // setShowClearConfirmation(false);
+  //   // setPendingStoreId(null);
+  // }, [basketState.clearBasket, pendingStoreId]);
  
-  const handleClearCancel = useCallback(() => {
-    setShowClearConfirmation(false);
-    setPendingStoreId(null);
-    // Keep the previous store ID unchanged
-  }, []);
+  // const handleClearCancel = useCallback(() => {
+  //   // setShowClearConfirmation(false);
+  //   // setPendingStoreId(null);
+  //   // Keep the previous store ID unchanged
+  // }, []);
 
   // Enhanced addItem with business logic
   const addItem = useCallback((
@@ -165,12 +167,6 @@ export function useBasket() {
     total,
     itemCount,
     currentStoreId: nearestStoreId,
-
-    // Basket clear confirmation
-    showClearConfirmation,
-    pendingStoreId,
-    handleClearConfirm,
-    handleClearCancel,
 
     // Actions
     addItem,
