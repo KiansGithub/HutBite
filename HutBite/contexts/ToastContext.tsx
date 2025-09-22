@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Snackbar } from 'react-native-paper';
+import { Text } from 'react-native';
 import Colors from '@/constants/Colors';
 
 const colors = Colors.light;
@@ -43,17 +44,28 @@ export function ToastProvider({ children }: ToastProviderProps) {
         onDismiss={hideToast}
         duration={duration}
         style={{
-          backgroundColor: colors.primary,
+          backgroundColor: '#10B981', // Modern success green
           marginBottom: 100, // Above bottom navigation
+          borderRadius: 12, // More modern rounded corners
+          elevation: 8, // Better shadow on Android
+          shadowColor: '#000', // iOS shadow
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
         }}
         theme={{
           colors: {
-            surface: colors.primary,
-            onSurface: '#fff',
+            surface: '#10B981', // Success green
+            onSurface: '#FFFFFF', // Clean white text
           },
         }}
+        contentStyle={{
+          fontSize: 16,
+          fontWeight: '500',
+          letterSpacing: 0.3,
+        }}
       >
-        {message}
+        <Text style={{ color: '#FFFFFF' }}>{message}</Text>
       </Snackbar>
     </ToastContext.Provider>
   );

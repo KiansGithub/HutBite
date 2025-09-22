@@ -107,7 +107,8 @@ function CheckoutInner() {
             </Text>
           </View>
 
-          <View style={styles.headerIcon} />
+          {/* Invisible spacer to balance the back button */}
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
@@ -205,6 +206,11 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(17,17,17,0.08)',
   },
   headerCenter: { flex: 1, alignItems: 'center', gap: 4 },
+  headerSpacer: {
+    height: 36,
+    width: 36,
+    // No background, just takes up space for centering
+  },
   content: { flex: 1 },
   contentContainer: { padding: 16 },
   paymentContainer: {

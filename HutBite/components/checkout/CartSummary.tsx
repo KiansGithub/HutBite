@@ -5,6 +5,13 @@ import { Text } from '@/components/Themed';
 import { useBasket } from '@/contexts/BasketContext';
 import Colors from '@/constants/Colors';
 
+// Format price for customer display - converts any format to £X.XX
+const formatPriceForDisplay = (price: string): string => {
+  // Extract just the number from any format (£8.95, 8.95 GBP, 8.95, etc.)
+  const numericValue = parseFloat(price.replace(/[^0-9.-]+/g, '')) || 0;
+  return `£${numericValue.toFixed(2)}`;
+};
+
 export const CartSummary = () => {
   const { items, itemCount, total } = useBasket();
 
@@ -27,14 +34,14 @@ export const CartSummary = () => {
           <View style={styles.itemDetails}>
             <Text style={styles.itemName}>{item.product_name}</Text>
           </View>
-          <Text style={styles.itemPrice}>{item.subtotal}</Text>
+          <Text style={styles.itemPrice}>{formatPriceForDisplay(item.subtotal)}</Text>
         </View>
       ))}
 
       {/* Subtotal Row */}
       <View style={styles.footer}>
         <Text style={styles.footerLabel}>Subtotal</Text>
-        <Text style={styles.footerValue}>{total}</Text>
+        <Text style={styles.footerValue}>{formatPriceForDisplay(total)}</Text>
       </View>
     </View>
   );

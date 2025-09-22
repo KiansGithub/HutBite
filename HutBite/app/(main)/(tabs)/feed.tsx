@@ -28,10 +28,10 @@ export default function FeedScreen() {
     );
   }, [feedData.isSearching, feedData.reshuffleRestaurants, videoPlayback]);
 
-  // Handle search results changes
+  // Handle search results changes - pass isSearching parameter
   useEffect(() => {
-    videoPlayback.handleSearchResultsChange();
-  }, [feedData.searchResults, videoPlayback]);
+    videoPlayback.handleSearchResultsChange(feedData.isSearching);
+  }, [feedData.searchResults, feedData.isSearching, videoPlayback]);
 
   // Handle order press
   const handleOrderPress = useCallback((

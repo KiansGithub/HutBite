@@ -11,10 +11,10 @@ const EditBuildingDetailsScreen = () => {
   const insets = useSafeAreaInsets();
   const { buildingDetails, setBuildingDetails } = useCheckout();
 
-  const [buildingType, setBuildingType] = useState(buildingDetails.buildingType);
-  const [apt, setApt] = useState(buildingDetails.apt);
-  const [buildingName, setBuildingName] = useState(buildingDetails.buildingName);
-  const [entryCode, setEntryCode] = useState(buildingDetails.entryCode);
+  const [buildingType, setBuildingType] = useState(buildingDetails.buildingType || '');
+  const [apt, setApt] = useState(buildingDetails.apt || '');
+  const [buildingName, setBuildingName] = useState(buildingDetails.buildingName || '');
+  const [entryCode, setEntryCode] = useState(buildingDetails.entryCode || '');
 
   const handleSave = () => {
     setBuildingDetails({ buildingType, apt, buildingName, entryCode });
@@ -33,25 +33,29 @@ const EditBuildingDetailsScreen = () => {
       <View style={styles.formContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Building Type"
+          placeholder="e.g. House, Flat, Office, Hotel"
+          placeholderTextColor="#999"
           value={buildingType}
           onChangeText={setBuildingType}
         />
         <TextInput
           style={styles.input}
-          placeholder="Apt / Unit / Floor"
+          placeholder="e.g. Flat 2B, Unit 15, Floor 3"
+          placeholderTextColor="#999"
           value={apt}
           onChangeText={setApt}
         />
         <TextInput
           style={styles.input}
-          placeholder="Building Name"
+          placeholder="e.g. Rose Gardens, City Tower"
+          placeholderTextColor="#999"
           value={buildingName}
           onChangeText={setBuildingName}
         />
         <TextInput
           style={styles.input}
-          placeholder="Entry Code"
+          placeholder="e.g. #1234, Ring bell twice"
+          placeholderTextColor="#999"
           value={entryCode}
           onChangeText={setEntryCode}
         />

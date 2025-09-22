@@ -15,12 +15,16 @@ interface RestaurantProductCardProps {
   product: IBaseProduct;
   quantity: number;
   onPress: () => void;
+  onIncrement?: () => void;
+  onDecrement?: () => void;
 }
 
 export function RestaurantProductCard({ 
   product, 
   quantity, 
-  onPress
+  onPress,
+  onIncrement,
+  onDecrement
 }: RestaurantProductCardProps) {
   
   const { urlForImages } = useStore();
@@ -95,30 +99,30 @@ export function RestaurantProductCard({
       
       <View style={styles.buttonContainer}>
         {quantity > 0 ? (
-          <View style={[styles.quantityRow, { backgroundColor: colors.primary }]}>
+          <View style={[styles.quantityRow, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}>
             <TouchableOpacity 
               style={styles.quantityButton}
-              onPress={onPress} // Decrement logic is handled in the parent
+              onPress={onDecrement} 
             >
-              <Ionicons name="remove" size={20} color="#fff" />
+              <Ionicons name="remove" size={20} color={colors.text} />
             </TouchableOpacity>
             
-            <Text style={styles.quantityText}>{quantity}</Text>
+            <Text style={[styles.quantityText, { color: colors.text }]}>{quantity}</Text>
             
             <TouchableOpacity 
               style={styles.quantityButton}
-              onPress={onPress} // Increment logic is handled in the parent
+              onPress={onIncrement} 
             >
-              <Ionicons name="add" size={20} color="#fff" />
+              <Ionicons name="add" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         ) : (
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <TouchableOpacity 
-              style={[styles.addButton, { backgroundColor: colors.primary }]}
+              style={[styles.addButton, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
               onPress={handleAddPress}
             >
-              <Ionicons name="add" size={24} color="#fff" />
+              <Ionicons name="add" size={24} color={colors.text} />
               {/* Show a small badge if there are items in basket for this product */}
               {quantity > 0 && (
                 <View style={[styles.quantityBadge, { backgroundColor: colors.error || '#FF6B6B' }]}>

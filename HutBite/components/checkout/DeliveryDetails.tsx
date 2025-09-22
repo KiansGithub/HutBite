@@ -91,7 +91,7 @@ export const DeliveryDetails = () => {
               icon="business-outline"
               title={pickupTitle}
               subtitle={pickupSubtitle}
-              onPress={() => router.navigate('/(main)/edit-pickup')} // or your store selector
+              onPress={() => router.navigate('/(main)/store-address')}
               isTitleRed={!storeInfo?.name}
             />
             <View style={styles.separator} />
@@ -100,7 +100,10 @@ export const DeliveryDetails = () => {
 
         <DetailRow
           icon="trail-sign-outline"
-          title={deliveryInstructions ? 'Delivery notes' : 'Add delivery notes'}
+          title={deliveryInstructions 
+            ? (orderType === 'DELIVERY' ? 'Delivery notes' : 'Notes')
+            : (orderType === 'DELIVERY' ? 'Add delivery notes' : 'Add notes')
+          }
           subtitle={deliveryInstructions || undefined}
           onPress={() => router.navigate('/(main)/edit-delivery-instructions')}
         />

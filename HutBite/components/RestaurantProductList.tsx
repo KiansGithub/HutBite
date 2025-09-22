@@ -12,6 +12,8 @@ interface RestaurantProductListProps {
   products: IBaseProduct[];
   basketItems: IBasketItem[];
   onProductPress: (product: IBaseProduct) => void;
+  onProductIncrement?: (product: IBaseProduct) => void;
+  onProductDecrement?: (product: IBaseProduct) => void;
   buildImageUrl: (imgUrl?: string) => string | null;
 }
 
@@ -19,6 +21,8 @@ export function RestaurantProductList({
   products, 
   basketItems = [], 
   onProductPress,
+  onProductIncrement,
+  onProductDecrement,
   buildImageUrl 
 }: RestaurantProductListProps) {
 
@@ -32,6 +36,8 @@ export function RestaurantProductList({
         product={item}
         quantity={quantity}
         onPress={() => onProductPress(item)}
+        onIncrement={onProductIncrement ? () => onProductIncrement(item) : undefined}
+        onDecrement={onProductDecrement ? () => onProductDecrement(item) : undefined}
         imageUrl={imageUrl || undefined}
       />
     );

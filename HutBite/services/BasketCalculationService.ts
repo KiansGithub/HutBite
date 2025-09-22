@@ -43,7 +43,7 @@ export class BasketCalculationService {
     // Calculate total with quantity
     const total = (basePrice + optionsTotal) * newQuantity;
 
-    return `${total.toFixed(2)}`;
+    return `£${total.toFixed(2)}`;
   }
 
   /**

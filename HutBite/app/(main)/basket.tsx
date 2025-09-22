@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/Themed';
 import Colors from '@/constants/Colors';
 import { useBasket } from '@/contexts/BasketContext';
+import { useStore } from '@/contexts/StoreContext';
 import { BasketItem } from '@/components/basket/BasketItem';
 import { EmptyBasket } from '@/components/basket/EmptyBasket';
 import { BasketSummary } from '@/components/basket/BasketSummary';
@@ -27,6 +28,7 @@ export default function BasketScreen() {
   const topPad = (insets.top || 0) + 6;
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme];
+  const { storeInfo } = useStore();
   const {
     items,
     total,
@@ -51,57 +53,67 @@ export default function BasketScreen() {
     console.log('Edit item:', item);
   };
 
-  // BasketScreen
-const handleCheckout = () => {
-  router.push({
-    pathname: '/(main)/checkout',
-    params: { orderType: 'DELIVERY' },
-  });
-};
+  const handleCheckout = () => {
+    router.push({
+      pathname: '/(main)/checkout',
+      params: { orderType: 'DELIVERY' },
+    });
+  };
 
   if (items.length === 0) {
     return (
       <View style={[styles.container, { backgroundColor: themeColors.background }]}>
-        <View style={[styles.header, { paddingTop: insets.top }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color={themeColors.text} />
-          </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: themeColors.text }]}>Basket</Text>
-          <View style={styles.headerRight} />
-        </View>
+        {/* Same gradient header as filled basket */}
+        <StatusBar style="light" translucent backgroundColor="transparent" />
+        <LinearGradient
+          colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientTop, { paddingTop: (insets.top || 0) + 6 }]}
+        >
+          <View style={styles.headerRow}>
+            <TouchableOpacity onPress={() => router.back()} style={styles.headerIcon}>
+              <Ionicons name="chevron-back" size={22} color="#111" />
+            </TouchableOpacity>
+
+            <View style={styles.headerCenter}>
+              <Text style={styles.headerTitle}>{storeInfo?.name || 'Basket'}</Text>
+              <Text style={styles.headerPill}>Empty</Text>
+            </View>
+
+            {/* Invisible spacer to balance the back button */}
+            <View style={styles.headerSpacer} />
+          </View>
+        </LinearGradient>
+        
         <EmptyBasket />
       </View>
     );
   }
 
   return (
-<View style={[styles.container, { backgroundColor: themeColors.background }]}>
-    {/* Gradient Header like the menu modal */}
-    <StatusBar style="light" translucent backgroundColor="transparent" />
-    <LinearGradient
-      colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={[styles.gradientTop, { paddingTop: (insets.top || 0) + 6 }]}
-    >
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerIcon}>
-          <Ionicons name="chevron-back" size={22} color="#111" />
-        </TouchableOpacity>
+    <View style={[styles.container, { backgroundColor: themeColors.background }]}>
+      {/* Gradient Header like the menu modal */}
+      <StatusBar style="light" translucent backgroundColor="transparent" />
+      <LinearGradient
+        colors={[Colors.light.primaryStart, Colors.light.primaryEnd]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.gradientTop, { paddingTop: (insets.top || 0) + 6 }]}
+      >
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerIcon}>
+            <Ionicons name="chevron-back" size={22} color="#111" />
+          </TouchableOpacity>
 
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Basket</Text>
-          <Text style={styles.headerPill}>
-            {itemCount} item{itemCount === 1 ? '' : 's'}
-          </Text>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>{storeInfo?.name || 'Basket'}</Text>
+          </View>
+
+          {/* Invisible spacer to balance the back button */}
+          <View style={styles.headerSpacer} />
         </View>
-
-        <TouchableOpacity onPress={clearBasket} style={styles.headerIcon}>
-          <Ionicons name="trash-outline" size={20} color="#111" />
-        </TouchableOpacity>
-      </View>
-    </LinearGradient>
-
+      </LinearGradient>
 
       <ScrollView
         style={styles.scrollView}
@@ -119,11 +131,14 @@ const handleCheckout = () => {
           />
         ))}
 
-        <BasketSummary
-          totalItems={itemCount}
-          totalPrice={total}
-          testID="basket-summary"
-        />
+        {/* Add more items button */}
+        <TouchableOpacity 
+          style={styles.addMoreButton}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="add" size={16} color={colors.tabIconDefault} />
+          <Text style={styles.addMoreText}>Add more items</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom, backgroundColor: themeColors.background }]}>
@@ -226,8 +241,13 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(17,17,17,0.08)',
   },
+  headerSpacer: {
+    height: 36,
+    width: 36,
+    // No background, just takes up space for centering
+  },
   headerCenter: { flex: 1, alignItems: 'center', gap: 4 },
-  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  headerTitle: { color: '#fff', fontSize: 18, fontWeight: '700', textAlign: 'center' },
   headerPill: {
     color: '#fff',
     fontSize: 12,
@@ -236,5 +256,22 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'rgba(255,255,255,0.22)',
     overflow: 'hidden',
-}
+  },
+  addMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 6,
+  },
+  addMoreText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
 })

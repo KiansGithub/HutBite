@@ -66,11 +66,14 @@ export function useVideoPlayback() {
   }, []);
 
   /**
-   * Handle search results changes - scroll to top and reset indexes
+   * Handle search results changes - ONLY reset when actually searching
    */
-  const handleSearchResultsChange = useCallback(() => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: false });
-    resetIndexes();
+  const handleSearchResultsChange = useCallback((isSearching: boolean) => {
+    // Only reset indexes when user is actively searching, not during normal scroll
+    if (isSearching) {
+      listRef.current?.scrollToOffset({ offset: 0, animated: false });
+      resetIndexes();
+    }
   }, [resetIndexes]);
 
   /**

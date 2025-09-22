@@ -35,7 +35,7 @@ export default function RestaurantMenuView({
   const insets = useSafeAreaInsets();
   const topPad = (insets.top || 0) + 6;
 
-  const { items, addItem } = useBasket();
+  const { items, addItem, removeItem, updateQuantity, total } = useBasket();
   const { toppingGroups, optionCategoryId } = useStore();
 
   // Use the new hooks for data and navigation
@@ -115,6 +115,32 @@ export default function RestaurantMenuView({
     [categories, products, addItem, handleProductPress]
   );
 
+  const handleProductIncrement = useCallback((product: IBaseProduct) => {
+    // For increment, we can directly add the product (same as handleProductPress for simple products)
+    if (product.Modifiable && product.DeGroupedPrices) {
+      // If product has options, open the options modal
+      handleProductPress(product);
+    } else {
+      // Simple product, add directly
+      addItem(product, []);
+    }
+  }, [addItem, handleProductPress]);
+
+  const handleProductDecrement = useCallback((product: IBaseProduct) => {
+    // Find the basket item for this product
+    const basketItem = items.find(item => item.id === product.ID);
+    if (basketItem) {
+      const currentQuantity = parseInt(basketItem.quantity, 10);
+      if (currentQuantity > 1) {
+        // Decrement quantity by 1
+        updateQuantity(basketItem.basketItemId, currentQuantity - 1);
+      } else {
+        // Remove item completely when quantity would become 0
+        removeItem(basketItem.basketItemId);
+      }
+    }
+  }, [items, removeItem, updateQuantity]);
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: colors.background }]}
@@ -141,10 +167,13 @@ export default function RestaurantMenuView({
           error={error}
           activeCategory={activeCategory}
           basketItems={items || []}
+          basketTotal={total}
           onCategoryPress={setActiveCategory}
           onProductPress={handleProductPress}
           onRetry={loadMenuData}
           buildImageUrl={buildImageUrl}
+          onProductIncrement={handleProductIncrement}
+          onProductDecrement={handleProductDecrement}
         />
       )}
 

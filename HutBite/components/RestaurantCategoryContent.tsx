@@ -18,6 +18,8 @@ interface RestaurantCategoryContentProps {
   selectedCategoryId: string | null;
   basketItems: IBasketItem[];
   onProductPress?: (product: IBaseProduct) => void;
+  onProductIncrement?: (product: IBaseProduct) => void;
+  onProductDecrement?: (product: IBaseProduct) => void;
   buildImageUrl: (imgUrl?: string) => string | null;
 }
 
@@ -30,6 +32,8 @@ export function RestaurantCategoryContent({
   selectedCategoryId,
   basketItems = [],
   onProductPress,
+  onProductIncrement,
+  onProductDecrement,
   buildImageUrl
 }: RestaurantCategoryContentProps) {
 
@@ -92,6 +96,8 @@ export function RestaurantCategoryContent({
           products={filteredProducts}
           basketItems={basketItems}
           onProductPress={onProductPress}
+          onProductIncrement={onProductIncrement}
+          onProductDecrement={onProductDecrement}
           buildImageUrl={buildImageUrl}
         />
       )}

@@ -20,8 +20,11 @@ export interface MenuContentProps {
   error: string | null;
   activeCategory: string | null;
   basketItems: IBasketItem[];
+  basketTotal: string;
   onCategoryPress: (categoryId: string) => void;
   onProductPress: (product: IBaseProduct) => void;
+  onProductIncrement?: (product: IBaseProduct) => void;
+  onProductDecrement?: (product: IBaseProduct) => void;
   onRetry: () => void;
   buildImageUrl: (imgUrl?: string) => string | null;
 }
@@ -35,8 +38,11 @@ export function MenuContent({
   error,
   activeCategory,
   basketItems,
+  basketTotal,
   onCategoryPress,
   onProductPress,
+  onProductIncrement,
+  onProductDecrement,
   onRetry,
   buildImageUrl,
 }: MenuContentProps) {
@@ -81,6 +87,8 @@ export function MenuContent({
         selectedCategoryId={activeCategory}
         basketItems={basketItems || []}
         onProductPress={onProductPress}
+        onProductIncrement={onProductIncrement}
+        onProductDecrement={onProductDecrement}
         buildImageUrl={buildImageUrl}
       />
 
@@ -92,7 +100,7 @@ export function MenuContent({
         >
           <View style={styles.basketInfo}>
             <Ionicons name="basket" size={20} color="#fff" />
-            <Text style={styles.basketText}>{storeProfile?.StoreName || 'Restaurant'}</Text>
+            <Text style={styles.basketText}>£{basketTotal}</Text>
             <Text style={styles.basketCount}>{basketItems.length}</Text>
           </View>
         </TouchableOpacity>

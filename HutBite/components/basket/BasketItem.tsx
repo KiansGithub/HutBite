@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Image } from 'react-native';
-import { Card, IconButton, Dialog, Portal, Button } from 'react-native-paper';
-import { LinearGradient } from 'expo-linear-gradient';
+import { StyleSheet, View, Image, TouchableOpacity } from 'react-native';
+import { IconButton, Dialog, Portal, Button } from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
 import type { IBasketItem } from '@/types/basket';
 import { parsePriceString } from '@/utils/basketUtils';
 import type { BasketItemProps } from './types';
 import { buildImageUrl } from '@/utils/imageUtils';
-import  Colors from '@/constants/Colors';
+import Colors from '@/constants/Colors';
 import { useStore } from '@/contexts/StoreContext';
 import { Text } from '@/components/Themed';
 
 const colors = Colors.light; 
+
+// Format price for customer display - converts any format to £X.XX
+const formatPriceForDisplay = (price: string): string => {
+  // Extract just the number from any format (£8.95, 8.95 GBP, 8.95, etc.)
+  const numericValue = parseFloat(price.replace(/[^0-9.-]+/g, '')) || 0;
+  return `£${numericValue.toFixed(2)}`;
+};
 
 export function BasketItem({
     item, 
@@ -33,315 +40,158 @@ export function BasketItem({
 
     // Handle delete confirmation 
     const handleDeletePress = () => {
-        setShowDeleteConfirm(true);
-    };
-
-    const handleConfirmDelete = () => {
-        onRemove(item.basketItemId);
-
-        setShowDeleteConfirm(false);
-    };
-
-    const handleCancelDelete = () => {
-        setShowDeleteConfirm(false);
+        if (quantity === 1) {
+            // Direct delete when quantity is 1
+            onRemove(item.basketItemId);
+        } else {
+            // Decrease quantity when > 1
+            handleQuantityChange(-1);
+        }
     };
 
     // Group options by type (regular options vs toppings)
     const regularOptions = item.options.filter(opt => opt.option_list_name !== 'Topping');
     const toppings = item.options.filter(opt => opt.option_list_name === 'Topping');
 
-    // Format price for the display 
-    const formatPrice = (price: string) => {
-        const priceValue = parsePriceString(price);
-        if (priceValue === 0) {
-            return '';
-        }
-        return price; 
-    }
-    const hasOptions = regularOptions.length > 0 || toppings.length > 0; 
-
     const imageSource = item.imageUrl ? { uri: item.imageUrl } : null; 
 
-    // Build succinct text for regular options and toppings 
-    const regularOptionsText = regularOptions 
-      .map((option) => {
-        const entries = option.label 
-          ? option.label.split(', ').map((entry) => entry.trim())
-          : ['Unknown Option'];
-        return entries 
-          .map(
-            (entry) => 
-                `${entry}${
-                    formatPrice(option.price) && option.quantity > 1 
-                      ? ` x${option.quantity}`
-                      : ''
-                }`
-          )
-          .join(', ')
-      })
-      .join(' ');
-
-    const toppingsText = toppings
-      .map(
-        (topping) => 
-            `${topping.label || 'Topping'}${
-                topping.quantity > 1 ? ` x${topping.quantity}` : ''
-            }`
-      )
+    // Build succinct text for options
+    const optionsText = regularOptions 
+      .map((option) => option.label || 'Option')
       .join(', ');
 
     return (
-        <>
-        <Card style={[styles.card, { backgroundColor: colors.background }]} testID={testID}>
-            <LinearGradient
-                colors={[colors.primary, 'transparent']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.cardAccent}
-                pointerEvents="none"
-            />
-            <View style={styles.container}>
-            <View style={styles.topRow}>
-                {/* Image Section */}
-                <View style={styles.imageContainer}>
-                    {imageSource ? (
-                        <Image source={imageSource} style={styles.image} resizeMode="cover" />
-                    ) : (
-                        <View style={[styles.image, styles.placeholderImage]} />
-                    )}
-                </View>
-           
-            {/* Product Details */}
-            <View style={styles.textContainer}>
-                <Text style={styles.itemName}>{item.product_name}</Text>
-                {regularOptionsText ? (
-                    <Text style={styles.optionsText} numberOfLines={2}>
-                        {regularOptionsText}
-                    </Text>
-                ): null}
-            </View>
-            <View style={styles.priceContainer}>
-                <Text style={styles.price}>
-                    {item.price}
-                </Text>
-            </View>
+        <View style={styles.container} testID={testID}>
+            {/* Product Image */}
+            <View style={styles.imageContainer}>
+                {imageSource ? (
+                    <Image source={imageSource} style={styles.image} resizeMode="cover" />
+                ) : (
+                    <View style={[styles.image, styles.placeholderImage]} />
+                )}
             </View>
 
-            {toppingsText ? (
-                <View style={styles.toppingsRow}>
-                    <IconButton 
-                      icon="plus"
-                      size={14}
-                      style={styles.toppingsIcon}
-                      disabled 
-                    />
-                    <Text style={styles.toppingsRowText} numberOfLines={3}>
-                        {toppingsText}
-                    </Text>
+            {/* Product Info */}
+            <View style={styles.contentContainer}>
+                <View style={styles.topRow}>
+                    <View style={styles.productInfo}>
+                        <Text style={styles.productName} numberOfLines={1}>
+                            {item.product_name}
+                        </Text>
+                        {optionsText ? (
+                            <Text style={styles.optionsText} numberOfLines={1}>
+                                {optionsText}
+                            </Text>
+                        ) : null}
                     </View>
-            ): null}
+                    <Text style={styles.price}>{formatPriceForDisplay(item.price)}</Text>
+                </View>
 
-            <View style={styles.bottomRow}>
-                {/* <View style={styles.actionButtons}>
-                    <IconButton 
-                        icon="pencil"
-                        size={20}
-                        onPress={() => onEdit?.(item)}
-                        testID={`${testID}-edit`}
-                    />
-                </View> */}
-                {/* Delete button */}
-                <IconButton 
-                    icon="delete"
-                    size={20}
-                    onPress={handleDeletePress}
-                    testID={`${testID}-delete`}
-                    style={[{}]}
-                />
+                {/* Controls Row */}
+                <View style={styles.controlsRow}>
+                    {/* Left side - Delete/Minus button */}
+                    <TouchableOpacity 
+                        style={styles.controlButton}
+                        onPress={handleDeletePress}
+                        testID={`${testID}-${quantity === 1 ? 'delete' : 'decrease'}`}
+                    >
+                        <Ionicons 
+                            name={quantity === 1 ? "trash-outline" : "remove"} 
+                            size={16} 
+                            color={colors.tabIconDefault} 
+                        />
+                    </TouchableOpacity>
 
-                <View style={styles.quantityControls}>
-                    <IconButton 
-                        icon="minus"
-                        size={20}
-                        onPress={() => handleQuantityChange(-1)}
-                        disabled={quantity <= 1}
-                        testID={`${testID}-decrease`}
-                    />
+                    {/* Center - Quantity */}
                     <Text style={styles.quantity}>{quantity}</Text>
-                    <IconButton 
-                        icon="plus"
-                        size={20}
+
+                    {/* Right side - Plus button */}
+                    <TouchableOpacity 
+                        style={styles.controlButton}
                         onPress={() => handleQuantityChange(1)}
                         testID={`${testID}-increase`}
-                    />
+                    >
+                        <Ionicons name="add" size={16} color={colors.tabIconDefault} />
+                    </TouchableOpacity>
                 </View>
             </View>
-            </View>
-            </Card>
-
-            {/* Delete confirmation dialog */}
-            <Portal>
-                <Dialog 
-                    visible={showDeleteConfirm}
-                    onDismiss={handleCancelDelete} 
-                    style={{borderRadius: 0}}
-                    testID={`${testID}-delete-dialog`}
-                >
-                    <Dialog.Title>Remove Item</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>
-                            Are you sure you want to remove {item.product_name} from your basket?
-                        </Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button 
-                            onPress={handleCancelDelete}
-                            testID={`${testID}-cancel-delete`}
-                        >
-                            Cancel
-                        </Button>
-                        <Button 
-                            onPress={handleConfirmDelete}
-                            testID={`${testID}-confirm-delete`}
-                        >
-                            Remove
-                        </Button>
-                        
-                    </Dialog.Actions>
-                </Dialog>
-                </Portal>
-                </>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
-        overflow: 'hidden',
-    },
-    card: {
-        marginVertical: 6,
-        marginHorizontal: 6,
-        borderRadius: 20,
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 6,
-        overflow: 'hidden',
-    },
-    topRow: {
         flexDirection: 'row',
-        alignItems: 'flex-start',
-        padding: 12, 
-        maxWidth: '100%',
-    },
-    actionButtons: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        backgroundColor: colors.background,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: colors.border + '30',
     },
     imageContainer: {
-        width: 100, 
-        height: 100,
+        width: 50,
+        height: 50,
+        borderRadius: 8,
         overflow: 'hidden',
-        borderTopLeftRadius: 16, 
-        borderBottomLeftRadius: 16, 
+        marginRight: 12,
     },
     image: {
         width: '100%',
         height: '100%',
     },
     placeholderImage: {
-        backgroundColor: colors.background,
+        backgroundColor: colors.tabIconDefault + '20',
     },
-    textContainer: {
-        flex: 1, 
-        marginLeft: 12, 
-        justifyContent: 'flex-start',
-    },
-    priceContainer: {
-        minWidth: 60, 
-        alignItems: 'flex-end',
-        justifyContent: 'flex-start',
-        paddingRight: 8,
-    },
-    itemName: {
-        fontSize: 16,
-        fontWeight: '600', 
-    },
-    optionLabel: {
+    contentContainer: {
         flex: 1,
+        justifyContent: 'space-between',
     },
-    price: {
-        fontSize: 17,
-        fontWeight: '700',
-        color: colors.text,
-        marginVertical: 4,
-    },
-    optionRow: {
+    topRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginVertical: 4,
+        alignItems: 'flex-start',
+        marginBottom: 8,
     },
-    optionQuantity: {
-        fontWeight: '500',
+    productInfo: {
+        flex: 1,
+        marginRight: 12,
     },
-    controls: {
-        marginTop: 16, 
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    quantityControls: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    quantity: {
-        marginHorizontal: 8,
+    productName: {
         fontSize: 16,
-    },
-    optionsContainer: {
-        backgroundColor: colors.background,
-        padding: 6,
-        borderRadius: 8,
-        marginVertical: 4, 
+        fontWeight: '600',
+        color: colors.text,
+        marginBottom: 2,
     },
     optionsText: {
-        fontSize: 14,
-        color: colors.text,
-        marginTop: 4, 
+        fontSize: 13,
+        color: colors.tabIconDefault,
     },
-    toppingsRow: {
+    price: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: colors.text,
+    },
+    controlsRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8, 
-        marginBottom: 2
+        justifyContent: 'flex-end',
     },
-    toppingsIcon: {
-        marginRight: 4, 
-    },
-    toppingsRowText: {
-        fontSize: 12, 
-        color: colors.text,
-    },
-    bottomRow: {
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-        padding: 4,
-        flexDirection: 'row',
+    controlButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: colors.background,
+        borderWidth: 1,
+        borderColor: colors.border,
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-between',
     },
-    toppingsText: {
-        fontSize: 14,
+    quantity: {
+        fontSize: 16,
+        fontWeight: '600',
         color: colors.text,
-        marginBottom: 4,
-    },
-    cardAccent: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 6, 
+        marginHorizontal: 16,
+        minWidth: 20,
+        textAlign: 'center',
     },
 });
