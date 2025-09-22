@@ -13,7 +13,7 @@ import {
 
 class AddressClient {
   private cache: DeliverabilityCache = {};
-  private readonly baseUrl = 'https://e724bfcd241c.ngrok-free.app';
+  private readonly baseUrl = 'https://hutbiteintegrations.onrender.com';
   private readonly timeout = 6000; // 6 seconds
   private readonly cacheExpiry = 30 * 60 * 1000; // 30 minutes
 
@@ -105,7 +105,6 @@ class AddressClient {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'ngrok-skip-browser-warning': 'true', // Skip ngrok browser warning
         },
         body: JSON.stringify(request),
         signal: controller.signal,

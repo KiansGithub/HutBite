@@ -6,11 +6,12 @@ import Colors from '@/constants/Colors';
 import { Database } from '@/lib/supabase.d';
 import { FeedContentItem } from '@/types/feedContent';
 import { APP_CONFIG } from '@/constants/config';
+import { useDeliveryRange } from '@/contexts/DeliveryRangeContext';
 
 type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 interface OrderButtonProps {
-    restaurant: Restaurant, 
+    restaurant: Restaurant & { distance?: number }, 
     feedItem: FeedContentItem, 
     onOrderPress: () => void;
     onMenuPress?: () => void;
@@ -22,7 +23,34 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
     onOrderPress,
     onMenuPress,
 }) => {
+    const { showDeliveryRangeModal } = useDeliveryRange();
+
+    const isOutsideDeliveryRange = (distance?: number): boolean => {
+        // If no distance available, assume it's within range (no location permission)
+        if (distance === undefined) return false;
+        // Check if restaurant is outside 3-mile delivery radius
+        return distance > 3;
+    };
+
     const handlePress = () => {
+        // Check if ordering is enabled and restaurant is outside delivery range
+        if (APP_CONFIG.ORDERING_ENABLED && 
+            restaurant.receives_orders && 
+            isOutsideDeliveryRange(restaurant.distance)) {
+            
+            // Show delivery range modal for restaurants outside 3-mile radius
+            showDeliveryRangeModal(
+                restaurant,
+                restaurant.distance,
+                () => {
+                    // User chose to continue anyway, proceed with original action
+                    onOrderPress();
+                }
+            );
+            return;
+        }
+
+        // For all other cases, proceed normally
         if (!APP_CONFIG.ORDERING_ENABLED) {
             // When ordering is disabled, always go to restaurant page
             onOrderPress();
@@ -36,6 +64,23 @@ export const OrderButton: React.FC<OrderButtonProps> = ({
     };
 
     const handleMenuPress = () => {
+        // Check if restaurant is outside delivery range for menu press too
+        if (APP_CONFIG.ORDERING_ENABLED && 
+            restaurant.receives_orders && 
+            isOutsideDeliveryRange(restaurant.distance)) {
+            
+            showDeliveryRangeModal(
+                restaurant,
+                restaurant.distance,
+                () => {
+                    // User chose to continue anyway, proceed to menu
+                    onMenuPress?.();
+                }
+            );
+            return;
+        }
+
+        // Proceed normally if within range or ordering disabled
         onMenuPress?.();
     };
 

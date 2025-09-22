@@ -88,7 +88,7 @@ export const hubriseSubmitOrder = async (orderData: any, storeUrl: string): Prom
 
       // The user specified the backend is running on localhost.
       // We'll use a hardcoded URL for now, but this can be configured via `storeUrl` later.
-      const endpoint = 'https://80825ea6b5ad.ngrok-free.app/orders';
+      const endpoint = 'https://hutbiteintegrations.onrender.com/orders';
 
       console.log('Submitting to endpoint:', endpoint);
       console.log('Order Payload:\n', JSON.stringify(orderData, null, 2));
