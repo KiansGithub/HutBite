@@ -17,6 +17,8 @@ export default {
     card: '#F9FAFB', // Off-white for cards
     border: '#E5E7EB', // Light grey for borders
     error: '#EF4444', // Red for error states
+    success: '#4CAF50', // Green for success states
+    warning: '#FF9800', // Orange for warning states
   },
   dark: {
     text: '#111827', // Darker grey for text
@@ -30,5 +32,7 @@ export default {
     card: '#F9FAFB', // Off-white for cards
     border: '#E5E7EB', // Light grey for borders
     error: '#EF4444', // Red for error states
+    success: '#4CAF50', // Green for success states
+    warning: '#FF9800', // Orange for warning states
   },
 };
