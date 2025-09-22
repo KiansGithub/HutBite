@@ -13,7 +13,7 @@ import {
 
 class AddressClient {
   private cache: DeliverabilityCache = {};
-  private readonly baseUrl = 'http://localhost:8000';
+  private readonly baseUrl = process.env.EXPO_PUBLIC_DELIVERABILITY_API_URL || 'https://e724bfcd241c.ngrok-free.app';
   private readonly timeout = 6000; // 6 seconds
   private readonly cacheExpiry = 30 * 60 * 1000; // 30 minutes
 
