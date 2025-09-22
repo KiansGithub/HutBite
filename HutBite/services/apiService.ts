@@ -114,7 +114,6 @@ export interface IStoreStatusResponse {
 export const getStoreProfile = async (storeId: string): Promise<IStoreProfile | null> => {
     try {
         const url = buildApiUrl(API.ENDPOINTS.GET_STORE_PROFILE, { StoreID: storeId });
-        console.log("Get store profile: ", url);
         const response = await fetch(url);
         const data = await response.json();
 
@@ -204,14 +203,11 @@ export const getStoreStatus = async (storeUrl: string): Promise<boolean | null> 
 export const getWebSettings = async (storeUrl: string): Promise<IWebSettings | null> => {
     try {
         const url = `${storeUrl}/api/StoreWebSetting`;
-        console.log("Get web settings: ", url);
         const response = await fetch(url);
         const data = await response.json();
         if (!data?.cardPaymentInfo?.publishableKey) {
             throw new Error('Invalid web settings response');
         }
-
-        console.log("stripe publishable key: ", data.cardPaymentInfo.publishableKey);
 
         return {
             cardPaymentInfo: {
@@ -255,7 +251,6 @@ export const getMenuCategories = async (
 ): Promise<{ categories: MenuCategory[]; optionCatId: string | null; toppingCatId: string | null; }> => {
     try {
         const fullUrl = `${stripeStoreUrl}/api/Categorys?StoreID=${storeId}`;
-        console.log("Get menu categories: ", fullUrl);
 
         const response = await fetch(fullUrl, {
             method: 'GET',
@@ -267,7 +262,6 @@ export const getMenuCategories = async (
         }
 
         const data = await response.json();
-        console.log("categories from store", data);
 
         if (!Array.isArray(data)) {
             throw new Error('Invalid response format');
@@ -277,11 +271,9 @@ export const getMenuCategories = async (
 
         const optionCategory = data.find((category: MenuCategory) => category.CatType === ItemType.OPTION);
         const optionCatId = optionCategory ? optionCategory.ID : null;
-        console.log('Found option category ID: ', optionCatId);
 
         const toppingCategory = data.find((category: MenuCategory) => category.CatType === ItemType.TOPPING);
         const toppingCatId = toppingCategory ? toppingCategory.ID : null;
-        console.log('Found topping category ID: ', toppingCatId);
 
         return { categories: visibleCategories, optionCatId, toppingCatId };
     } catch (error) {

@@ -4,7 +4,6 @@ import { IOptionSelections } from '@/types/productOptions';
 import { IToppingSelection, ITopping, IToppingGroup } from '@/types/toppings';
 import { normalizeOptionList, normalizeOptionListIDs } from './productOptionsUtils';
 
-
 // Price calculation result interface
 interface PriceCalculationResult { 
     basePrice: number; 
@@ -12,7 +11,6 @@ interface PriceCalculationResult {
     toppingsPrice: number; 
     total: number; 
 }
-
 
 /**
  * Safely parse price strings to number 
@@ -22,7 +20,6 @@ interface PriceCalculationResult {
 export function parsePriceString(price: string): number {
     return parseFloat(price.replace(/[^0-9.-]+/g, '')) || 0;
 }
-
 
 /**
  * Format product options for basket 
@@ -37,13 +34,6 @@ export function formatOptionsForBasket(
 ): IBasketOption[] {
     if (!options) return [];
 
-
-    console.log("options: ", options);
-
-
-    console.log("product: ", product);
-
-
     return Object.entries(options).map(([key, value]) => {
         // Skip if no value is selected 
         if (!value) {
@@ -56,16 +46,12 @@ export function formatOptionsForBasket(
             };
         }
 
-
         let optionLabel = "Option";
         let grpId = '';
-
 
         // Ensure DeGroupedPrices exists and access DePrices directly
         const group = product.DeGroupedPrices;
         if (group?.DePrices) {
-            console.log("group.DePrices: ", group.DePrices);
-            
             let matchingOption = group.DePrices.find((option: IProductPrice) =>
                 normalizeOptionListIDs(option?.DeMixOption?.OptionListIDs).some(
                     (opt: { Key: string; Value: string }) =>
@@ -73,25 +59,17 @@ export function formatOptionsForBasket(
                 )
             );
 
-
-            console.log("Matching option", matchingOption);
-
-
             if (matchingOption?.DeMixOption?.OptionList) {
                 const normalizedList = normalizeOptionList(matchingOption.DeMixOption.OptionList);
                 const specificOption = normalizedList.find(opt => opt.Key === key);
                 if (specificOption) {
                     optionLabel = `${specificOption.Value.Name}`;
-                    console.log("optionLabel", optionLabel);
                     grpId = specificOption.Value.GrpID;
-                    console.log("grpId", grpId);
                 } else {
                     optionLabel = key;
-                    console.log("optionLabel", optionLabel);
                 }
             }
         }
-
 
         const refValue = optionCatId && grpId ? `${optionCatId}-${grpId}-${value}` : (value ?? "");
         const option = {
@@ -102,19 +80,9 @@ export function formatOptionsForBasket(
             quantity: 1
         };
 
-
-        // Log cat ID and group ID for debugging
-        console.log('Adding basket option', {
-            optionCatId,
-            grpId,
-            option
-        });
-
-
         return option;
     });
 }
-
 
 /**
  * Format toppings for basket - only includes EXTRA portions beyond what's included
@@ -173,9 +141,6 @@ export function formatToppingsForBasket(
                 quantity: extraPortions, 
                 isExtra: true
             });
-
-            console.log(`Adding extra topping to basket: ${toppingName}, original: ${originalPortion}, selected: ${topping.portions}, extra: ${extraPortions}`);
-        
         }
 
         // Add removed toppings to basket 
@@ -189,14 +154,11 @@ export function formatToppingsForBasket(
                 isExtra: false,
                 isRemoved: true
             });
-
-            console.log(`Adding removed topping to basket: ${toppingName}, original: ${originalPortion}, selected: ${topping.portions}, removed: ${removedPortions}`);
         }
     });
 
     return basketOptions;
 }
-
 
 /**
  * Identify extra toppings in options 
@@ -243,7 +205,6 @@ export const getProductPrice = (product: IBaseProduct): number | null => {
     // Case 2: If DeProducts exist, find the first available price 
     if (product.DeGroupedPrices && Array.isArray(product.DeGroupedPrices.DePrices) && product.DeGroupedPrices?.DePrices?.length > 0) {
         const firstPrice = product.DeGroupedPrices?.DePrices[0].Amount;
-        console.log("Extracted Price from DeGroupedPrices:", firstPrice);
         if (typeof firstPrice === 'number') {
             return firstPrice;
         }
@@ -273,7 +234,6 @@ export function findProductPriceByOptions(
         Object.entries(selectedOptions).filter(([key]) => key !== "Topping")
     );
 
-
     // When options refs include the option category and group ID (e.g. "2-900-101")
     // only the actual option value should be used for price matching
     const normalizedSelectedOptions = Object.fromEntries(
@@ -286,18 +246,15 @@ export function findProductPriceByOptions(
         })
     );
 
-
     // Find a price entry where all selected options match 
     const matchingPrice = product.DeGroupedPrices.DePrices.find(price => {
         // Skip entries without option information 
         if (!price.DeMixOption?.OptionListIDs) return false;
 
-
         // Convert selectedOptions values to strings for comparison 
         const selectedOptionsString = Object.fromEntries(
             Object.entries(normalizedSelectedOptions).map(([k, v]) => [k, String(v)])
         );
-
 
         // Check only Crust and Size match
         return Object.entries(selectedOptionsString).every(([key, value]) => {
@@ -307,17 +264,21 @@ export function findProductPriceByOptions(
         });
     });
 
-
     if (matchingPrice) {
         return matchingPrice.Amount; 
     }
 
-
-    console.log(`No matching price found for product ${product.ID} with options`, normalizedSelectedOptions);
     return getProductPrice(product) ?? product.DePrice; 
 }
 
-
+/**
+ * Calculate the price for a basket item 
+ * @param product - The product object 
+ * @param selections - Object containing selected options and toppings 
+ * @param selectedToppings - Array of selected toppings (kept for signature compatibility)
+ * @param availableToppings - Array of available toppings (kept for signature compatibility)
+ * @returns Price calculation result 
+ */
 export const calculateItemPrice = (
     product: IBaseProduct,
     selections?: {
@@ -327,43 +288,33 @@ export const calculateItemPrice = (
     selectedToppings?: IToppingSelection[],          // kept for signature compatibility
     availableToppings?: ITopping[],
   ): PriceCalculationResult => {
-    console.log("Calculating price for: ", {
-      product: product.Name,
-      selections,
-      selectedToppings,
-      availableToppings,
-    });
-  
     let basePrice = getProductPrice(product) ?? product.DePrice;
     let optionsPrice = 0;
     let toppingsPrice = 0;
-  
+
     // If options are selected, use them to resolve the base price
     if (selections?.options && Object.keys(selections.options).length > 0) {
       basePrice = findProductPriceByOptions(product, selections.options);
     }
-  
+
     // Resolve selected size (handles refs like "2-900-101")
     let selectedSizeId = selections?.options?.Size || selections?.options?.["Größe"];
     if (typeof selectedSizeId === "string" && selectedSizeId.includes("-")) {
       selectedSizeId = selectedSizeId.split("-").pop() as string;
     }
-  
+
     // --- Toppings price -------------------------------------------------------
     if (selections?.toppings && selections.toppings.length > 0 && availableToppings) {
-      console.log("Calculating price for selected toppings:", selections.toppings);
-  
       toppingsPrice = selections.toppings.reduce((total, topping) => {
         // Catalog definition (has prices)
         const toppingDefinition = availableToppings.find(t => t.ID === topping.id);
         if (!toppingDefinition) {
-          console.warn(`No topping definition found for ID ${topping.id}`);
           return total;
         }
-  
+
         // Resolve unit price for this topping, preferring size-specific
         let toppingPriceAmount: number | undefined;
-  
+
         if (selectedSizeId && toppingDefinition.DeGroupedPrices?.DePrices) {
           const priceEntry = toppingDefinition.DeGroupedPrices.DePrices.find(price =>
             normalizeOptionListIDs(price.DeMixOption?.OptionListIDs).some(
@@ -372,7 +323,7 @@ export const calculateItemPrice = (
           );
           toppingPriceAmount = priceEntry?.Amount;
         }
-  
+
         // Fallbacks
         if (toppingPriceAmount === undefined && toppingDefinition.DeGroupedPrices?.DePrices?.length > 0) {
           const firstPrice = toppingDefinition.DeGroupedPrices.DePrices[0].Amount;
@@ -382,39 +333,32 @@ export const calculateItemPrice = (
           toppingPriceAmount = toppingDefinition.DePrice;
         }
         if (toppingPriceAmount === undefined) {
-          console.warn(`No price found for topping ${topping.name}`);
           return total;
         }
-  
-        // ✅ Included (free) portions: prefer product-level mapping, then catalog
+
+        // Included (free) portions: prefer product-level mapping, then catalog
         const includedFromProduct =
           product.Toppings?.find(pt => pt.ID === topping.id)?.OrgPortion;
         const includedFromCatalog = toppingDefinition.OrgPortion;
-  
+
         const originalPortion =
           (includedFromProduct ?? includedFromCatalog ?? 0);
-  
+
         // Bill only the extra above what's included
         const chargeablePortion = Math.max(0, topping.portions - originalPortion);
         const portionPrice = toppingPriceAmount * chargeablePortion;
-  
-        console.log(
-          `Topping ${topping.name}: portions=${topping.portions}, included=${originalPortion}, ` +
-          `chargeable=${chargeablePortion} @ ${toppingPriceAmount} = ${portionPrice}`
-        );
-  
+
         return total + portionPrice;
       }, 0);
     }
-  
+
     return {
       basePrice,
       optionsPrice,
       toppingsPrice,
       total: basePrice + optionsPrice + toppingsPrice,
     };
-  };
-
+};
 
 /**
  * Calculate subtotal for a basket item 
@@ -426,10 +370,8 @@ export function calculateItemSubtotal(item: IBasketItem, newQuantity?: number): 
     // Use provided quantity or item's current quantity 
     const quantity = newQuantity !== undefined ? newQuantity: parseInt(item.quantity, 10);
 
-
     // Calculate base price 
     const basePrice = parsePriceString(item.price);
-
 
     // Calculate options total 
     const optionsTotal = item.options.reduce((sum, option) => {
@@ -437,14 +379,11 @@ export function calculateItemSubtotal(item: IBasketItem, newQuantity?: number): 
         return sum + (optionPrice * option.quantity);
     }, 0);
 
-
     // Calculate total with quantity 
     const total = (basePrice + optionsTotal) * quantity; 
 
-
     return `£${total.toFixed(2)}`;
 }
-
 
 /**
  * Functioning for generating unique id 
@@ -452,7 +391,6 @@ export function calculateItemSubtotal(item: IBasketItem, newQuantity?: number): 
 export function generateSimpleId(): string {
     return 'item-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 5);
 }
-
 
 // Export all utility functions 
 export { PriceCalculationResult };

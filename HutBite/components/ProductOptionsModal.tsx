@@ -255,13 +255,6 @@ const baseInitialSelections: IOptionSelections = useMemo(() => {
   initialSelections: baseInitialSelections,
   });
 
-  console.log('--- DEBUG useProductOptions ---');
-console.log('Processed groups:', processedOptions?.groups?.map((g: any) => g.key));
-console.log('Processed defaults:', processedOptions?.defaultSelections);
-console.log('Initial selections passed in:', baseInitialSelections);
-console.log('Hook selections state:', selections);
-console.log('Validation state:', validationState);
-
   const { formattedPrice, currentPrice } = useRealTimePricing({
     product,
     selections,
@@ -318,7 +311,6 @@ console.log('Validation state:', validationState);
       });
       onDismiss();
     } else {
-      console.log('Cannot confirm - validation failed:', validationState);
     }
   }, [
     validationState.isValid,
