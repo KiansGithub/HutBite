@@ -238,12 +238,18 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
 
             // Consider the order successful if either external submission succeeded 
             // or database save succeeded (we have a record)
-            if (orderResult.success || databaseResult.success) {
-                console.log('✅ ORDER SUCCESS - Order completed successfully');
+            // Only consider order successful if Stripe payment succeeded AND we saved to database
+            // This prevents "successful" orders when payment actually failed
+            if (orderResult.success && databaseResult.success) {
+                console.log('✅ ORDER SUCCESS - Payment completed and order saved');
                 onPaymentSuccess();
-            } else {
-                console.error('❌ ORDER FAILED - Both external submission and database save failed');
-                const errorMsg = orderResult.error || databaseResult.error || 'Order processing failed';
+            } else if (!orderResult.success) {
+                console.error('❌ PAYMENT FAILED - External order submission failed:', orderResult.error);
+                const errorMsg = orderResult.error || 'Payment processing failed';
+                onPaymentError(errorMsg);
+            } else if (!databaseResult.success) {
+                console.error('❌ DATABASE SAVE FAILED - Order not recorded:', databaseResult.error);
+                const errorMsg = 'Order could not be saved. Please contact support.';
                 onPaymentError(errorMsg);
             }
 

@@ -190,8 +190,8 @@ const RestaurantCard = ({ restaurant }) => {
 ### Environment Variables
 
 ```bash
-# Backend API URL (default: http://localhost:8000)
-EXPO_PUBLIC_DELIVERABILITY_API_URL=http://localhost:8000
+# Backend API URL (default: https://hutbiteintegrations.onrender.com)
+EXPO_PUBLIC_DELIVERABILITY_API_URL=https://hutbiteintegrations.onrender.com
 
 # Default delivery radius in miles (default: 3)
 EXPO_PUBLIC_DEFAULT_DELIVERY_RADIUS=3
@@ -382,7 +382,7 @@ M1 1AA   - Test different area (Manchester)
 
 ### Common Issues
 
-1. **Network errors**: Check backend API is running on `http://localhost:8000`
+1. **Network errors**: Check backend API is running on `https://hutbiteintegrations.onrender.com`
 2. **CORS issues**: Ensure backend allows requests from your frontend domain
 3. **Cache issues**: Clear cache with `addressClient.clearCache()`
 4. **Type errors**: Ensure all TypeScript interfaces are properly imported

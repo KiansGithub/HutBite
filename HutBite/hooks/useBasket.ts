@@ -3,7 +3,7 @@
  * Combines state management, calculations, transformations, and validation
  */
 
-import { useCallback, useMemo, useEffect, useRef } from 'react';
+import { useCallback, useMemo, useEffect, useRef, useState } from 'react';
 import type { IBasketItem } from '@/types/basket';
 import type { IBaseProduct } from '@/types/product';
 import type { IToppingSelection, ITopping } from '@/types/toppings';
@@ -18,6 +18,10 @@ export function useBasket() {
   const basketState = useBasketState();
   const validation = useBasketValidation();
   const previousStoreId = useRef<string | null>(null);
+
+  // State for basket clear confirmation 
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [pendingStoreId, setPendingStoreId] = useState<string | null>(null);
 
   // Calculate derived values using memoization
   const total = useMemo(() => {
@@ -37,12 +41,28 @@ export function useBasket() {
       basketState.items.length > 0
     ) {
       console.log(
-        `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId}, clearing basket to prevent mixed items`
+        `🔄 Store change detected from ${previousStoreId.current} to ${nearestStoreId}, showing confirmation`
       );
-      basketState.clearBasket();
+      setPendingStoreId(nearestStoreId);
+      setShowClearConfirmation(true);
+      return; // Don't update previousStoreId yet
     }
     previousStoreId.current = nearestStoreId;
-  }, [nearestStoreId, basketState.clearBasket, basketState.items.length]);
+  }, [nearestStoreId, basketState.items.length]);
+
+  // Handle confirmation modal actions
+  const handleClearConfirm = useCallback(() => {
+    basketState.clearBasket();
+    previousStoreId.current = pendingStoreId;
+    setShowClearConfirmation(false);
+    setPendingStoreId(null);
+  }, [basketState.clearBasket, pendingStoreId]);
+ 
+  const handleClearCancel = useCallback(() => {
+    setShowClearConfirmation(false);
+    setPendingStoreId(null);
+    // Keep the previous store ID unchanged
+  }, []);
 
   // Enhanced addItem with business logic
   const addItem = useCallback((
@@ -145,6 +165,12 @@ export function useBasket() {
     total,
     itemCount,
     currentStoreId: nearestStoreId,
+
+    // Basket clear confirmation
+    showClearConfirmation,
+    pendingStoreId,
+    handleClearConfirm,
+    handleClearCancel,
 
     // Actions
     addItem,
