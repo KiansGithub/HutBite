@@ -6,23 +6,59 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useCheckout } from '@/contexts/CheckoutContext';
+import { useStore } from '@/contexts/StoreContext';
 import { addressyFind, addressyRetrieve, normalizePostcode, outwardCode } from '@/services/addressService';
 import { AddressySuggestion } from '@/types/addressy';
+import { DeliverabilityChecker } from '@/components/DeliverabilityChecker';
+import { Restaurant } from '@/types/deliverability';
 import debounce from 'lodash.debounce';
-
-const REQUIRED_POSTCODE_OUTWARD_FROM_STORE = undefined as unknown as string;
-// ^ If you already captured a store-validated postcode earlier in the flow,
-// pass it into this screen via params/context and set it here, e.g. "EN7".
 
 const EditAddressScreen = () => {
   const insets = useSafeAreaInsets();
-  const { setAddressDetails } = useCheckout();
+  const { 
+    setAddressDetails, 
+    addressDetails,
+    deliverabilityStatus,
+    deliverabilityChecked,
+    restaurant,
+    setDeliverabilityStatus,
+    setDeliverabilityChecked,
+    setRestaurant
+  } = useCheckout();
+  const { storeInfo } = useStore();
 
   // Single text input for everything (postcode, street, full address)
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<AddressySuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [containerStack, setContainerStack] = useState<string | undefined>(undefined); // drill-down container
+  const [showDeliverabilityCheck, setShowDeliverabilityCheck] = useState(false);
+
+  // Initialize restaurant from store info
+  useEffect(() => {
+    if (storeInfo?.latitude && storeInfo?.longitude && !restaurant) {
+      const restaurantData: Restaurant = {
+        lat: parseFloat(storeInfo.latitude),
+        lon: parseFloat(storeInfo.longitude)
+      };
+      setRestaurant(restaurantData);
+    }
+  }, [storeInfo, restaurant, setRestaurant]);
+
+  // Initialize with existing address if available
+  useEffect(() => {
+    if (addressDetails.address || addressDetails.city || addressDetails.postalCode) {
+      const existingAddress = [addressDetails.address, addressDetails.city, addressDetails.postalCode]
+        .filter(Boolean)
+        .join(', ');
+      setQuery(existingAddress);
+      
+      // Show deliverability check if we have a postcode
+      if (addressDetails.postalCode) {
+        setShowDeliverabilityCheck(true);
+      }
+    }
+  }, []);
 
   const runFind = useCallback(async (text: string, container?: string) => {
     if (!text || text.trim().length < 2) {
@@ -45,7 +81,6 @@ const EditAddressScreen = () => {
     // If it's not a full address yet (e.g., Postcode/Street/Locality), drill down
     if (item.Type !== 'Address') {
       setContainerStack(item.Id); // next find() will search within this container
-      // Also replace the list with children of the container (no need to clear query)
       return;
     }
 
@@ -63,19 +98,6 @@ const EditAddressScreen = () => {
     const addressParts = [line1, line2, line3].filter(part => part.length > 0);
     const fullAddress = addressParts.join(', ');
 
-    // Optional: delivery eligibility check against a known outward code
-    if (REQUIRED_POSTCODE_OUTWARD_FROM_STORE) {
-      const need = outwardCode(REQUIRED_POSTCODE_OUTWARD_FROM_STORE);
-      const got = outwardCode(postalCode);
-      if (need && got && need !== got) {
-        Alert.alert(
-          'Outside delivery area',
-          `This address (${postalCode}) is not in our ${need} delivery area.`
-        );
-        return;
-      }
-    }
-
     console.log('Setting address details in edit-address.tsx:', {
       address: fullAddress,
       city,
@@ -88,6 +110,35 @@ const EditAddressScreen = () => {
       postalCode,
     });
 
+    // Show deliverability check section
+    setShowDeliverabilityCheck(true);
+    
+    // Clear suggestions
+    setSuggestions([]);
+  };
+
+  const handleDeliverabilityChange = (deliverable: boolean, postcode: string) => {
+    console.log('Deliverability changed:', { deliverable, postcode });
+    setDeliverabilityChecked(true);
+    
+    if (deliverable) {
+      setDeliverabilityStatus('ok');
+    } else {
+      // The hook will set the appropriate status (out_of_range, invalid, error)
+      // We just need to mark it as checked
+    }
+  };
+
+  const handleSaveAddress = () => {
+    // Only allow saving if deliverability check passed or is not required
+    if (showDeliverabilityCheck && deliverabilityStatus !== 'ok') {
+      Alert.alert(
+        'Delivery Check Required',
+        'Please ensure your address is within our delivery area before continuing.'
+      );
+      return;
+    }
+
     router.back();
   };
 
@@ -98,6 +149,10 @@ const EditAddressScreen = () => {
     if (query) runFind(query);
   };
 
+  const canSave = showDeliverabilityCheck ? 
+    (deliverabilityStatus === 'ok' && deliverabilityChecked) : 
+    !!query.trim();
+
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
@@ -105,7 +160,15 @@ const EditAddressScreen = () => {
           <Ionicons name="close" size={24} color={Colors.light.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Delivery Address</Text>
-        <View style={{ width: 24 }} />
+        <TouchableOpacity 
+          onPress={handleSaveAddress} 
+          style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+          disabled={!canSave}
+        >
+          <Text style={[styles.saveButtonText, !canSave && styles.saveButtonTextDisabled]}>
+            Save
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.formContainer}>
@@ -144,6 +207,46 @@ const EditAddressScreen = () => {
           />
         )}
 
+        {/* Deliverability Check Section */}
+        {showDeliverabilityCheck && restaurant && addressDetails.postalCode && (
+          <View style={styles.deliverabilitySection}>
+            <Text style={styles.sectionTitle}>Delivery Area Check</Text>
+            <DeliverabilityChecker
+              restaurant={restaurant}
+              radiusMiles={3}
+              initialPostcode={addressDetails.postalCode}
+              onDeliverabilityChange={handleDeliverabilityChange}
+              placeholder="Postcode"
+              style={styles.deliverabilityChecker}
+            />
+            
+            {deliverabilityStatus === 'ok' && (
+              <View style={styles.successMessage}>
+                <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                <Text style={styles.successText}>Great! We deliver to this area.</Text>
+              </View>
+            )}
+            
+            {deliverabilityStatus === 'out_of_range' && (
+              <View style={styles.errorMessage}>
+                <Ionicons name="warning" size={20} color="#F59E0B" />
+                <Text style={styles.errorText}>This address is outside our delivery area.</Text>
+              </View>
+            )}
+            
+            {(deliverabilityStatus === 'invalid' || deliverabilityStatus === 'error') && (
+              <View style={styles.errorMessage}>
+                <Ionicons name="close-circle" size={20} color="#EF4444" />
+                <Text style={styles.errorText}>
+                  {deliverabilityStatus === 'invalid' 
+                    ? 'Please enter a valid postcode' 
+                    : 'Unable to verify delivery area. Please try again.'}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
+
         <Text style={styles.powered}>Suggestions powered by Addressy</Text>
       </View>
     </View>
@@ -160,6 +263,21 @@ const styles = StyleSheet.create({
   },
   iconButton: { padding: 8 },
   headerTitle: { flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 'bold' },
+  saveButton: {
+    padding: 8,
+    backgroundColor: Colors.light.primary,
+    borderRadius: 10,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  saveButtonTextDisabled: {
+    color: '#666',
+  },
   formContainer: { padding: 20 },
   input: {
     backgroundColor: '#f0f0f0', borderRadius: 10, padding: 15, fontSize: 16,
@@ -177,6 +295,29 @@ const styles = StyleSheet.create({
     fontSize: 12, opacity: 0.6,
   },
   powered: { marginTop: 10, fontSize: 12, opacity: 0.6 },
+  deliverabilitySection: {
+    marginTop: 20,
+  },
+  sectionTitle: {
+    fontSize: 16, fontWeight: 'bold',
+  },
+  deliverabilityChecker: {
+    padding: 10,
+  },
+  successMessage: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10,
+    backgroundColor: '#f0f0f0', borderRadius: 10,
+  },
+  successText: {
+    fontSize: 14, color: '#10B981',
+  },
+  errorMessage: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10,
+    backgroundColor: '#f0f0f0', borderRadius: 10,
+  },
+  errorText: {
+    fontSize: 14, color: '#EF4444',
+  },
 });
 
 export default EditAddressScreen;

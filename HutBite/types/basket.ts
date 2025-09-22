@@ -8,6 +8,7 @@ export interface IBasketOption {
     price: string; 
     quantity: number; 
     isExtra?: boolean; // Flag for extra toppings
+    isRemoved?: boolean; // Flag for removed toppings
 }
 
 /**

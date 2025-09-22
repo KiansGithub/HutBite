@@ -37,7 +37,7 @@ export const saveOrderToDatabase = async (
     const numericTotal = parseFloat(total.replace(/[^0-9.-]+/g, '')) || 0;
     
     // Calculate item count
-    const itemCount = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const itemCount = items.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
     
     // Determine payment status based on submission response
     let paymentStatus: 'pending' | 'completed' | 'failed' | 'refunded' = 'pending';

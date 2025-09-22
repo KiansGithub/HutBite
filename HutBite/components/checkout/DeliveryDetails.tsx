@@ -28,7 +28,15 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, title, subtitle, onPress, i
 );
 
 export const DeliveryDetails = () => {
-  const { addressDetails, buildingDetails, deliveryInstructions, contact, orderType } = useCheckout();
+  const { 
+    addressDetails, 
+    buildingDetails, 
+    deliveryInstructions, 
+    contact, 
+    orderType,
+    deliverabilityStatus,
+    deliverabilityComplete
+  } = useCheckout();
   const { postcode, storeInfo } = useStore();
 
   console.log('Rendering DeliveryDetails with address:', addressDetails);
@@ -38,9 +46,28 @@ export const DeliveryDetails = () => {
     !!(addressDetails.address?.trim() || addressDetails.city?.trim() || addressDetails.postalCode?.trim());
 
   const addressTitle = hasAddress ? (addressDetails.address || 'Address') : 'Add delivery address';
-  const addressSubtitle = hasAddress
-    ? [addressDetails.address, addressDetails.city, addressDetails.postalCode].filter(Boolean).join(', ')
-    : (postcode ? `Postcode: ${postcode}` : undefined);
+  
+  // Enhanced address subtitle with deliverability status
+  let addressSubtitle = '';
+  if (hasAddress) {
+    const addressParts = [addressDetails.address, addressDetails.city, addressDetails.postalCode].filter(Boolean);
+    addressSubtitle = addressParts.join(', ');
+    
+    // Add deliverability status indicator
+    if (orderType === 'DELIVERY' && addressDetails.postalCode) {
+      if (deliverabilityStatus === 'ok') {
+        addressSubtitle += ' ✓ Delivery available';
+      } else if (deliverabilityStatus === 'out_of_range') {
+        addressSubtitle += ' ⚠️ Outside delivery area';
+      } else if (deliverabilityStatus === 'checking') {
+        addressSubtitle += ' 🔄 Checking delivery...';
+      } else if (!deliverabilityComplete) {
+        addressSubtitle += ' ❗ Delivery check required';
+      }
+    }
+  } else if (postcode) {
+    addressSubtitle = `Postcode: ${postcode}`;
+  }
 
   const hasBuilding =
     !!(buildingDetails.apt?.trim() ||
@@ -60,6 +87,9 @@ export const DeliveryDetails = () => {
   const pickupTitle = storeInfo?.name || 'Select pickup location';
   const pickupSubtitle = [storeInfo?.address, storeInfo?.postalCode].filter(Boolean).join(', ') || undefined;
 
+  // Determine if address row should show as error (red title)
+  const isAddressError = orderType === 'DELIVERY' && (!hasAddress || !deliverabilityComplete);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>
@@ -74,7 +104,7 @@ export const DeliveryDetails = () => {
               title={addressTitle}
               subtitle={addressSubtitle}
               onPress={() => router.navigate('/(main)/edit-address')}
-              isTitleRed={!hasAddress}
+              isTitleRed={isAddressError}
             />
             <View style={styles.separator} />
             <DetailRow
