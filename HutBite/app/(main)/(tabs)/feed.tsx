@@ -29,6 +29,17 @@ export default function FeedScreen() {
   const { storeInfo } = useStore();
   const { showConfirmation } = useBasketClearConfirmation();
 
+  // Debug basket state changes
+  useEffect(() => {
+    console.log('🛒 BASKET STATE CHANGED:', {
+      itemCount,
+      currentStoreId,
+      basketItems: items,
+      storeInfoName: storeInfo?.name,
+      timestamp: new Date().toISOString()
+    });
+  }, [items, itemCount, currentStoreId, storeInfo?.name]);
+
   // Handle search state changes
   useEffect(() => {
     videoPlayback.handleSearchStateChange(
