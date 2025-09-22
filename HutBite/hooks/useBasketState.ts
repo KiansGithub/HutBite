@@ -93,20 +93,21 @@ export function useBasketState() {
   const previousStoreId = useRef<string | null>(null);
 
   // Clear basket when switching between different stores
-  useEffect(() => {
-    if (
-      previousStoreId.current !== null &&
-      nearestStoreId &&
-      nearestStoreId !== previousStoreId.current &&
-      state.items.length > 0
-    ) {
-      console.log(
-        `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId}, clearing basket`
-      );
-      dispatch({ type: 'CLEAR_BASKET' });
-    }
-    previousStoreId.current = nearestStoreId;
-  }, [nearestStoreId, state.items.length]);
+  // DISABLED: Now handled by BasketClearConfirmationContext in feed.tsx
+  // useEffect(() => {
+  //   if (
+  //     previousStoreId.current !== null &&
+  //     nearestStoreId &&
+  //     nearestStoreId !== previousStoreId.current &&
+  //     state.items.length > 0
+  //   ) {
+  //     console.log(
+  //       `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId}, clearing basket`
+  //     );
+  //     dispatch({ type: 'CLEAR_BASKET' });
+  //   }
+  //   previousStoreId.current = nearestStoreId;
+  // }, [nearestStoreId, state.items.length]);
 
   const addItem = useCallback((item: IBasketItem) => {
     dispatch({ type: 'ADD_ITEM', payload: item });
