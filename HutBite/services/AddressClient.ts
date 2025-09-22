@@ -10,10 +10,11 @@ import {
   DeliverabilityResult, 
   DeliverabilityCache 
 } from '@/types/deliverability';
+import { APP_CONFIG } from '@/constants/config';
 
 class AddressClient {
   private cache: DeliverabilityCache = {};
-  private readonly baseUrl = 'https://hutbiteintegrations.onrender.com';
+  private readonly baseUrl = APP_CONFIG.BACKEND_URL;
   private readonly timeout = 6000; // 6 seconds
   private readonly cacheExpiry = 30 * 60 * 1000; // 30 minutes
 

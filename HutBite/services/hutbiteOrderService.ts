@@ -3,6 +3,7 @@ import { OrderType } from '@/types/store';
 import { formatCurrency, generateOrderId, calculateExpectedTime } from '@/utils/orderUtils';
 import { OrderCustomerDetails, OrderPaymentDetails, OrderSubmissionResponse } from '@/types/order';
 import { validateOrderData, handleOrderSubmissionError } from '@/utils/errorHandling';
+import { APP_CONFIG } from '@/constants/config';
 
 const toE164 = (phone?: string) =>
   phone ? phone.replace(/[^\d+]/g, '').replace(/^00/, '+') : undefined;
@@ -86,9 +87,8 @@ export const hubriseSubmitOrder = async (orderData: any, storeUrl: string): Prom
       //   return { success: false, error: `Validation failed: ${validation.errors.join(', ')}` };
       // }
 
-      // The user specified the backend is running on localhost.
-      // We'll use a hardcoded URL for now, but this can be configured via `storeUrl` later.
-      const endpoint = 'https://hutbiteintegrations.onrender.com/orders';
+      // Use environment variable for backend URL
+      const endpoint = `${APP_CONFIG.BACKEND_URL}/orders`;
 
       console.log('Submitting to endpoint:', endpoint);
       console.log('Order Payload:\n', JSON.stringify(orderData, null, 2));
