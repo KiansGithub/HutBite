@@ -1,369 +1,157 @@
-import React, { useState, useRef, useCallback } from 'react';
-import {
-  StyleSheet,
-  FlatList,
-  Dimensions,
-  ActivityIndicator,
-  View,
-  Image,
-  TouchableOpacity,
-  Platform,
-} from 'react-native';
+/**
+ * FeedScreen - Main feed screen component
+ * Displays restaurant feed with video content in a vertical scrollable list
+ */
+
+import React, { useCallback, useEffect } from 'react';
+import { View, FlatList, ActivityIndicator } from 'react-native';
 import { Text } from '@/components/Themed';
-import Colors from '@/constants/Colors';
-import { useRestaurantData, RestaurantWithDistance } from '@/hooks/useRestaurantData';
-import { FeedContentItem } from '@/types/feedContent';
-import { useViewabilityTracking } from '@/hooks/useViewabilityTracking';
-import { RestaurantCard } from '@/components/RestaurantCard';
-import { useLocation } from '@/hooks/useLocation';
-import { useSearch } from '@/hooks/useSearch';
 import { TopOverlay } from '@/components/TopOverlay';
-import { useFocusEffect } from '@react-navigation/native';
-import { router } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useTabTheme } from '@/contexts/TabThemeContext';
-import { useBasket } from '@/contexts/BasketContext';
+import { FeedItem } from '@/components/FeedItem';
 import SignInNudge from '@/components/SignInNudge';
-import { STORE_CONFIG } from '@/constants/api';
-import { APP_CONFIG } from '@/constants/config';
-
-const { height: H } = Dimensions.get('screen');
-const TAB_BAR_HEIGHT = Platform.OS === 'android' ? 45 : 80;
-
-const dynamicStyles = (themeColors: any) => StyleSheet.create({
-  container: { backgroundColor: themeColors.background },
-  locationText: { color: themeColors.primary },
-  locationBanner: { backgroundColor: themeColors.primary },
-  locationBannerText: { color: '#fff' }, // White text on purple is good
-  noResultsText: { color: themeColors.text },
-  noResultsSubtext: { color: themeColors.text, opacity: 0.7 },
-});
+import { useFeedData } from '@/hooks/useFeedData';
+import { useVideoPlayback } from '@/hooks/useVideoPlayback';
+import { FeedService } from '@/services/FeedService';
+import type { RestaurantWithDistance } from '@/hooks/useRestaurantData';
+import type { FeedContentItem } from '@/types/feedContent';
 
 export default function FeedScreen() {
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const [carouselResetTrigger, setCarouselResetTrigger] = useState(0);
-  const [isScreenFocused, setIsScreenFocused] = useState(true);
-  const insets = useSafeAreaInsets();
-  const colorScheme = useColorScheme();
-  const { setTheme } = useTabTheme();
-  const themeColors = Colors[colorScheme];
-  const styles = { ...staticStyles, ...dynamicStyles(themeColors) };
-  const bottomOffset = TAB_BAR_HEIGHT + insets.bottom;
-  const { location, loading: locationLoading } = useLocation();
-  const { restaurants: allRestaurants, feedContent, loading, reshuffleRestaurants } = useRestaurantData();
-  const { searchQuery, setSearchQuery, searchResults, isSearching, setSearchType } = useSearch(allRestaurants, []);
-  const { addItem } = useBasket();
+  // Data and state management
+  const feedData = useFeedData();
+  const videoPlayback = useVideoPlayback();
 
-  const openMenuScreen = useCallback((restaurantId: string, itemId?: string) => {
-    const restaurant = allRestaurants.find(r => r.id === restaurantId);
-    const storeId = restaurant?.store_id || STORE_CONFIG.TEST_STORE_ID;
-    router.push({
-      pathname: '/menu',   // ← route to the new screen
-      params: { id: String(restaurantId), storeId, itemId },
-    });
-  }, [allRestaurants]);
+  // Handle search state changes
+  useEffect(() => {
+    videoPlayback.handleSearchStateChange(
+      feedData.isSearching,
+      feedData.reshuffleRestaurants
+    );
+  }, [feedData.isSearching, feedData.reshuffleRestaurants, videoPlayback]);
 
-  // Track previous search state to detect when search is cleared
-  const prevIsSearching = useRef(isSearching);
-  // Track previous restaurant to only reset carousel when restaurant changes
-  const prevRestaurantId = useRef<string | null>(null);
+  // Handle search results changes
+  useEffect(() => {
+    videoPlayback.handleSearchResultsChange();
+  }, [feedData.searchResults, videoPlayback]);
 
-  // Use search results when searching, otherwise use all restaurants
-  const restaurants: RestaurantWithDistance[] = isSearching ? searchResults : allRestaurants;
-
-  // Ref to control scrolling when search results change
-  const listRef = useRef<FlatList<any>>(null);
-  const {
-    vIndex,
-    visibleHIndex,
-    onViewableChange,
-    updateHorizontalIndex,
-    resetIndexes,
-  } = useViewabilityTracking();
-
-  useFocusEffect(
-    useCallback(() => {
-      setTheme('dark');
-    }, [setTheme])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      setIsScreenFocused(true);
-      return () => {
-        setIsScreenFocused(false);
-      };
-    }, [])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      // On focus do nothing special here
-      return () => {
-        // On blur: ensure menu modal is closed so it doesn't overlay other screens
-        // setMenuModalVisible(false);
-        // setSelectedRestaurant(null);
-        // setSelectedMenuItem(undefined);
-      };
-    }, [])
-  );
-
-  /* one stable object – create it once with useRef */
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 5, // 5 % for percent fields
-  }).current;
-
-  React.useEffect(() => {
-    // Detect when search is cleared (was searching, now not searching)
-    if (prevIsSearching.current && !isSearching) {
-      reshuffleRestaurants();
-    }
-    prevIsSearching.current = isSearching;
-  }, [isSearching, reshuffleRestaurants]);
-
-  React.useEffect(() => {
-    listRef.current?.scrollToOffset({ offset: 0, animated: false });
-    resetIndexes();
-  }, [searchResults]);
-
-  React.useEffect(() => {
-    setIsDescriptionExpanded(false);
-  }, [vIndex]);
-
-  React.useEffect(() => {
-    // AnalyticsService.logScreenView('Feed', 'MainScreen');
-  }, []);
-
-  React.useEffect(() => {
-    setSearchType('restaurants');
-  }, [setSearchType]);
-
-  const handleOrderPress = useCallback(async (
+  // Handle order press
+  const handleOrderPress = useCallback((
     restaurant: RestaurantWithDistance,
-    selectedItem: FeedContentItem 
+    selectedItem: FeedContentItem
   ) => {
-    console.log('🛒 handleOrderPress called with:', { restaurant: restaurant.name, selectedItem });
+    FeedService.handleOrderPress(restaurant, selectedItem, feedData.allRestaurants);
+  }, [feedData.allRestaurants]);
 
-    if (!APP_CONFIG.ORDERING_ENABLED) {
-      router.push(`/restaurant/${restaurant.id}`);
-      return;
-    }
-
-    // Navigate to menu with product IDs so menu can handle the logic
-    console.log('🧭 Navigating to menu screen with product IDs:', {
-      cat_id: selectedItem.cat_id,
-      grp_id: selectedItem.grp_id,
-      pro_id: selectedItem.pro_id
-    });
-    
-    const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
-    router.push({
-      pathname: '/menu',
-      params: { 
-        id: String(restaurant.id), 
-        storeId,
-        cat_id: selectedItem.cat_id,
-        grp_id: selectedItem.grp_id,
-        pro_id: selectedItem.pro_id,
-        auto_add: 'true' // Flag to indicate this should auto-trigger add to basket
-      },
-    });
-  }, []);
-
+  // Handle menu press
   const handleMenuPress = useCallback((restaurantId: string) => {
-    openMenuScreen(restaurantId);
-  }, [openMenuScreen]);
+    FeedService.navigateToMenu(restaurantId, feedData.allRestaurants);
+  }, [feedData.allRestaurants]);
 
+  // Render individual restaurant item
   const renderRestaurant = useCallback(
     ({ item, index }: { item: RestaurantWithDistance; index: number }) => {
-      const feedItems = feedContent[item.id] || [];
-      const isCurrent = index === vIndex;
-      const isPreloaded = Math.abs(index - vIndex) <= 2;
-
-      if (!isCurrent && !isPreloaded) {
-        return <View style={{ width: '100%', height: H }} />;
-      }
-
-      const rowMode = !isScreenFocused
-        ? 'off'
-        : index === vIndex
-          ? 'play'
-          : index === vIndex + 1
-            ? 'warm'
-            : 'off';
+      const feedItems = FeedService.getFeedItemsForRestaurant(item.id, feedData.feedContent);
 
       return (
-        <RestaurantCard
+        <FeedItem
           restaurant={item}
+          index={index}
+          vIndex={videoPlayback.vIndex}
+          isScreenFocused={videoPlayback.isScreenFocused}
           feedItems={feedItems}
-          rowMode={rowMode}
-          isVisible={isCurrent && isScreenFocused}
-          onHorizontalScroll={(idx) => updateHorizontalIndex(item.id, idx)}
-          onOrderPress={(menuItemId) => handleOrderPress(item, feedItems.find(item => item.id === menuItemId))}
+          isDescriptionExpanded={videoPlayback.isDescriptionExpanded}
+          carouselResetTrigger={videoPlayback.carouselResetTrigger}
+          bottomOffset={feedData.bottomOffset}
+          onHorizontalScroll={videoPlayback.handleHorizontalScroll}
+          onOrderPress={handleOrderPress}
           onMenuPress={handleMenuPress}
-          distance={item.distance}
-          isDescriptionExpanded={isCurrent ? isDescriptionExpanded : false}
-          setIsDescriptionExpanded={setIsDescriptionExpanded}
-          resetTrigger={carouselResetTrigger}
-          bottomOffset={bottomOffset}
+          setIsDescriptionExpanded={videoPlayback.setIsDescriptionExpanded}
         />
       );
     },
-    [feedContent, vIndex, carouselResetTrigger, updateHorizontalIndex, handleOrderPress, isScreenFocused, bottomOffset]
+    [
+      feedData.feedContent,
+      feedData.bottomOffset,
+      videoPlayback.vIndex,
+      videoPlayback.isScreenFocused,
+      videoPlayback.isDescriptionExpanded,
+      videoPlayback.carouselResetTrigger,
+      videoPlayback.handleHorizontalScroll,
+      videoPlayback.setIsDescriptionExpanded,
+      handleOrderPress,
+      handleMenuPress,
+    ]
   );
 
-  const getItemLayout = useCallback(
-    (data: any, index: number) => ({
-      length: H,
-      offset: H * index,
-      index,
-    }),
-    []
-  );
+  // Get FlatList configuration
+  const flatListConfig = FeedService.getFlatListConfig();
+  const getItemLayout = FeedService.getItemLayout(feedData.screenHeight);
+  const snapOffsets = FeedService.generateSnapOffsets(feedData.restaurants, feedData.screenHeight);
 
-  if (loading) {
+  // Loading state
+  if (feedData.loading) {
     return (
-      <View style={[styles.container, styles.center, { flex: 1, paddingBottom: 88 }]}>
-        <ActivityIndicator size="large" color={themeColors.primary} />
-        {locationLoading && (
-          <Text style={styles.locationText}>Getting your location...</Text>
-        )}
-        {!locationLoading && (
-          <Text style={styles.locationText}>Loading restaurants...</Text>
-        )}
+      <View style={[feedData.styles.container, feedData.styles.center, { flex: 1, paddingBottom: 88 }]}>
+        <ActivityIndicator size="large" color={feedData.themeColors.primary} />
+        <Text style={feedData.styles.locationText}>
+          {feedData.getLoadingMessage()}
+        </Text>
       </View>
     );
   }
 
+  // Get current restaurant for overlay
+  const currentRestaurant = feedData.getCurrentRestaurant(videoPlayback.vIndex);
+  const currentFeedItems = feedData.getCurrentFeedItems(currentRestaurant?.id);
+
   return (
-    <View style={styles.container}>
-      {/* TopOverlay at page level */}
+    <View style={feedData.styles.container}>
+      {/* Top overlay with search and restaurant info */}
       <TopOverlay
-        restaurantName={restaurants[vIndex]?.name || ''}
-        distance={restaurants[vIndex]?.distance}
-        currentIndex={visibleHIndex}
-        totalItems={feedContent[restaurants[vIndex]?.id]?.length ?? 0}
-        searchQuery={searchQuery}
-        onSearchQueryChange={setSearchQuery}
-        onCategoryPress={(category) => setSearchQuery(category)}
+        restaurantName={FeedService.getRestaurantDisplayName(currentRestaurant)}
+        distance={currentRestaurant?.distance}
+        currentIndex={videoPlayback.visibleHIndex}
+        totalItems={FeedService.getTotalFeedItems(currentRestaurant, feedData.feedContent)}
+        searchQuery={feedData.searchQuery}
+        onSearchQueryChange={feedData.setSearchQuery}
+        onCategoryPress={(category) => feedData.setSearchQuery(category)}
       />
 
-      {isSearching && restaurants.length === 0 ? (
-        <View style={[styles.container, styles.center, styles.noResultsContainer]}>
-          <Text style={styles.noResultsText}>No restaurants found</Text>
-          <Text style={styles.noResultsSubtext}>
-            Try adjusting your search terms
+      {/* Main content */}
+      {feedData.isEmpty ? (
+        <View style={[feedData.styles.container, feedData.styles.center, feedData.styles.noResultsContainer]}>
+          <Text style={feedData.styles.noResultsText}>
+            {feedData.getEmptyStateMessage().title}
           </Text>
-        </View>
-      ) : !isSearching && restaurants.length === 0 ? (
-        <View style={[styles.container, styles.center]}>
-          <Text style={styles.noResultsText}>No restaurants available</Text>
-          <Text style={styles.noResultsSubtext}>
-            Check back later for new restaurants
+          <Text style={feedData.styles.noResultsSubtext}>
+            {feedData.getEmptyStateMessage().subtitle}
           </Text>
         </View>
       ) : (
         <FlatList
-          ref={listRef}
-          data={restaurants}
+          ref={videoPlayback.listRef}
+          data={feedData.restaurants}
           testID="restaurant-flatlist"
-          bounces={false}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          showsVerticalScrollIndicator={false}
           keyExtractor={(r) => r.id.toString()}
           renderItem={renderRestaurant}
-          onViewableItemsChanged={onViewableChange}
-          viewabilityConfig={viewabilityConfig}
+          onViewableItemsChanged={videoPlayback.onViewableChange}
+          viewabilityConfig={videoPlayback.viewabilityConfig}
           getItemLayout={getItemLayout}
-          snapToOffsets={restaurants.map((_, index) => index * H)}
-          disableIntervalMomentum={true}
-          scrollEventThrottle={16}
-          maxToRenderPerBatch={2}
-          windowSize={2}
-          initialNumToRender={1}
-          updateCellsBatchingPeriod={50}
+          snapToOffsets={snapOffsets}
+          {...flatListConfig}
         />
       )}
 
-      {!location && (
-        <View style={styles.locationBanner}>
-          <Text style={styles.locationBannerText}>
+      {/* Location banner */}
+      {!feedData.location && (
+        <View style={feedData.styles.locationBanner}>
+          <Text style={feedData.styles.locationBannerText}>
             Enable location for nearby restaurants
           </Text>
         </View>
       )}
 
+      {/* Sign in nudge */}
       <SignInNudge topOverlayHeight={88} />
     </View>
   );
 }
-
-const staticStyles = StyleSheet.create({
-  container: { flex: 1 },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  noResultsContainer: {
-    paddingTop: 0,
-  },
-  locationText: {
-    marginTop: 10,
-    fontSize: 16
-  },
-  locationBanner: {
-    position: 'absolute',
-    top: 50,
-    left: 20,
-    right: 20,
-    padding: 10,
-    borderRadius: 8,
-    zIndex: 1000,
-  },
-  locationBannerText: {
-    textAlign: 'center',
-    fontSize: 14,
-    fontWeight: '600'
-  },
-  noResultsText: {
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  noResultsSubtext: {
-    fontSize: 14,
-    textAlign: 'center'
-  },
-  signInNudge: {
-    position: 'absolute',
-    bottom: 120,
-    left: 20,
-    right: 20,
-    borderRadius: 12,
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  nudgeTitle: {
-    color: '#fff',
-    fontWeight: '600',
-    marginBottom: 12,
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  nudgeButton: {
-    alignSelf: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-  },
-  nudgeButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-});
