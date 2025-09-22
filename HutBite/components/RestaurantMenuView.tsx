@@ -26,10 +26,12 @@ const colors = Colors.light;
 export default function RestaurantMenuView({
   initialMenuItem,
   initialProductIds,
+  restaurantId,
   storeId,
 }: {
   initialMenuItem?: FeedContentItem;
   initialProductIds?: InitialProductIds;
+  restaurantId?: string;
   storeId?: string;
 }) {
   const insets = useSafeAreaInsets();
@@ -49,7 +51,7 @@ export default function RestaurantMenuView({
     loadMenuData,
     buildImageUrl,
     productCategories,
-  } = useMenuData(storeId);
+  } = useMenuData(storeId, restaurantId);
 
   const {
     route,

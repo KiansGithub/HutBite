@@ -9,6 +9,10 @@ import {
 import { STORE_CONFIG } from '@/constants/api';
 import type { IStoreProfile, IWebSettings, MenuCategory, IBaseProduct } from '@/types/store';
 import { useStore } from '@/contexts/StoreContext';
+import { supabase } from '@/lib/supabase';
+import { Database } from '@/lib/supabase.d';
+
+type Restaurant = Database['public']['Tables']['restaurants']['Row'];
 
 export interface MenuData {
   storeProfile: IStoreProfile | null;
@@ -25,7 +29,7 @@ export interface UseMenuDataReturn extends MenuData {
   productCategories: MenuCategory[];
 }
 
-export function useMenuData(storeId?: string): UseMenuDataReturn {
+export function useMenuData(storeId?: string, restaurantId?: string): UseMenuDataReturn {
   const [loading, setLoading] = useState(true);
   const [storeProfile, setStoreProfile] = useState<IStoreProfile | null>(null);
   const [webSettings, setWebSettings] = useState<IWebSettings | null>(null);
@@ -44,6 +48,27 @@ export function useMenuData(storeId?: string): UseMenuDataReturn {
 
       // Update StoreContext with the correct store ID
       setStoreState((prev) => ({ ...prev, nearestStoreId: effectiveStoreId }));
+
+      // Fetch restaurant coordinates from Supabase if restaurantId is provided
+      let restaurantData: Restaurant | null = null;
+      if (restaurantId) {
+        const { data, error: restaurantError } = await supabase
+          .from('restaurants')
+          .select('latitude, longitude, name')
+          .eq('id', restaurantId)
+          .single();
+        
+        if (restaurantError) {
+          console.warn('Failed to fetch restaurant coordinates:', restaurantError);
+        } else {
+          restaurantData = data;
+          console.log(' Fetched restaurant coordinates:', {
+            name: data.name,
+            latitude: data.latitude,
+            longitude: data.longitude
+          });
+        }
+      }
 
       const profile = await getStoreProfile(effectiveStoreId);
       if (!profile) throw new Error('Failed to fetch store profile');
@@ -70,6 +95,9 @@ export function useMenuData(storeId?: string): UseMenuDataReturn {
           phone: profile.Phone,
           isOpen: true,
           status: 1,
+          // Add restaurant coordinates from Supabase if available
+          latitude: restaurantData?.latitude?.toString(),
+          longitude: restaurantData?.longitude?.toString(),
         },
         stripeStoreUrl: profile.StoreURL,
         stripeApiKey: settings.cardPaymentInfo.publishableKey,
@@ -112,7 +140,7 @@ export function useMenuData(storeId?: string): UseMenuDataReturn {
     } finally {
       setLoading(false);
     }
-  }, [storeId, setStoreState]);
+  }, [storeId, restaurantId, setStoreState]);
 
   useEffect(() => {
     loadMenuData();

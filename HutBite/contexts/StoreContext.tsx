@@ -28,6 +28,8 @@ interface StoreState {
         name?: string;
         address?: string;
         postalCode?: string;
+        latitude?: string;
+        longitude?: string;
         status?: number;
         openingHours?: string;
         isOpen?: boolean;

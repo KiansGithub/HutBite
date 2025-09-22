@@ -43,6 +43,7 @@ const EditAddressScreen = () => {
         lon: parseFloat(storeInfo.longitude)
       };
       setRestaurant(restaurantData);
+      console.log('Restaurant set from storeInfo:', restaurantData);
     }
   }, [storeInfo, restaurant, setRestaurant]);
 
@@ -119,6 +120,16 @@ const EditAddressScreen = () => {
 
     // Show deliverability check section
     setShowDeliverabilityCheck(true);
+
+    // Ensure restaurant is set if not already
+    if (!restaurant && storeInfo?.latitude && storeInfo?.longitude) {
+      const restaurantData: Restaurant = {
+        lat: parseFloat(storeInfo.latitude),
+        lon: parseFloat(storeInfo.longitude)
+      };
+      setRestaurant(restaurantData);
+      console.log('Restaurant set during address selection:', restaurantData);
+    }
     
     // Clear suggestions
     setSuggestions([]);
@@ -224,17 +235,23 @@ const EditAddressScreen = () => {
         )}
 
         {/* Deliverability Check Section */}
-        {showDeliverabilityCheck && restaurant && addressDetails.postalCode && (
+        {showDeliverabilityCheck && addressDetails.postalCode && (
           <View style={styles.deliverabilitySection}>
             <Text style={styles.sectionTitle}>Delivery Area Check</Text>
-            <DeliverabilityChecker
-              restaurant={restaurant}
-              radiusMiles={3}
-              initialPostcode={addressDetails.postalCode}
-              onDeliverabilityChange={handleDeliverabilityChange}
-              placeholder="Postcode"
-              style={styles.deliverabilityChecker}
-            />
+            {restaurant ? (
+              <DeliverabilityChecker
+                restaurant={restaurant}
+                radiusMiles={3}
+                initialPostcode={addressDetails.postalCode}
+                onDeliverabilityChange={handleDeliverabilityChange}
+                placeholder="Postcode"
+                style={styles.deliverabilityChecker}
+              />
+            ) : (
+              <Text style={styles.errorText}>
+                Restaurant location not available. Please try again.
+              </Text>
+            )}
             
             {deliverabilityStatus === 'ok' && (
               <View style={styles.successMessage}>

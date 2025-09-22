@@ -3,7 +3,8 @@ import { useLocalSearchParams } from 'expo-router';
 import RestaurantMenuView from '@/components/RestaurantMenuView';
 
 export default function MenuScreen() {
-  const { storeId, cat_id, grp_id, pro_id, auto_add } = useLocalSearchParams<{ 
+  const { id, storeId, cat_id, grp_id, pro_id, auto_add } = useLocalSearchParams<{ 
+    id?: string;
     storeId?: string; 
     cat_id?: string;
     grp_id?: string; 
@@ -13,6 +14,7 @@ export default function MenuScreen() {
   
   return (
     <RestaurantMenuView 
+      restaurantId={id}
       storeId={storeId} 
       initialProductIds={cat_id && grp_id && pro_id ? {
         cat_id,
