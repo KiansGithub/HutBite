@@ -100,7 +100,7 @@ export function MenuContent({
         >
           <View style={styles.basketInfo}>
             <Ionicons name="basket" size={20} color="#fff" />
-            <Text style={styles.basketText}>£{basketTotal}</Text>
+            <Text style={styles.basketText}>{basketTotal}</Text>
             <Text style={styles.basketCount}>{basketItems.length}</Text>
           </View>
         </TouchableOpacity>

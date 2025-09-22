@@ -11,6 +11,9 @@ import { FeedItem } from '@/components/FeedItem';
 import SignInNudge from '@/components/SignInNudge';
 import { useFeedData } from '@/hooks/useFeedData';
 import { useVideoPlayback } from '@/hooks/useVideoPlayback';
+import { useBasket } from '@/hooks/useBasket';
+import { useStore } from '@/contexts/StoreContext';
+import { useBasketClearConfirmation } from '@/contexts/BasketClearConfirmationContext';
 import { FeedService } from '@/services/FeedService';
 import type { RestaurantWithDistance } from '@/hooks/useRestaurantData';
 import type { FeedContentItem } from '@/types/feedContent';
@@ -19,6 +22,9 @@ export default function FeedScreen() {
   // Data and state management
   const feedData = useFeedData();
   const videoPlayback = useVideoPlayback();
+  const { items, itemCount, currentStoreId } = useBasket();
+  const { storeInfo } = useStore();
+  const { showConfirmation } = useBasketClearConfirmation();
 
   // Handle search state changes
   useEffect(() => {
@@ -33,18 +39,59 @@ export default function FeedScreen() {
     videoPlayback.handleSearchResultsChange(feedData.isSearching);
   }, [feedData.searchResults, feedData.isSearching, videoPlayback]);
 
-  // Handle order press
+  // Handle order press with basket confirmation
   const handleOrderPress = useCallback((
     restaurant: RestaurantWithDistance,
     selectedItem: FeedContentItem
   ) => {
-    FeedService.handleOrderPress(restaurant, selectedItem, feedData.allRestaurants);
-  }, [feedData.allRestaurants]);
+    // Check if we have items in basket and switching to different store
+    const targetStoreId = restaurant.store_id;
+    const hasBasketItems = itemCount > 0;
+    const isDifferentStore = currentStoreId && targetStoreId && currentStoreId !== targetStoreId;
 
-  // Handle menu press
+    if (hasBasketItems && isDifferentStore) {
+      // Show confirmation dialog
+      showConfirmation({
+        currentStoreName: storeInfo?.name || 'Current Restaurant',
+        newStoreName: restaurant.name,
+        itemCount,
+        onConfirm: () => {
+          // User confirmed, proceed with navigation
+          FeedService.handleOrderPress(restaurant, selectedItem, feedData.allRestaurants);
+        }
+      });
+    } else {
+      // No basket items or same store, proceed directly
+      FeedService.handleOrderPress(restaurant, selectedItem, feedData.allRestaurants);
+    }
+  }, [feedData.allRestaurants, itemCount, currentStoreId, storeInfo?.name, showConfirmation]);
+
+  // Handle menu press with basket confirmation
   const handleMenuPress = useCallback((restaurantId: string) => {
-    FeedService.navigateToMenu(restaurantId, feedData.allRestaurants);
-  }, [feedData.allRestaurants]);
+    const restaurant = feedData.allRestaurants.find(r => r.id === restaurantId);
+    if (!restaurant) return;
+
+    // Check if we have items in basket and switching to different store
+    const targetStoreId = restaurant.store_id;
+    const hasBasketItems = itemCount > 0;
+    const isDifferentStore = currentStoreId && targetStoreId && currentStoreId !== targetStoreId;
+
+    if (hasBasketItems && isDifferentStore) {
+      // Show confirmation dialog
+      showConfirmation({
+        currentStoreName: storeInfo?.name || 'Current Restaurant',
+        newStoreName: restaurant.name,
+        itemCount,
+        onConfirm: () => {
+          // User confirmed, proceed with navigation
+          FeedService.navigateToMenu(restaurantId, feedData.allRestaurants);
+        }
+      });
+    } else {
+      // No basket items or same store, proceed directly
+      FeedService.navigateToMenu(restaurantId, feedData.allRestaurants);
+    }
+  }, [feedData.allRestaurants, itemCount, currentStoreId, storeInfo?.name, showConfirmation]);
 
   // Render individual restaurant item
   const renderRestaurant = useCallback(

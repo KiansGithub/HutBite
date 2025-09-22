@@ -23,12 +23,28 @@ interface ProductToppingsProps {
 const ToppingPortionControl = ({ value, onChange }) => {
   return (
     <View style={styles.portionControlContainer}>
-      <TouchableRipple onPress={() => onChange(Math.max(0, value - 1))} style={styles.portionButton} borderless>
-        <Ionicons name="remove-circle-outline" size={28} color={lightColors.tabIconDefault} />
+      <TouchableRipple 
+        onPress={() => onChange(Math.max(0, value - 1))} 
+        style={styles.portionButton} 
+        borderless
+      >
+        <Ionicons 
+          name="remove-circle-outline" 
+          size={24} 
+          color={value > 0 ? lightColors.primary : '#D1D5DB'} 
+        />
       </TouchableRipple>
       <Text style={styles.portionValue}>{value}</Text>
-      <TouchableRipple onPress={() => onChange(Math.min(3, value + 1))} style={styles.portionButton} borderless>
-        <Ionicons name="add-circle" size={28} color={lightColors.primary} />
+      <TouchableRipple 
+        onPress={() => onChange(Math.min(3, value + 1))} 
+        style={styles.portionButton} 
+        borderless
+      >
+        <Ionicons 
+          name="add-circle" 
+          size={24} 
+          color={lightColors.primary} 
+        />
       </TouchableRipple>
     </View>
   );
@@ -128,7 +144,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   toppingGroupTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: lightColors.text,
     marginBottom: 12,
@@ -137,7 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: lightColors.border,
   },
@@ -145,7 +161,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   toppingName: {
-    fontSize: 16,
+    fontSize: 14,
     color: lightColors.text,
     flex: 1,
   },
@@ -158,10 +174,10 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   portionValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: lightColors.text,
-    marginHorizontal: 16,
+    marginHorizontal: 12,
     minWidth: 20,
     textAlign: 'center',
   },

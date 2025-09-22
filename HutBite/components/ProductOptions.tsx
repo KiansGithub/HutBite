@@ -89,72 +89,75 @@ export const ProductOptions: React.FC<ProductOptionsProps> = ({
 const styles = StyleSheet.create({
   container: { width: '100%' },
 
-  groupContainer: { marginBottom: 24 },
+  groupContainer: { marginBottom: 20 },
 
   groupHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
 
   groupTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
     color: lightColors.text,
+    letterSpacing: -0.2,
   },
 
   requiredText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
     color: lightColors.primary,
-    backgroundColor: `${lightColors.primary}20`,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    backgroundColor: `${lightColors.primary}15`,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
     overflow: 'hidden',
   },
 
   optionContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
-    borderWidth: 1.5,
-    borderColor: lightColors.border,
-    backgroundColor: '#fff',       // stays white even when selected
-    borderRadius: 12,
-    marginBottom: 10,
-    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderWidth: 0.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 6,
+    gap: 10,
   },
 
-  // Selected state: only emphasize the border; no fill change
+  // Selected state: subtle border emphasis
   optionSelected: {
     borderColor: lightColors.primary,
+    borderWidth: 1,
   },
 
   optionName: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: lightColors.text,
+    lineHeight: 20,
   },
 
-  // Slight emphasis but keep same color to avoid overwhelm
+  // Minimal emphasis for selected state
   optionNameSelected: {
-    fontWeight: '600',
+    fontWeight: '500',
   },
 
   radioButton: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: lightColors.border,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  // Purple pill with white checkmark
+  // Clean selected state
   radioButtonSelected: {
     backgroundColor: lightColors.primary,
     borderColor: lightColors.primary,

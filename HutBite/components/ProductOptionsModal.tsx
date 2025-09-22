@@ -520,24 +520,25 @@ const styles = StyleSheet.create({
 
   titleBlock: {
     paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 6,
+    paddingVertical: 12,
+    gap: 4,
   },
   productName: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
     color: lightColors.text,
+    letterSpacing: -0.3,
   },
   productDescription: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 18,
     color: '#667085',
   },
 
   /* CONTENT */
   contentBlock: {
     paddingHorizontal: 16,
-    paddingTop: 14,
+    paddingTop: 8,
     paddingBottom: 8,
   },
 
