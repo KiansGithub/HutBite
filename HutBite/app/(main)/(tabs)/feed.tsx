@@ -26,7 +26,7 @@ export default function FeedScreen() {
   const feedData = useFeedData();
   const videoPlayback = useVideoPlayback();
   const { items, itemCount, currentStoreId, clearBasket } = useBasket();
-  const { storeInfo } = useStore();
+  const { storeInfo, setStoreState } = useStore();
   const { showConfirmation } = useBasketClearConfirmation();
 
   // Debug basket state changes
@@ -102,23 +102,47 @@ export default function FeedScreen() {
       newStoreName,
       itemCount,
       onConfirm: () => {
-        console.log('🗑️ User confirmed basket clear, clearing basket and proceeding');
+        console.log('🗑️ User confirmed basket clear, clearing basket and updating store context');
+        
+        // Clear basket first
         clearBasket();
+        
+        // Update store context to new store
+        setStoreState(prev => ({
+          ...prev,
+          nearestStoreId: targetStoreId
+        }));
+        
+        // Then proceed with navigation
         onProceed();
       }
     });
-  }, [itemCount, currentStoreId, storeInfo?.name, showConfirmation, items, clearBasket]);
+  }, [itemCount, currentStoreId, storeInfo?.name, showConfirmation, items, clearBasket, setStoreState]);
 
   // Handle order press with basket confirmation
   const handleOrderPress = useCallback((
     restaurant: RestaurantWithDistance,
     selectedItem: FeedContentItem
   ) => {
+    console.log('🚀 handleOrderPress CALLED:', {
+      restaurantName: restaurant.name,
+      restaurantId: restaurant.id,
+      selectedItemId: selectedItem.id,
+      timestamp: new Date().toISOString()
+    });
+
     const proceedWithOrder = () => {
       console.log('🛒 handleOrderPress proceeding with:', { 
         restaurant: restaurant.name, 
         selectedItem 
       });
+
+      // Update store context to target restaurant
+      const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
+      setStoreState(prev => ({
+        ...prev,
+        nearestStoreId: storeId
+      }));
 
       // If ordering is disabled, navigate to restaurant page
       if (!APP_CONFIG.ORDERING_ENABLED) {
@@ -133,7 +157,6 @@ export default function FeedScreen() {
         pro_id: selectedItem.pro_id
       });
       
-      const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
       router.push({
         pathname: '/menu',
         params: { 
@@ -148,15 +171,26 @@ export default function FeedScreen() {
     };
 
     checkBasketConflict(restaurant, proceedWithOrder);
-  }, [checkBasketConflict]);
+  }, [checkBasketConflict, setStoreState]);
 
   // Handle menu press with basket confirmation
   const handleMenuPress = useCallback((restaurantId: string) => {
+    console.log('🚀 handleMenuPress CALLED:', {
+      restaurantId,
+      timestamp: new Date().toISOString()
+    });
+
     const restaurant = feedData.allRestaurants.find(r => r.id === restaurantId);
     if (!restaurant) return;
 
     const proceedWithMenu = () => {
       const storeId = restaurant.store_id || STORE_CONFIG.TEST_STORE_ID;
+      
+      // Update store context to target restaurant
+      setStoreState(prev => ({
+        ...prev,
+        nearestStoreId: storeId
+      }));
       
       router.push({
         pathname: '/menu',
@@ -165,20 +199,7 @@ export default function FeedScreen() {
     };
 
     checkBasketConflict(restaurant, proceedWithMenu);
-  }, [feedData.allRestaurants, checkBasketConflict]);
-
-  // Handle order press
-  // const handleOrderPress = useCallback((
-  //   restaurant: RestaurantWithDistance,
-  //   selectedItem: FeedContentItem
-  // ) => {
-  //   FeedService.handleOrderPress(restaurant, selectedItem, feedData.allRestaurants);
-  // }, [feedData.allRestaurants]);
-
-  // Handle menu press
-  // const handleMenuPress = useCallback((restaurantId: string) => {
-  //   FeedService.navigateToMenu(restaurantId, feedData.allRestaurants);
-  // }, [feedData.allRestaurants]);
+  }, [feedData.allRestaurants, checkBasketConflict, setStoreState]);
 
   // Render individual restaurant item
   const renderRestaurant = useCallback(

@@ -93,21 +93,24 @@ export function useBasketState() {
   const previousStoreId = useRef<string | null>(null);
 
   // Clear basket when switching between different stores
-  // DISABLED: Now handled by BasketClearConfirmationContext in feed.tsx
-  // useEffect(() => {
-  //   if (
-  //     previousStoreId.current !== null &&
-  //     nearestStoreId &&
-  //     nearestStoreId !== previousStoreId.current &&
-  //     state.items.length > 0
-  //   ) {
-  //     console.log(
-  //       `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId}, clearing basket`
-  //     );
-  //     dispatch({ type: 'CLEAR_BASKET' });
-  //   }
-  //   previousStoreId.current = nearestStoreId;
-  // }, [nearestStoreId, state.items.length]);
+  // CONTROLLED: Only clear when adding items from different store to prevent mixed baskets
+  useEffect(() => {
+    if (
+      previousStoreId.current !== null &&
+      nearestStoreId &&
+      nearestStoreId !== previousStoreId.current &&
+      state.items.length > 0
+    ) {
+      console.log(
+        `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId} with ${state.items.length} items in basket`
+      );
+      console.log('⚠️ Mixed store items detected - this should be handled by confirmation system');
+      // Don't auto-clear here - let the confirmation system handle it
+      // Only update the previousStoreId after confirmation
+      return;
+    }
+    previousStoreId.current = nearestStoreId;
+  }, [nearestStoreId, state.items.length]);
 
   const addItem = useCallback((item: IBasketItem) => {
     dispatch({ type: 'ADD_ITEM', payload: item });
