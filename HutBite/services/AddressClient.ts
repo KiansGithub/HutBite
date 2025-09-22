@@ -8,7 +8,6 @@ import {
   Restaurant, 
   DeliverabilityRequest, 
   DeliverabilityResult, 
-  DeliverabilityError,
   DeliverabilityCache 
 } from '@/types/deliverability';
 
