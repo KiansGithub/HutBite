@@ -93,7 +93,6 @@ export function useBasketState() {
   const previousStoreId = useRef<string | null>(null);
 
   // Clear basket when switching between different stores
-  // CONTROLLED: Only clear when adding items from different store to prevent mixed baskets
   useEffect(() => {
     if (
       previousStoreId.current !== null &&
@@ -102,12 +101,9 @@ export function useBasketState() {
       state.items.length > 0
     ) {
       console.log(
-        `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId} with ${state.items.length} items in basket`
+        `🔄 Store changed from ${previousStoreId.current} to ${nearestStoreId}, clearing basket`
       );
-      console.log('⚠️ Mixed store items detected - this should be handled by confirmation system');
-      // Don't auto-clear here - let the confirmation system handle it
-      // Only update the previousStoreId after confirmation
-      return;
+      dispatch({ type: 'CLEAR_BASKET' });
     }
     previousStoreId.current = nearestStoreId;
   }, [nearestStoreId, state.items.length]);
