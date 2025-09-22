@@ -61,20 +61,23 @@ export const DeliverabilityChecker: React.FC<DeliverabilityCheckerProps> = ({
 
   // Update postcode when initialPostcode changes
   useEffect(() => {
-    setPostcode(initialPostcode);
-    if (initialPostcode) {
+    console.log('DeliverabilityChecker: initialPostcode changed to:', initialPostcode);
+    if (initialPostcode && initialPostcode !== postcode) {
+      setPostcode(initialPostcode);
       check(initialPostcode);
     }
   }, [initialPostcode, check]);
 
   // Notify parent component when deliverability changes
   useEffect(() => {
+    console.log('DeliverabilityChecker: status changed to:', status, 'postcode:', postcode);
     if (onDeliverabilityChange && status !== 'idle' && status !== 'checking') {
       onDeliverabilityChange(status === 'ok', postcode);
     }
   }, [status, postcode, onDeliverabilityChange]);
 
   const handlePostcodeChange = (text: string) => {
+    console.log('DeliverabilityChecker: postcode input changed to:', text);
     setPostcode(text);
     check(text);
   };

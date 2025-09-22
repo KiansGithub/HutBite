@@ -33,6 +33,7 @@ const EditAddressScreen = () => {
   const [loading, setLoading] = useState(false);
   const [containerStack, setContainerStack] = useState<string | undefined>(undefined); // drill-down container
   const [showDeliverabilityCheck, setShowDeliverabilityCheck] = useState(false);
+  const [addressSelected, setAddressSelected] = useState(false); // Track if address was properly selected
 
   // Initialize restaurant from store info
   useEffect(() => {
@@ -52,6 +53,7 @@ const EditAddressScreen = () => {
         .filter(Boolean)
         .join(', ');
       setQuery(existingAddress);
+      setAddressSelected(true); // Mark as selected if we have existing address details
       
       // Show deliverability check if we have a postcode
       if (addressDetails.postalCode) {
@@ -81,6 +83,7 @@ const EditAddressScreen = () => {
     // If it's not a full address yet (e.g., Postcode/Street/Locality), drill down
     if (item.Type !== 'Address') {
       setContainerStack(item.Id); // next find() will search within this container
+      setAddressSelected(false); // Reset address selection state
       return;
     }
 
@@ -104,6 +107,10 @@ const EditAddressScreen = () => {
       postalCode,
     });
 
+    // Update the query to show the selected address
+    setQuery(`${fullAddress}, ${city}, ${postalCode}`);
+    setAddressSelected(true); // Mark that a proper address was selected
+
     setAddressDetails({
       address: fullAddress,
       city,
@@ -118,7 +125,7 @@ const EditAddressScreen = () => {
   };
 
   const handleDeliverabilityChange = (deliverable: boolean, postcode: string) => {
-    console.log('Deliverability changed:', { deliverable, postcode });
+    console.log('Deliverability changed in edit-address:', { deliverable, postcode });
     setDeliverabilityChecked(true);
     
     if (deliverable) {
@@ -130,7 +137,15 @@ const EditAddressScreen = () => {
   };
 
   const handleSaveAddress = () => {
-    // Only allow saving if deliverability check passed or is not required
+    // Only allow saving if a proper address was selected and deliverability check passed (for delivery orders)
+    if (!addressSelected) {
+      Alert.alert(
+        'Address Required',
+        'Please select a complete address from the suggestions.'
+      );
+      return;
+    }
+
     if (showDeliverabilityCheck && deliverabilityStatus !== 'ok') {
       Alert.alert(
         'Delivery Check Required',
@@ -147,11 +162,12 @@ const EditAddressScreen = () => {
     setContainerStack(undefined);
     setSuggestions([]);
     if (query) runFind(query);
+    setAddressSelected(false); // Reset address selection state
   };
 
-  const canSave = showDeliverabilityCheck ? 
+  const canSave = addressSelected && (showDeliverabilityCheck ? 
     (deliverabilityStatus === 'ok' && deliverabilityChecked) : 
-    !!query.trim();
+    true);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
