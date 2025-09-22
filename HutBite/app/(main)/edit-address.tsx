@@ -9,7 +9,7 @@ import { useCheckout } from '@/contexts/CheckoutContext';
 import { useStore } from '@/contexts/StoreContext';
 import { addressyFind, addressyRetrieve, normalizePostcode, outwardCode } from '@/services/addressService';
 import { AddressySuggestion } from '@/types/addressy';
-import { DeliverabilityChecker } from '@/components/DeliverabilityChecker';
+import { useDeliverability } from '@/hooks/useDeliverability';
 import { Restaurant } from '@/types/deliverability';
 import debounce from 'lodash.debounce';
 
@@ -32,7 +32,6 @@ const EditAddressScreen = () => {
   const [suggestions, setSuggestions] = useState<AddressySuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [containerStack, setContainerStack] = useState<string | undefined>(undefined); // drill-down container
-  const [showDeliverabilityCheck, setShowDeliverabilityCheck] = useState(false);
   const [addressSelected, setAddressSelected] = useState(false); // Track if address was properly selected
 
   // Initialize restaurant from store info
@@ -47,6 +46,12 @@ const EditAddressScreen = () => {
     }
   }, [storeInfo, restaurant, setRestaurant]);
 
+  // Background deliverability checking hook
+  const deliverabilityHook = useDeliverability(
+    restaurant || { lat: 0, lon: 0 }, 
+    3 // 3 mile radius
+  );
+
   // Initialize with existing address if available
   useEffect(() => {
     if (addressDetails.address || addressDetails.city || addressDetails.postalCode) {
@@ -56,12 +61,34 @@ const EditAddressScreen = () => {
       setQuery(existingAddress);
       setAddressSelected(true); // Mark as selected if we have existing address details
       
-      // Show deliverability check if we have a postcode
-      if (addressDetails.postalCode) {
-        setShowDeliverabilityCheck(true);
+      // Trigger background deliverability check if we have a postcode
+      if (addressDetails.postalCode && restaurant) {
+        console.log('Triggering initial deliverability check for:', addressDetails.postalCode);
+        deliverabilityHook.check(addressDetails.postalCode);
       }
     }
   }, []);
+
+  // Monitor deliverability hook status and update checkout context
+  useEffect(() => {
+    console.log('Deliverability hook status changed:', {
+      status: deliverabilityHook.status,
+      isLoading: deliverabilityHook.isLoading,
+      data: deliverabilityHook.data
+    });
+
+    if (deliverabilityHook.status !== 'idle' && deliverabilityHook.status !== 'checking') {
+      setDeliverabilityChecked(true);
+      
+      if (deliverabilityHook.status === 'ok') {
+        setDeliverabilityStatus('ok');
+        console.log(' Deliverability check passed');
+      } else {
+        setDeliverabilityStatus(deliverabilityHook.status);
+        console.log(' Deliverability check failed:', deliverabilityHook.status);
+      }
+    }
+  }, [deliverabilityHook.status, deliverabilityHook.isLoading, setDeliverabilityChecked, setDeliverabilityStatus]);
 
   const runFind = useCallback(async (text: string, container?: string) => {
     if (!text || text.trim().length < 2) {
@@ -118,9 +145,6 @@ const EditAddressScreen = () => {
       postalCode,
     });
 
-    // Show deliverability check section
-    setShowDeliverabilityCheck(true);
-
     // Ensure restaurant is set if not already
     if (!restaurant && storeInfo?.latitude && storeInfo?.longitude) {
       const restaurantData: Restaurant = {
@@ -130,21 +154,23 @@ const EditAddressScreen = () => {
       setRestaurant(restaurantData);
       console.log('Restaurant set during address selection:', restaurantData);
     }
+
+    // Trigger background deliverability check automatically
+    if (postalCode && restaurant) {
+      console.log(' Starting automatic deliverability check for:', postalCode);
+      deliverabilityHook.check(postalCode);
+    }
     
     // Clear suggestions
     setSuggestions([]);
   };
 
-  const handleDeliverabilityChange = (deliverable: boolean, postcode: string) => {
-    console.log('Deliverability changed in edit-address:', { deliverable, postcode });
-    setDeliverabilityChecked(true);
-    
-    if (deliverable) {
-      setDeliverabilityStatus('ok');
-    } else {
-      // The hook will set the appropriate status (out_of_range, invalid, error)
-      // We just need to mark it as checked
-    }
+  const handleBackContainer = () => {
+    // Reset container drill-down (go up one level). For simplicity, jump to root:
+    setContainerStack(undefined);
+    setSuggestions([]);
+    if (query) runFind(query);
+    setAddressSelected(false); // Reset address selection state
   };
 
   const handleSaveAddress = () => {
@@ -157,7 +183,7 @@ const EditAddressScreen = () => {
       return;
     }
 
-    if (showDeliverabilityCheck && deliverabilityStatus !== 'ok') {
+    if (deliverabilityStatus !== 'ok' && deliverabilityChecked) {
       Alert.alert(
         'Delivery Check Required',
         'Please ensure your address is within our delivery area before continuing.'
@@ -168,17 +194,16 @@ const EditAddressScreen = () => {
     router.back();
   };
 
-  const handleBackContainer = () => {
-    // Reset container drill-down (go up one level). For simplicity, jump to root:
-    setContainerStack(undefined);
-    setSuggestions([]);
-    if (query) runFind(query);
-    setAddressSelected(false); // Reset address selection state
-  };
-
-  const canSave = addressSelected && (showDeliverabilityCheck ? 
-    (deliverabilityStatus === 'ok' && deliverabilityChecked) : 
+  const canSave = addressSelected && (deliverabilityChecked ? 
+    (deliverabilityStatus === 'ok') : 
     true);
+
+  console.log('Save button state:', {
+    addressSelected,
+    deliverabilityStatus,
+    deliverabilityChecked,
+    canSave
+  });
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -234,40 +259,39 @@ const EditAddressScreen = () => {
           />
         )}
 
-        {/* Deliverability Check Section */}
-        {showDeliverabilityCheck && addressDetails.postalCode && (
+        {/* Background Deliverability Status Display */}
+        {addressSelected && addressDetails.postalCode && (
           <View style={styles.deliverabilitySection}>
-            <Text style={styles.sectionTitle}>Delivery Area Check</Text>
-            {restaurant ? (
-              <DeliverabilityChecker
-                restaurant={restaurant}
-                radiusMiles={3}
-                initialPostcode={addressDetails.postalCode}
-                onDeliverabilityChange={handleDeliverabilityChange}
-                placeholder="Postcode"
-                style={styles.deliverabilityChecker}
-              />
-            ) : (
-              <Text style={styles.errorText}>
-                Restaurant location not available. Please try again.
-              </Text>
+            <Text style={styles.sectionTitle}>Delivery Area Status</Text>
+            
+            {deliverabilityHook.isLoading && (
+              <View style={styles.statusMessage}>
+                <ActivityIndicator size="small" color={Colors.light.primary} />
+                <Text style={styles.statusText}>Checking delivery area...</Text>
+              </View>
             )}
             
-            {deliverabilityStatus === 'ok' && (
+            {deliverabilityStatus === 'ok' && deliverabilityChecked && (
               <View style={styles.successMessage}>
                 <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                <Text style={styles.successText}>Great! We deliver to this area.</Text>
+                <Text style={styles.successText}>
+                  Great! We deliver to this area.
+                  {deliverabilityHook.data && ` (${deliverabilityHook.data.distance_miles.toFixed(1)} miles away)`}
+                </Text>
               </View>
             )}
             
-            {deliverabilityStatus === 'out_of_range' && (
+            {deliverabilityStatus === 'out_of_range' && deliverabilityChecked && (
               <View style={styles.errorMessage}>
                 <Ionicons name="warning" size={20} color="#F59E0B" />
-                <Text style={styles.errorText}>This address is outside our delivery area.</Text>
+                <Text style={styles.errorText}>
+                  This address is outside our delivery area.
+                  {deliverabilityHook.data && ` (${deliverabilityHook.data.distance_miles.toFixed(1)} miles away, max 3 miles)`}
+                </Text>
               </View>
             )}
             
-            {(deliverabilityStatus === 'invalid' || deliverabilityStatus === 'error') && (
+            {(deliverabilityStatus === 'invalid' || deliverabilityStatus === 'error') && deliverabilityChecked && (
               <View style={styles.errorMessage}>
                 <Ionicons name="close-circle" size={20} color="#EF4444" />
                 <Text style={styles.errorText}>
@@ -332,24 +356,28 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   sectionTitle: {
-    fontSize: 16, fontWeight: 'bold',
+    fontSize: 16, fontWeight: 'bold', marginBottom: 10,
   },
-  deliverabilityChecker: {
-    padding: 10,
+  statusMessage: {
+    flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12,
+    backgroundColor: '#f0f0f0', borderRadius: 10,
+  },
+  statusText: {
+    fontSize: 14, color: Colors.light.text,
   },
   successMessage: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10,
-    backgroundColor: '#f0f0f0', borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12,
+    backgroundColor: '#f0f9ff', borderRadius: 10, borderWidth: 1, borderColor: '#10B981',
   },
   successText: {
-    fontSize: 14, color: '#10B981',
+    fontSize: 14, color: '#10B981', flex: 1,
   },
   errorMessage: {
-    flexDirection: 'row', alignItems: 'center', gap: 6, padding: 10,
-    backgroundColor: '#f0f0f0', borderRadius: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12,
+    backgroundColor: '#fef2f2', borderRadius: 10, borderWidth: 1, borderColor: '#F59E0B',
   },
   errorText: {
-    fontSize: 14, color: '#EF4444',
+    fontSize: 14, color: '#EF4444', flex: 1,
   },
 });
 

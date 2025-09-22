@@ -157,11 +157,20 @@ export function useDeliverability(
    * Reset state when restaurant or radius changes
    */
   useEffect(() => {
-    setStatus('idle');
-    setData(null);
-    setError(null);
-    currentRequestRef.current = null;
-    clearDebounce();
+    // Only reset if restaurant coordinates are actually different
+    // Don't reset if we're just getting the same coordinates again
+    const hasValidCoords = restaurant.lat !== 0 && restaurant.lon !== 0;
+    
+    if (!hasValidCoords) {
+      // If we don't have valid coordinates, reset everything
+      setStatus('idle');
+      setData(null);
+      setError(null);
+      currentRequestRef.current = null;
+      clearDebounce();
+      console.log('useDeliverability: Reset due to invalid coordinates');
+    }
+    // Don't reset if we have valid coordinates - let existing checks continue
   }, [restaurant.lat, restaurant.lon, radiusMiles, clearDebounce]);
 
   return {
