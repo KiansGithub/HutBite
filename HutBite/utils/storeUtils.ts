@@ -1,4 +1,4 @@
-import { IStoreInfo } from '@/store/StoreContext';
+import { IStoreInfo } from '@/contexts/StoreContext';
 
 /**
  * Store status codes

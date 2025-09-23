@@ -70,7 +70,7 @@ const CheckoutContext = createContext<CheckoutData | undefined>(undefined);
 
 export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
   const { total, getFormattedBasketData } = useBasket();
-  const { deliveryCharge, serviceCharge, currency, orderType: storeOrderType } = useStore();
+  const { deliveryCharge, serviceCharge, currency, orderType: storeOrderType, minDeliveryValue } = useStore();
 
   // ---- Raw state
   const [contact, _setContact] = useState<ContactDetails>({ firstName: '', lastName: '', email: '', phone: '' });
@@ -187,6 +187,15 @@ export const CheckoutProvider = ({ children }: { children: ReactNode }) => {
         errors.deliverability = 'Unable to verify delivery area. Please try again';
       } else if (!deliverabilityChecked) {
         errors.deliverability = 'Please verify your delivery address';
+      }
+    }
+
+    // NEW: minimum order validation for delivery orders
+    if (orderType === 'DELIVERY' && minDeliveryValue > 0) {
+      const currentTotal = totals.subtotalNum;
+      if (currentTotal < minDeliveryValue) {
+        const remaining = minDeliveryValue - currentTotal;
+        errors.minimumOrder = `Minimum order is £${minDeliveryValue.toFixed(2)}. Add £${remaining.toFixed(2)} more to continue.`;
       }
     }
 

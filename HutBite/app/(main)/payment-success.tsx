@@ -21,7 +21,7 @@ export default function PaymentSuccessScreen() {
 
   const handleViewOrders = () => {
     clearBasket();
-    router.replace('/orders');
+    router.replace('/order-details');
   };
 
   return (
@@ -117,7 +117,7 @@ export default function PaymentSuccessScreen() {
           style={styles.secondaryButton}
           labelStyle={styles.secondaryButtonText}
         >
-          View My Orders
+          View My Order
         </Button>
 
         <Button

@@ -247,3 +247,54 @@ export const getUserOrderHistory = async (
     };
   }
 };
+
+/**
+ * Gets the most recent order (for MVP - single order view)
+ * @param userId - Optional user ID for authenticated users
+ * @returns Promise with the most recent order
+ */
+export const getMostRecentOrder = async (
+  userId?: string | null
+): Promise<{ success: boolean; order?: any; error?: string }> => {
+  try {
+    let query = supabase
+      .from('orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1);
+
+    // If userId is provided, filter by user_id, otherwise get the most recent order regardless of user
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Failed to get most recent order:', error);
+      return {
+        success: false,
+        error: `Database error: ${error.message}`
+      };
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        success: false,
+        error: 'No orders found'
+      };
+    }
+
+    return {
+      success: true,
+      order: data[0]
+    };
+
+  } catch (error) {
+    console.error('Error getting most recent order:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown database error'
+    };
+  }
+};

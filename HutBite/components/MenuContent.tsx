@@ -4,10 +4,12 @@ import { Text } from '@/components/Themed';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
+import { APP_CONFIG } from '@/constants/config';
 import type { IStoreProfile, IWebSettings, MenuCategory, IBaseProduct } from '@/types/store';
 import type { IBasketItem } from '@/types/basket';
 import { RestaurantCategoryHeader } from '@/components/RestaurantCategoryHeader';
 import { RestaurantCategoryContent } from '@/components/RestaurantCategoryContent';
+import { useStore } from '@/contexts/StoreContext';
 
 const colors = Colors.light;
 
@@ -46,12 +48,18 @@ export function MenuContent({
   onRetry,
   buildImageUrl,
 }: MenuContentProps) {
+  const { isCurrentStoreOpen, getStoreStatus, canOrder } = useStore();
+  
+  const storeOpen = isCurrentStoreOpen();
+  const storeStatusMessage = getStoreStatus();
+  const orderingEnabled = canOrder();
+
   return (
     <>
       {/* Delivery Info */}
       <View style={[styles.deliveryInfo, { backgroundColor: colors.tabIconDefault + '10' }]}>
         <View style={styles.deliveryItem}>
-          <Text style={[styles.deliveryValue, { color: colors.text }]}>£0.00</Text>
+          <Text style={[styles.deliveryValue, { color: colors.text }]}>£{APP_CONFIG.DELIVERY_FEE.toFixed(2)}</Text>
           <Text style={[styles.deliveryLabel, { color: colors.text }]}>Delivery Fee</Text>
         </View>
         <View style={styles.deliveryItem}>
@@ -62,10 +70,26 @@ export function MenuContent({
         </View>
       </View>
 
-      {/* Menu Section */}
+      {/* Store Status Section */}
       <View style={[styles.menuSection, { backgroundColor: colors.background }]}>
         <Text style={[styles.menuTitle, { color: colors.text }]}>MENU</Text>
-        <Text style={[styles.menuSubtitle, { color: colors.text }]}>Available Today at 10:00 AM</Text>
+        <View style={styles.statusContainer}>
+          <View style={[
+            styles.statusIndicator, 
+            { backgroundColor: storeOpen ? '#4CAF50' : '#F44336' }
+          ]} />
+          <Text style={[
+            styles.menuSubtitle, 
+            { color: storeOpen ? colors.text : '#F44336' }
+          ]}>
+            {storeStatusMessage || (storeOpen ? 'Open Now' : 'Closed')}
+          </Text>
+        </View>
+        {!storeOpen && (
+          <Text style={[styles.closedMessage, { color: '#F44336' }]}>
+            Items cannot be added to basket while store is closed
+          </Text>
+        )}
       </View>
 
       {/* Category Header */}
@@ -86,9 +110,9 @@ export function MenuContent({
         products={products}
         selectedCategoryId={activeCategory}
         basketItems={basketItems || []}
-        onProductPress={onProductPress}
-        onProductIncrement={onProductIncrement}
-        onProductDecrement={onProductDecrement}
+        onProductPress={orderingEnabled ? onProductPress : undefined}
+        onProductIncrement={orderingEnabled ? onProductIncrement : undefined}
+        onProductDecrement={orderingEnabled ? onProductDecrement : undefined}
         buildImageUrl={buildImageUrl}
       />
 
@@ -140,6 +164,21 @@ const styles = StyleSheet.create({
     fontSize: 12, 
     marginTop: 2, 
     opacity: 0.8 
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  closedMessage: {
+    fontSize: 12,
+    marginTop: 8,
   },
 
   basketFooter: {

@@ -7,4 +7,7 @@ export const APP_CONFIG = {
     
     // Backend URL for HubRise orders and deliverability checking
     BACKEND_URL: process.env.EXPO_PUBLIC_BACKEND_URL || 'https://hutbiteintegrations.onrender.com',
+    
+    // Delivery fee for all orders (in GBP)
+    DELIVERY_FEE: 2.99,
   } as const;

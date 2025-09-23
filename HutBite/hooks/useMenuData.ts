@@ -54,18 +54,21 @@ export function useMenuData(storeId?: string, restaurantId?: string): UseMenuDat
       if (restaurantId) {
         const { data, error: restaurantError } = await supabase
           .from('restaurants')
-          .select('latitude, longitude, name')
+          .select('latitude, longitude, name, opening_time, closing_time, is_open')
           .eq('id', restaurantId)
           .single();
         
         if (restaurantError) {
-          console.warn('Failed to fetch restaurant coordinates:', restaurantError);
+          console.warn('Failed to fetch restaurant data:', restaurantError);
         } else {
           restaurantData = data;
-          console.log(' Fetched restaurant coordinates:', {
+          console.log(' Fetched restaurant data:', {
             name: data.name,
             latitude: data.latitude,
-            longitude: data.longitude
+            longitude: data.longitude,
+            opening_time: data.opening_time,
+            closing_time: data.closing_time,
+            is_open: data.is_open
           });
         }
       }
@@ -98,6 +101,9 @@ export function useMenuData(storeId?: string, restaurantId?: string): UseMenuDat
           // Add restaurant coordinates from Supabase if available
           latitude: restaurantData?.latitude?.toString(),
           longitude: restaurantData?.longitude?.toString(),
+          openingTime: restaurantData?.opening_time,
+          closingTime: restaurantData?.closing_time,
+          isOpen: restaurantData?.is_open,
         },
         stripeStoreUrl: profile.StoreURL,
         stripeApiKey: settings.cardPaymentInfo.publishableKey,

@@ -24,6 +24,10 @@ export interface Database {
           google_review_count: number | null
           receives_orders: boolean
           own_delivery: boolean
+          store_hours: Json | null
+          is_open: boolean | null
+          opening_time: string | null
+          closing_time: string | null
         }
         Insert: {
           id?: string
@@ -39,6 +43,10 @@ export interface Database {
           google_review_count: number | null
           receives_orders?: boolean
           own_delivery?: boolean
+          store_hours?: Json | null
+          is_open?: boolean | null
+          opening_time?: string | null
+          closing_time?: string | null
         }
         Update: {
           id?: string
@@ -54,6 +62,10 @@ export interface Database {
           google_review_count: number | null
           receives_orders?: boolean
           own_delivery?: boolean
+          store_hours?: Json | null
+          is_open?: boolean | null
+          opening_time?: string | null
+          closing_time?: string | null
         }
       }
       menu_items: {

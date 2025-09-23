@@ -29,6 +29,7 @@ export default function MainLayout() {
                       <Stack.Screen name="basket" options={{ headerShown: false, presentation: 'card' }} />
                       <Stack.Screen name="checkout" options={{ headerShown: false, presentation: 'card' }} />
                       <Stack.Screen name="payment-success" options={{ headerShown: false, presentation: 'card' }} />
+                      <Stack.Screen name="order-details" options={{ headerShown: false, presentation: 'card' }} />
                       <Stack.Screen name="edit-address" options={{ headerShown: false, presentation: 'card' }} />
                       <Stack.Screen name="edit-building-details" options={{ headerShown: false, presentation: 'card' }} />
                       <Stack.Screen name="edit-delivery-instructions" options={{ headerShown: false, presentation: 'card' }} />

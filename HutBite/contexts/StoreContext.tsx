@@ -3,6 +3,8 @@ import type { MenuCategory, MenuGroup, IBaseProduct } from '@/types/store';
 import { IOptionSelections } from '@/types/productOptions';
 import { ITopping, IToppingGroup } from '@/types/toppings';
 import { IBasket } from '@/types/basket';
+import { isStoreOpen, getStoreStatusMessage, isOrderingDisabled, type StoreHours } from '@/utils/storeHours';
+import { APP_CONFIG } from '@/constants/config';
 
 // Interface for storeInfo 
 export interface IStoreInfo {
@@ -16,7 +18,6 @@ export interface IStoreInfo {
     isOpen?: boolean; 
     closingIn?: number; 
 }
-
 
 // Define the shape of the state that will be shared across the app. 
 interface StoreState {
@@ -32,8 +33,10 @@ interface StoreState {
         longitude?: string;
         status?: number;
         openingHours?: string;
-        isOpen?: boolean;
+        isOpen?: boolean | null;
         closingIn?: number;
+        opening_time?: string | null;
+        closing_time?: string | null;
     };
     urlForImages: string;
     isStoreInfoVisible: boolean;
@@ -63,6 +66,9 @@ interface StoreContextType extends StoreState {
     setStoreState: React.Dispatch<React.SetStateAction<StoreState>>; 
     handleError: (errorMessage: string) => void;
     selectStore: (storeId: string) => Promise<void>;
+    isCurrentStoreOpen: () => boolean;
+    getStoreStatus: () => string;
+    canOrder: () => boolean;
 }
 
 // Define the default state values for the context
@@ -84,8 +90,8 @@ const defaultState: StoreState = {
     orderType: '',
     groups: [],
     toppingGroups: [],
-    deliveryCharge: 0, 
-    serviceCharge: 0.90,
+    deliveryCharge: APP_CONFIG.DELIVERY_FEE, 
+    serviceCharge: 0,
     selectedGroupId: null,
     optionCategoryId: null,
     toppingCategoryId: null,
@@ -101,6 +107,9 @@ const StoreContext = createContext<StoreContextType>({
     setStoreState: () => {},
     handleError: () => {},
     selectStore: () => Promise.resolve(),
+    isCurrentStoreOpen: () => false,
+    getStoreStatus: () => '',
+    canOrder: () => false,
 });
 
 // Define the StoreProvider component, which wraps the app and provides the shared state.
@@ -131,6 +140,24 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
     };
 
+    // Method to check if the current store is open
+    const isCurrentStoreOpen = () => {
+        if (!storeState.storeInfo) return false;
+        return isStoreOpen(storeState.storeInfo);
+    };
+
+    // Method to get the store status message
+    const getStoreStatus = () => {
+        if (!storeState.storeInfo) return '';
+        return getStoreStatusMessage(storeState.storeInfo);
+    };
+
+    // Method to check if ordering is disabled
+    const canOrder = () => {
+        if (!storeState.storeInfo) return false;
+        return !isOrderingDisabled(storeState.storeInfo);
+    };
+
     // Provide the store state and the `setStoreState` function to child components.
     return (
         <StoreContext.Provider value={{ 
@@ -138,6 +165,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setStoreState, 
             handleError, 
             selectStore, 
+            isCurrentStoreOpen,
+            getStoreStatus,
+            canOrder,
             }}>
             {children}
         </StoreContext.Provider>

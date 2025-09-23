@@ -5,7 +5,7 @@
 
 import { useCallback } from 'react';
 import { useStore } from '@/contexts/StoreContext';
-import { isStoreOpen, getStoreHoursMessage } from '@/utils/storeUtils';
+import { isStoreOpen, getStoreStatusMessage } from '@/utils/storeHours';
 import { BasketCalculationService } from '@/services/BasketCalculationService';
 
 export interface ValidationResult {
@@ -21,7 +21,7 @@ export function useBasketValidation() {
    */
   const validateAddItem = useCallback((): ValidationResult => {
     if (storeInfo && !isStoreOpen(storeInfo)) {
-      const message = getStoreHoursMessage(storeInfo);
+      const message = getStoreStatusMessage(storeInfo);
       return {
         isValid: false,
         message: `Cannot add items: ${message}`
