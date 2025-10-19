@@ -7,7 +7,7 @@ import { router } from 'expo-router';
 import Colors from '@/constants/Colors';
 import { useCheckout } from '@/contexts/CheckoutContext';
 import { useStore } from '@/contexts/StoreContext';
-import { addressyFind, addressyRetrieve, normalizePostcode, outwardCode } from '@/services/addressService';
+import { addressyFind, buildFromFindAddress, normalizePostcode, outwardCode } from '@/services/addressService';
 import { AddressySuggestion } from '@/types/addressy';
 import { useDeliverability } from '@/hooks/useDeliverability';
 import { Restaurant } from '@/types/deliverability';
@@ -108,59 +108,64 @@ const EditAddressScreen = () => {
   }, [query, containerStack, debouncedFind]);
 
   const handleSuggestionPress = async (item: AddressySuggestion) => {
-    // If it's not a full address yet (e.g., Postcode/Street/Locality), drill down
+    // Drill-down container if not yet a full address
     if (item.Type !== 'Address') {
-      setContainerStack(item.Id); // next find() will search within this container
-      setAddressSelected(false); // Reset address selection state
+      setContainerStack(item.Id);
+      setAddressSelected(false);
       return;
     }
-
-    // Full Address → Retrieve full components
-    const details = await addressyRetrieve(item.Id);
-    if (!details) return;
-
-    const line1 = (details.Line1 || '').trim();
-    const line2 = (details.Line2 || '').trim();
-    const line3 = (details.Line3 || '').trim();
-    const city = (details.City || '').trim();
-    const postalCode = (details.PostalCode || '').trim();
- 
-    // Build address string properly, avoiding leading commas
-    const addressParts = [line1, line2, line3].filter(part => part.length > 0);
+  
+    // 👉 Build a usable address from Find's Address item
+    const details = buildFromFindAddress(item);
+    if (!details) {
+      Alert.alert('Address selection', 'Please choose a complete address from the list.');
+      setAddressSelected(false);
+      return;
+    }
+  
+    const { line1, line2, line3, city, postalCode } = details;
+  
+    if (!line1 || !postalCode) {
+      Alert.alert(
+        'Address lookup',
+        'We could not extract a full address or postcode. Please try another suggestion or enter it manually.'
+      );
+      setAddressSelected(false);
+      return;
+    }
+  
+    const addressParts = [line1, line2, line3].filter(Boolean);
     const fullAddress = addressParts.join(', ');
-
-    console.log('Setting address details in edit-address.tsx:', {
-      address: fullAddress,
-      city,
-      postalCode,
-    });
-
-    // Update the query to show the selected address
-    setQuery(`${fullAddress}, ${city}, ${postalCode}`);
-    setAddressSelected(true); // Mark that a proper address was selected
-
+    const display = [fullAddress, city, postalCode].filter(Boolean).join(', ');
+  
+    // Show in input
+    setQuery(display);
+    setAddressSelected(true);
+  
+    // Persist to checkout context
     setAddressDetails({
       address: fullAddress,
       city,
       postalCode,
     });
-
-    // Ensure restaurant is set if not already
+  
+    // Ensure restaurant coords exist
     if (!restaurant && storeInfo?.latitude && storeInfo?.longitude) {
       const restaurantData: Restaurant = {
         lat: parseFloat(storeInfo.latitude),
-        lon: parseFloat(storeInfo.longitude)
+        lon: parseFloat(storeInfo.longitude),
       };
       setRestaurant(restaurantData);
       console.log('Restaurant set during address selection:', restaurantData);
     }
-
-    // Trigger background deliverability check automatically
-    if (postalCode && restaurant) {
-      console.log(' Starting automatic deliverability check for:', postalCode);
-      deliverabilityHook.check(postalCode);
+  
+    // Kick off deliverability if we have postcode & restaurant
+    if (postalCode && (restaurant || (storeInfo?.latitude && storeInfo?.longitude))) {
+      const pc = postalCode.toUpperCase().replace(/\s+/, ' ');
+      console.log('Starting automatic deliverability check for:', pc);
+      deliverabilityHook.check(pc);
     }
-    
+  
     // Clear suggestions
     setSuggestions([]);
   };

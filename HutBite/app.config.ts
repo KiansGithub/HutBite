@@ -5,7 +5,7 @@ const config: ExpoConfig = {
   name: "HutBite",
   slug: "HutBite",
   owner: "kiandev",
-  version: "1.0.2",
+  version: "1.3.0",
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: "hutbite",
@@ -28,6 +28,8 @@ const config: ExpoConfig = {
         "hutbite uses your location in the background to keep delivery areas up to date.",
         NSPhotoLibraryUsageDescription:
         "HutBite needs access to your photos and videos so you can upload food reviews and restaurant content—for example, choosing a video of you eating your meal to post. Uploaded content will be reviewed by our team before it appears publicly.",
+        NSCameraUsageDescription:
+        "HutBite uses your camera so you can take photos and videos for reviews and restaurant content.",
       ITSAppUsesNonExemptEncryption: false
     },
     config: {

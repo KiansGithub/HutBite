@@ -145,7 +145,7 @@ export default function FeedScreen() {
       }));
 
       // If ordering is disabled, navigate to restaurant page
-      if (!APP_CONFIG.ORDERING_ENABLED) {
+      if (!restaurant.receives_orders) {
         router.push(`/restaurant/${restaurant.id}`);
         return;
       }
