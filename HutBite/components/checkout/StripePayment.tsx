@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import Constants from 'expo-constants';
 import { OrderType } from '@/types/store';
 import * as Linking from 'expo-linking';
+import { sendOrderNotification } from '@/services/smsNotificationService';
 
 interface StripePaymentProps {
     onPaymentSuccess: () => void; 
@@ -236,11 +237,30 @@ export const StripePayment: React.FC<StripePaymentProps> = ({
 
             setOrderSubmitting(false);
 
-            // Consider the order successful if either external submission succeeded 
-            // or database save succeeded (we have a record)
-            // Only consider order successful if Stripe payment succeeded AND we saved to database
-            // This prevents "successful" orders when payment actually failed
+            // Send SMS notification after successful order (non-blocking)
             if (orderResult.success && databaseResult.success) {
+                // Send SMS notification in background
+                const smsData = {
+                    restaurant_name: 'HutBite',
+                    customer_name: `${customerDetails.firstName} ${customerDetails.lastName}`.trim() || 'Guest',
+                    customer_phone: '+447756811243', // Hardcoded for testing as requested
+                    order_amount: total,
+                    order_ref: orderData.order_id
+                };
+
+                // Send SMS in background - don't block order success
+                sendOrderNotification(smsData)
+                    .then(smsResult => {
+                        if (smsResult.success) {
+                            console.log('✅ SMS sent successfully');
+                        } else {
+                            console.error('❌ SMS failed:', smsResult.error);
+                        }
+                    })
+                    .catch(smsError => {
+                        console.error('❌ SMS error:', smsError);
+                    });
+
                 console.log('✅ ORDER SUCCESS - Payment completed and order saved');
                 onPaymentSuccess();
             } else if (!orderResult.success) {
