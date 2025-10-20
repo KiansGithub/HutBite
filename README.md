@@ -49,16 +49,12 @@
 - **Addressy**: UK address validation and postcode lookup
 - **OpenStreetMap**: Reverse geocoding for location services
 
-## 📱 Screenshots
-
-*Add screenshots of your app here*
-
 ## 🛠️ Installation
 
 ### Prerequisites
 - Node.js 18+
 - npm or yarn
-- Expo CLI
+- Expo CLI and Expo Go app for quick iteration and testing
 - iOS Simulator (for iOS development)
 - Android Studio (for Android development)
 
